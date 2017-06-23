@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context="com.zy.ppmusic.MainActivity">
 
     <android.support.design.widget.AppBarLayout
@@ -16,13 +17,87 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            app:title="@string/app_name"
             android:subtitle="@string/app_subtitle"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
             app:subtitle="@string/app_subtitle"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
+            app:title="@string/app_name" />
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_main" />
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycle_main_menu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:layoutManager="GridLayoutManager" />
+
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:behavior_hideable="true"
+        app:behavior_peekHeight="@dimen/dp60"
+        app:layout_behavior="@string/bottom_sheet_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <android.support.constraint.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp60">
+
+                <ImageView
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:contentDescription="@string/mic_head"
+                    android:src="@mipmap/ic_launcher_round"
+                    android:id="@+id/imageView2" />
+
+                <com.zy.ppmusic.view.MarqueeTextView
+                    android:text="@string/normal_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:id="@+id/play_music_name"
+                    app:layout_constraintStart_toEndOf="@+id/imageView2"
+                    android:ellipsize="marquee"
+                    android:focusableInTouchMode="true"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:focusable="true"
+                    android:singleLine="true"
+                    android:maxWidth="@dimen/do100"
+                    android:layout_marginStart="8dp" />
+
+                <ImageView
+                    android:src="@mipmap/play"
+                    android:layout_width="@dimen/dp40"
+                    android:layout_height="@dimen/dp40"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:id="@+id/play_or_pause"
+                    app:layout_constraintEnd_toStartOf="@+id/next"
+                    android:layout_marginEnd="8dp" />
+
+                <ImageView
+                    android:id="@+id/next"
+                    android:src="@mipmap/next"
+                    android:layout_width="@dimen/dp40"
+                    android:layout_height="@dimen/dp40"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginEnd="8dp" />
+
+            </android.support.constraint.ConstraintLayout>
+
+            <android.support.v7.widget.RecyclerView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+    </android.support.v4.widget.NestedScrollView>
 
 </android.support.design.widget.CoordinatorLayout>

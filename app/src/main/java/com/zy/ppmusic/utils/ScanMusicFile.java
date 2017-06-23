@@ -1,5 +1,9 @@
 package com.zy.ppmusic.utils;
 
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Environment;
 import android.os.Handler;
@@ -16,6 +20,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +42,7 @@ public class ScanMusicFile {
     private String[] mSupportMedia = {".mp3", ".wav", ".wma"};//所支持的音乐格式
     private ExecutorService executor = Executors.newSingleThreadExecutor();//单一线程池
     private OnScanComplete onScanComplete;//扫描完成回调
-    private List<String> mPathList = new ArrayList<>();//扫描到的音乐路径集合
+    private ArrayList<String> mPathList = new ArrayList<>();//扫描到的音乐路径集合
     private ScanHandler mHandler = new ScanHandler(this);//线程回调的handler
     private NumberFormat format = NumberFormat.getInstance(Locale.CHINA);//数字格式化工具
     private String mInnerStoragePath;//内部存储路径
@@ -64,13 +70,21 @@ public class ScanMusicFile {
     public void scanMusicFile(Context context) {
         mInnerStoragePath = FileUtils.getStoragePath(context,false);
         mExternalStoragePath = FileUtils.getStoragePath(context,true);
+        Log.e(TAG, "scanMusicFile: \n"+mInnerStoragePath+"\n"+mExternalStoragePath );
         executor.submit(new Runnable() {
             @Override
             public void run() {
-                searchFile(new File(mInnerStoragePath));
-                searchFile(new File(mExternalStoragePath));
 
-                for (int i = 0; i < mPathList.size(); i++) {
+                Log.e(TAG, "run: 扫描开始" );
+                searchFile(new File(mInnerStoragePath));
+                Log.e(TAG, "run: 扫描内部存储结束");
+                if(mExternalStoragePath != null){
+                    searchFile(new File(mExternalStoragePath));
+                    Log.e(TAG, "run: 扫描外部存储结束");
+                }
+                Log.d(TAG, "run: 扫描结束");
+
+                for (int i = (mPathList.size() - 1); i >= 0; i--) {
                     File file = new File(mPathList.get(i));
                     double size = ((double) file.length() / 1024d) / 1024d;
                     if (size > 1d) {
@@ -79,7 +93,10 @@ public class ScanMusicFile {
                         mPathList.remove(i);
                     }
                 }
-                mHandler.sendEmptyMessage(0);
+                for (String s : mPathList) {
+                    Log.w(TAG, "path="+s +",size="+(new File(s).length()));
+                }
+                mHandler.sendEmptyMessage(SCAN_COMPLETE);
             }
         });
     }
@@ -122,7 +139,7 @@ public class ScanMusicFile {
      * @param file 需要扫描的文件目录
      */
     private void searchFile(File file) {
-        if (file.isDirectory()) {
+        if (file.isDirectory() && file.listFiles() != null) {
             File[] items = file.listFiles();
             for (File item : items) {
                 searchFile(item);
@@ -142,15 +159,13 @@ public class ScanMusicFile {
                 return;
             }
         }
-
-
     }
 
-    public abstract class OnScanComplete {
-        private OnScanComplete(){
+    public abstract static class OnScanComplete {
+        public OnScanComplete(){
 
         }
-        abstract void onComplete(List<String> paths);
+        protected abstract void onComplete(ArrayList<String> paths);
         void onCountChange(int size){
 
         }

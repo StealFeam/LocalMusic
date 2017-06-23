@@ -10,7 +10,6 @@ import static org.junit.Assert.*;
 public class ScanMusicFileTest {
     @Test
     public void scanMusicFile() throws Exception {
-        ScanMusicFile.getInstance().scanMusicFile();
 
 
     }

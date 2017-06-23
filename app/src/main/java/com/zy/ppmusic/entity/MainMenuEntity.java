@@ -1,5 +1,8 @@
 package com.zy.ppmusic.entity;
 
+import com.zy.ppmusic.MainActivity;
+import com.zy.ppmusic.bl.BlScanActivity;
+
 public class MainMenuEntity {
     private String menuTitle;
     private int menuRes;

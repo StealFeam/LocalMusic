@@ -9,4 +9,9 @@
     <string name="local_music">LocalMusic</string>
     <string name="email">2295573743@qq.com</string>
     <string name="bl_title">蓝牙</string>
+    <string name="normal_text">nomal text</string>
+    <string name="scan_result_icon">扫描设备的标识</string>
+    <string name="menu_refresh">刷新</string>
+    <string name="mic_head">音乐头像</string>
+    <string name="fun_des_img">功能图片</string>
 </resources>
