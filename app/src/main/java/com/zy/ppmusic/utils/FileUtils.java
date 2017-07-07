@@ -10,6 +10,14 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -45,13 +53,7 @@ public class FileUtils {
                     return path;
                 }
             }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
             e.printStackTrace();
         }
         return null;
@@ -70,7 +72,63 @@ public class FileUtils {
                 searchFile(item);
             }
         }
+    }
 
+    /**
+     * 存储对象到本地
+     * @param object 需要存储的数据对象
+     * @param path 存储文件目录
+     * @param name 存储文件名称
+     */
+    public static void writeDataToFile(Object object,String path,String name){
+        File dir = new File(path);
+        File saveFile = null;
+        if(!dir.exists()){
+            boolean result = dir.mkdirs();
+            if(!result){
+               System.err.println("文件目录创建失败");
+               return;
+            }
+        }
+        saveFile = new File(dir.getAbsolutePath()+File.separator+name);
+        ObjectOutputStream objectOutputStream = null;
+        OutputStream outputStream = null;
+        try {
+            outputStream = new FileOutputStream(saveFile);
+            objectOutputStream = new ObjectOutputStream(outputStream);
+            objectOutputStream.writeObject(object);
+            objectOutputStream.flush();
+        }catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            IOUtils.closeIo(objectOutputStream);
+            IOUtils.closeIo(outputStream);
+        }
+    }
+
+    /**
+     * 从本地读取数据
+     * @param path 文件存放的位置
+     * @return data
+     */
+    public static Object readDataFromFile(String path){
+        File saveFile = new File(path);
+        if(!saveFile.exists()){
+            return null;
+        }
+        ObjectInputStream objectInputStream = null;
+        InputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream(saveFile);
+            objectInputStream = new ObjectInputStream(inputStream);
+            return objectInputStream.readObject();
+        }catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            IOUtils.closeIo(objectInputStream);
+            IOUtils.closeIo(inputStream);
+        }
+        return null;
     }
 
 }

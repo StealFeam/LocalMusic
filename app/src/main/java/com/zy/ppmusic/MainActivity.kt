@@ -1,5 +1,6 @@
 package com.zy.ppmusic
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -7,6 +8,7 @@ import android.content.ServiceConnection
 import android.os.*
 import android.support.design.widget.NavigationView
 import android.support.v4.app.ActivityCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
@@ -21,6 +23,7 @@ import android.widget.TextView
 import com.zy.ppmusic.adapter.MainMenuAdapter
 import com.zy.ppmusic.bl.BlScanActivity
 import com.zy.ppmusic.entity.MainMenuEntity
+import com.zy.ppmusic.entity.MusicInfoEntity
 import com.zy.ppmusic.service.PlayService
 import com.zy.ppmusic.utils.PermissionUtil
 import com.zy.ppmusic.utils.ScanMusicFile
@@ -30,46 +33,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     var TAG = "MainActivity"
     var ivNextMusic: ImageView? = null
     var ivPlayOrPause: ImageView? = null
-    var messenger: Messenger? = null//playerService的消息传递
-    var clientMessenger = Messenger(MsgHandler(this))//消息接受
-    var isPause: Boolean = true
     var musicName: TextView? = null
-
-    /**
-     * 服务消息回传处理
-     */
-    private class MsgHandler(activity: MainActivity) : Handler() {
-        private val weakReference: WeakReference<MainActivity> = WeakReference(activity)
-
-        override fun handleMessage(msg: Message) {
-            if (weakReference.get() != null) {
-                when (msg.what) {
-                    PlayService.START_OR_PAUSE -> {
-                        println("操作修改成功")
-                        weakReference.get()!!.isPause = !weakReference.get()!!.isPause
-                        weakReference.get()!!.isPauseOrStart(weakReference.get()!!.isPause)
-                    }
-                    PlayService.PLAY_NEXT -> {
-                        println("请求已收到")
-                    }
-                    PlayService.INIT_PLAYER -> {
-
-                    }
-                    else -> {
-                        println("收到其他类型消息--what=" + msg.what)
-                    }
-                }
-                val entity = msg.data
-                if (entity != null) {
-                    val musicPath = entity.getString("path")
-                    val musicDuration = entity.getInt("duration")
-                    weakReference.get()!!.changeDisName(musicPath)
-                    println("收到服务的消息--" + musicPath + "\n" + musicDuration)
-                }
-            }
-            super.handleMessage(msg)
-        }
-    }
+    var musicManager:IMusicInterface?=null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,8 +53,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         ivNextMusic = findViewById(R.id.next) as ImageView?
         ivNextMusic!!.setOnClickListener {
-            if (messenger != null) {
-                sendMsgToService(PlayService.PLAY_NEXT)
+            if (musicManager != null) {
+                musicManager!!.next()
             }
         }
 
@@ -97,8 +62,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         ivPlayOrPause = findViewById(R.id.play_or_pause) as ImageView?
         ivPlayOrPause!!.setOnClickListener {
-            if (messenger != null) {
-                sendMsgToService(PlayService.START_OR_PAUSE)
+            if (musicManager != null) {
+                musicManager!!.playOrPause()
             }
         }
 
@@ -124,13 +89,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
         mainRecycle.adapter = mainAdapter
-        mainRecycle.layoutManager = GridLayoutManager(this, 3) as RecyclerView.LayoutManager?
+        mainRecycle.layoutManager = GridLayoutManager(this, 3)
+
+        val it = Intent(this@MainActivity, PlayService::class.java)
+        startService(it)
 
         ScanMusicFile.getInstance().setOnScanComplete(object : ScanMusicFile.OnScanComplete() {
             override fun onComplete(paths: ArrayList<String>) {
                 val it = Intent(this@MainActivity, PlayService::class.java)
                 it.putExtra("paths", paths)
-                bindService(it, conn, Context.BIND_AUTO_CREATE)
+                bindService(it, conn, Context.BIND_EXTERNAL_SERVICE)
                 println("启动service")
             }
         }).scanMusicFile(applicationContext)
@@ -147,17 +115,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    fun changeDisName(path: String) {
-        val arr = path.substring((path.lastIndexOf("/") + 1), path.lastIndexOf("."))
-        musicName!!.text = arr
+    fun changeDisName(name: String) {
+        musicName!!.text = name
         musicName!!.isSelected = true
-    }
-
-    fun sendMsgToService(type: Int) {
-        val msg = Message.obtain()
-        msg.what = type
-        msg.replyTo = clientMessenger
-        messenger!!.send(msg)
     }
 
     /**
@@ -165,13 +125,46 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
      */
     var conn = object : ServiceConnection {
         override fun onServiceDisconnected(name: ComponentName?) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            musicManager = null
         }
 
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             println("服务已连接")
-            messenger = Messenger(service)
-            sendMsgToService(PlayService.INIT_PLAYER)
+            musicManager = IMusicInterface.Stub.asInterface(service)
+            musicManager!!.initPlayer(0,0)
+            musicManager!!.registerMusicChange(musicChangeListener)
+            musicManager!!.registerListener(stateChangeListener)
+        }
+    }
+    /**
+     * 监听播放文件
+     */
+    var musicChangeListener = object : IOnMusicChangeListener.Stub() {
+        override fun onMusicChange(entity: com.zy.ppmusic.MusicInfoEntity?) {
+            runOnUiThread {
+                changeDisName(entity!!.name)
+            }
+        }
+    }
+    /**
+     * 监听播放器状态
+     */
+    var stateChangeListener = object : IPlayerStateChangeListener.Stub() {
+        override fun onPlayerStateChange(state: Int) {
+            runOnUiThread {
+                when(state){
+                    PlaybackStateCompat.STATE_PLAYING->{
+                        isPauseOrStart(false)
+                    }
+                    PlaybackStateCompat.STATE_PAUSED->{
+                        isPauseOrStart(true)
+                    }
+                    else->{
+
+                    }
+                }
+                println("state="+state)
+            }
         }
     }
 
@@ -211,6 +204,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val drawer = findViewById(R.id.drawer_layout) as DrawerLayout
         drawer.closeDrawer(GravityCompat.START)
         return true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if(musicManager != null && musicManager!!.asBinder().isBinderAlive){
+            musicManager!!.unregisterListener(stateChangeListener)
+            musicManager!!.unregisterMusicChange(musicChangeListener)
+        }
+        unbindService(conn)
     }
 }
 

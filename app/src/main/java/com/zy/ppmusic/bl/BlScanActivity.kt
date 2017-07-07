@@ -10,6 +10,7 @@ import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.support.annotation.RequiresApi
+import android.support.v4.content.LocalBroadcastManager
 import android.support.v4.media.session.MediaButtonReceiver
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -44,6 +45,9 @@ class BlScanActivity : AppCompatActivity() {
     private var context: Context? = null
     private var blDeviceFoundReceiver: DeviceFoundReceiver? = null
 
+
+    private var receiverManager:LocalBroadcastManager ?=null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bl_scan)
@@ -55,7 +59,7 @@ class BlScanActivity : AppCompatActivity() {
         if (defaultAdapter == null) {
             showToast("设备不支持蓝牙")
             finish()
-            return;
+            return
         }
         context = this
         scanList = ArrayList()
@@ -72,7 +76,9 @@ class BlScanActivity : AppCompatActivity() {
             "蓝牙已关闭"
         }
 
-        sw_bl!!.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
+        receiverManager = LocalBroadcastManager.getInstance(this)
+
+        sw_bl!!.setOnCheckedChangeListener({ _, isChecked ->
             if (isChecked) {
                 // 打开蓝牙
                 if (!defaultAdapter!!.isEnabled) {
@@ -114,7 +120,7 @@ class BlScanActivity : AppCompatActivity() {
             override fun onServiceDisconnected(profile: Int) {
                 TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
-        }, BluetoothProfile.HEADSET);
+        }, BluetoothProfile.HEADSET)
     }
 
 
@@ -127,7 +133,7 @@ class BlScanActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.bl_refresh, menu)
-        return true;
+        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -224,7 +230,7 @@ class BlScanActivity : AppCompatActivity() {
 
         val foundFilter = IntentFilter(BluetoothDevice.ACTION_FOUND)
 
-        registerReceiver(blDeviceFoundReceiver, foundFilter)
+        receiverManager!!.registerReceiver(blDeviceFoundReceiver,foundFilter)
 
         val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         filter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED)
@@ -232,7 +238,7 @@ class BlScanActivity : AppCompatActivity() {
         filter.addAction(BluetoothDevice.ACTION_FOUND)
         filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
-        registerReceiver(blStateChangeReceiver, filter)
+        receiverManager!!.registerReceiver(blStateChangeReceiver, filter)
     }
 
     /**
@@ -252,7 +258,7 @@ class BlScanActivity : AppCompatActivity() {
      * 判断新发现的设备是否已经存在列表中
      */
     fun isInList(device: BluetoothDevice): Boolean {
-        scanList!!.forEachIndexed { index, scanEntity ->
+        scanList!!.forEachIndexed { _, scanEntity ->
             if (scanEntity.device == device) {
                 return true
             }
@@ -264,7 +270,7 @@ class BlScanActivity : AppCompatActivity() {
      * 删除设备
      */
     fun removeDevice(device: BluetoothDevice) {
-        scanList!!.forEachIndexed { index, scanResultEntity ->
+        scanList!!.forEachIndexed { _, scanResultEntity ->
             if (scanResultEntity.device == device) {
                 scanList!!.remove(scanResultEntity)
             }
@@ -299,8 +305,8 @@ class BlScanActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        unregisterReceiver(blDeviceFoundReceiver)
-        unregisterReceiver(blStateChangeReceiver)
+        receiverManager!!.unregisterReceiver(blDeviceFoundReceiver)
+        receiverManager!!.unregisterReceiver(blStateChangeReceiver)
         defaultAdapter!!.cancelDiscovery()
     }
 
