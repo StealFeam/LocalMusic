@@ -26,7 +26,9 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.KeyEvent;
+import android.widget.RemoteViews;
 
 import com.zy.ppmusic.MediaActivity;
 import com.zy.ppmusic.R;
@@ -38,14 +40,19 @@ import java.util.List;
 
 public class MediaService extends MediaBrowserServiceCompat {
     private static final String TAG = "MediaService";
+    //通知的id
+    private final int NOTIFY_ID = 412;
+
     private MediaSessionCompat sessionCompat;
     private PlaybackStateCompat.Builder mStateBuilder;
     private PlayBack mPlayBack;
-    private List<String> mPlayQueue;
+    private List<String> mPlayQueueMediaId;
     private NotificationManagerCompat mNotificationManager;
     private MediaSessionCompat.QueueItem mCurrentMedia;
     private AudioBecomingNoisyReceiver audioBecomingNoisyReceiver;
     private boolean mServiceStarted;
+    private boolean isAutoContinuedPlay = true;//播放完成是否继续下一首
+    private SparseArray<MediaSessionCompat.QueueItem> mQueueValueArray;
 
     private Handler mDelayedStopHandler = new Handler(new Handler.Callback() {
         @Override
@@ -61,13 +68,18 @@ public class MediaService extends MediaBrowserServiceCompat {
         if (sessionCompat == null) {
             sessionCompat = new MediaSessionCompat(this, TAG);
         }
+        mPlayQueueMediaId = new ArrayList<>();
+        mQueueValueArray = new SparseArray<>();
         setSessionToken(sessionCompat.getSessionToken());
         mStateBuilder = new PlaybackStateCompat.Builder();
-        mStateBuilder.setActions(PlaybackStateCompat.ACTION_PLAY | PlaybackStateCompat.ACTION_PAUSE);
+        mStateBuilder.setActions(PlaybackStateCompat.ACTION_PLAY | PlaybackStateCompat.ACTION_PAUSE
+                | PlaybackStateCompat.ACTION_SEEK_TO | PlaybackStateCompat.ACTION_SKIP_TO_NEXT);
         sessionCompat.setPlaybackState(mStateBuilder.build());
         sessionCompat.setCallback(new MediaSessionCallBack());
         sessionCompat.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+
+        sessionCompat.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE);
 
         Intent it = new Intent(getApplicationContext(), MediaActivity.class);
         it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -78,7 +90,7 @@ public class MediaService extends MediaBrowserServiceCompat {
         mPlayBack.setCallBack(new PlayBack.CallBack() {
             @Override
             public void onCompletion() {
-                handleStopRequest();
+                handleStopRequest(false);
             }
 
             @Override
@@ -96,8 +108,47 @@ public class MediaService extends MediaBrowserServiceCompat {
         audioBecomingNoisyReceiver = new AudioBecomingNoisyReceiver(this);
     }
 
-    private void handleStopRequest() {
+    /**
+     * 停止播放
+     *
+     * @param isNeedEnd 是否需要停止播放
+     */
+    private void handleStopRequest(boolean isNeedEnd) {
+        mPlayBack.stopPlayer();
+        if (!isNeedEnd) {
+            //判断重复模式，单曲重复，列表重复，列表播放
+            switch (sessionCompat.getController().getRepeatMode()) {
+                //列表重复：自动下一首
+                case PlaybackStateCompat.REPEAT_MODE_ALL:
+                    if (isAutoContinuedPlay) {
+                        onMediaChange(mPlayBack.onSkipToNext());
+                    }
+                    break;
+                //单曲重复：重复当前的歌曲
+                case PlaybackStateCompat.REPEAT_MODE_ONE:
+                    onMediaChange(mCurrentMedia.getDescription().getMediaId());
+                    break;
+                //列表播放：判断是否播放到列表的最后
+                case PlaybackStateCompat.REPEAT_MODE_NONE:
+                    List<MediaSessionCompat.QueueItem> queue = sessionCompat.getController().getQueue();
+                    int position = queue.indexOf(mCurrentMedia);
+                    Log.d(TAG, "handleStopRequest() query index=" + position);
+                    if (position < (queue.size() - 1)) {
+                        onMediaChange(mPlayBack.onSkipToNext());
+                    } else {
+                        Log.e(TAG, "handleStopRequest: 已播放到最后一首曲目");
+                    }
+                    break;
+                default:
 
+                    break;
+            }
+        } else {
+            mNotificationManager.cancel(NOTIFY_ID);
+            sessionCompat.setActive(false);
+            stopForeground(true);
+            System.exit(0);
+        }
     }
 
     private void onPlayStateChange(int errorCode, String error) {
@@ -122,13 +173,13 @@ public class MediaService extends MediaBrowserServiceCompat {
         }
         sessionCompat.setPlaybackState(stateBuilder.build());
         if (state == PlaybackStateCompat.STATE_PLAYING) {
-            postNotification();
+            postRemoteNotification();
             audioBecomingNoisyReceiver.register();
         } else {
             if (state == PlaybackStateCompat.STATE_PAUSED) {
-                postNotification();
+                postRemoteNotification();
             } else {
-                mNotificationManager.cancel(412);
+                mNotificationManager.cancel(NOTIFY_ID);
             }
             stopForeground(false);
             audioBecomingNoisyReceiver.unregister();
@@ -137,19 +188,8 @@ public class MediaService extends MediaBrowserServiceCompat {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        KeyEvent keyEvent = MediaButtonReceiver.handleIntent(sessionCompat, intent);
-        if (keyEvent != null) {
-            switch (keyEvent.getKeyCode()) {
-                case KeyEvent.KEYCODE_MEDIA_NEXT:
-                    mPlayBack.onSkipToNext();
-                    break;
-                case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
-                    mPlayBack.onSkipToPrevious();
-                    break;
-                default:
-                    break;
-            }
-        }
+        //也可以在这接收通知按钮的event事件
+        MediaButtonReceiver.handleIntent(sessionCompat, intent);
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -161,34 +201,41 @@ public class MediaService extends MediaBrowserServiceCompat {
 
     @Override
     public void onLoadChildren(@NonNull String s, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        Log.d(TAG, "onLoadChildren() called with: s = [" + s + "], result = [" + result + "]");
+        Log.d(TAG, "service onLoadChildren() called with: s = [" + s + "], result = [" + result + "]");
         if (s.equals(getPackageName())) {
             result.detach();
             ScanMusicFile.getInstance().scanMusicFile(this).setOnScanComplete(new ScanMusicFile.OnScanComplete() {
                 @Override
                 protected void onComplete(ArrayList<String> paths) {
-                    mPlayQueue = paths;
-                    mPlayBack.setPlayQueue(mPlayQueue);
                     Log.d(TAG, "onComplete() called with: paths = [" + paths + "]");
                     List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<>();
+                    List<MediaSessionCompat.QueueItem> queueItems = new ArrayList<>();
                     for (int i = 0; i < paths.size(); i++) {
+                        String mediaId = String.valueOf(paths.get(i).hashCode());
                         MediaMetadataCompat mediaMetadataCompat = ScanMusicFile.getInstance().
-                                getMusicById(String.valueOf(paths.get(i).hashCode()));
+                                getMusicById(mediaId);
                         if (mediaMetadataCompat != null) {
                             MediaBrowserCompat.MediaItem mediaItem = new MediaBrowserCompat.MediaItem(
                                     mediaMetadataCompat.getDescription(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE);
                             mediaItems.add(mediaItem);
+                            MediaSessionCompat.QueueItem queueItem = new MediaSessionCompat.QueueItem(
+                                    mediaMetadataCompat.getDescription(), Long.parseLong(mediaId));
+                            queueItems.add(queueItem);
+                            mQueueValueArray.append(i, queueItem);
+                            mPlayQueueMediaId.add(mediaId);
                         } else {
                             Log.e(TAG, "onComplete: null is " + paths.get(i));
                         }
                     }
+                    mPlayBack.setPlayQueue(mPlayQueueMediaId);
+                    sessionCompat.setQueue(queueItems);
                     result.sendResult(mediaItems);
                 }
             });
         }
     }
 
-    public void postNotification() {
+    public void postRemoteNotification() {
         Notification notification;
         MediaControllerCompat controller = sessionCompat.getController();//获取媒体控制器
         MediaMetadataCompat metadata = controller.getMetadata();//media信息
@@ -205,64 +252,63 @@ public class MediaService extends MediaBrowserServiceCompat {
         if (iconBitmap == null) {
             iconBitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher_round);
         }
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-        Log.e(TAG, "postNotification: playing=" + mPlayBack.isPlaying());
-        NotificationCompat.Action action = mPlayBack.isPlaying()
-                ? new NotificationCompat.Action(R.drawable.ic_pause, "暂停",
-                MediaButtonReceiver.buildMediaButtonPendingIntent(getBaseContext(), PlaybackStateCompat.ACTION_PAUSE))
-                : new NotificationCompat.Action(R.drawable.ic_play, "播放",
-                MediaButtonReceiver.buildMediaButtonPendingIntent(getBaseContext(), PlaybackStateCompat.ACTION_PLAY));
-        //添加上一首图标和监听
-        builder.addAction(R.drawable.ic_previous, "上一首", MediaButtonReceiver.buildMediaButtonPendingIntent(getBaseContext(),
-                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS));
-        //添加暂停或者播放图标和监听
-        builder.addAction(action);
-        //添加下一首图标和监听
-        builder.addAction(R.drawable.ic_next, "下一首", MediaButtonReceiver.buildMediaButtonPendingIntent(getBaseContext(),
-                PlaybackStateCompat.ACTION_SKIP_TO_NEXT));
-        builder.setStyle(new NotificationCompat.MediaStyle()
-                .setMediaSession(sessionCompat.getSessionToken())
-                .setShowCancelButton(true)
-                .setShowActionsInCompactView(1, 2)//缩小版显示第几个图标 上面添加了三个，所以对应的index为0，1，2
-        );
-
-        builder.setSmallIcon(R.mipmap.ic_launcher_round)
-                .setShowWhen(false)
-                .setContentIntent(controller.getSessionActivity())//设置点击需要响应的activity
-                .setLargeIcon(iconBitmap)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+        RemoteViews remoteViews = new RemoteViews(getPackageName(), R.layout.notify_copy_layout);
+        remoteViews.setImageViewBitmap(R.id.notify_artist_head_iv, iconBitmap);
+        if(mPlayBack.isPlaying()){
+            remoteViews.setImageViewResource(R.id.notify_action_play_pause,R.drawable.ic_pause);
+        }else{
+            remoteViews.setImageViewResource(R.id.notify_action_play_pause,R.drawable.ic_play);
+        }
         if (descriptionCompat != null) {
             Log.e(TAG, "postNotification: title=" + descriptionCompat.getTitle() + ",subTitle=" + descriptionCompat.getSubtitle());
-            builder.setContentTitle(descriptionCompat.getTitle());
-            builder.setContentText(descriptionCompat.getSubtitle());
+            remoteViews.setTextViewText(R.id.notify_display_title, descriptionCompat.getTitle());
+            remoteViews.setTextViewText(R.id.notify_display_sub_title, descriptionCompat.getSubtitle());
         } else {
             Log.e(TAG, "postNotification: description is null");
         }
-        builder.setOngoing(true);
+        remoteViews.setOnClickPendingIntent(R.id.notify_action_play_pause, MediaButtonReceiver.
+                buildMediaButtonPendingIntent(getApplicationContext(), PlaybackStateCompat.ACTION_PLAY_PAUSE));
+        remoteViews.setOnClickPendingIntent(R.id.notify_action_next, MediaButtonReceiver.
+                buildMediaButtonPendingIntent(getApplicationContext(), PlaybackStateCompat.ACTION_SKIP_TO_NEXT));
+        remoteViews.setOnClickPendingIntent(R.id.notify_action_close, MediaButtonReceiver.
+                buildMediaButtonPendingIntent(getApplicationContext(), PlaybackStateCompat.ACTION_STOP));
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext());
+        builder.setSmallIcon(R.drawable.ic_small_notify);
+        builder.setContentIntent(controller.getSessionActivity());
+
         notification = builder.build();
-        mNotificationManager.notify(412, notification);
-        startForeground(412, notification);
+        notification.contentView = remoteViews;
+        mNotificationManager.notify(NOTIFY_ID, notification);
+        startForeground(NOTIFY_ID, notification);
     }
 
+    public void onMediaChange(String mediaId) {
+        //设置媒体信息
+        MediaMetadataCompat track = ScanMusicFile.getInstance().getMusicById(mediaId);
+        if (track != null) {
+            sessionCompat.setMetadata(track);
+        }
+        mCurrentMedia = mQueueValueArray.valueAt(mPlayQueueMediaId.indexOf(mediaId));
 
+        mPlayBack.onPlay(mediaId);
+
+        onPlayStateChange(0, null);
+
+        handlePlayRequest();
+    }
+
+    /**
+     * 响应Activity的调用
+     * getController.transportControls.
+     */
     private final class MediaSessionCallBack extends MediaSessionCompat.Callback {
 
         @Override
         public void onPlayFromMediaId(String mediaId, Bundle extras) {
             super.onPlayFromMediaId(mediaId, extras);
             Log.d(TAG, "onPlayFromMediaId() called with: mediaId = [" + mediaId + "], extras = [" + extras + "]");
-            //设置媒体信息
-            MediaMetadataCompat track = ScanMusicFile.getInstance().getMusicById(mediaId);
-            if (track != null) {
-                mCurrentMedia = new MediaSessionCompat.QueueItem(track.getDescription(), track.hashCode());
-            }
-            sessionCompat.setMetadata(track);
-
-            mPlayBack.onPlay(mediaId);
-
-            onPlayStateChange(0, null);
-
-            handlePlayRequest();
+            onMediaChange(mediaId);
         }
 
         @Override
@@ -287,6 +333,7 @@ public class MediaService extends MediaBrowserServiceCompat {
         public void onSkipToNext() {
             super.onSkipToNext();
             Log.d(TAG, "onSkipToNext() called");
+            onMediaChange(mPlayBack.onSkipToNext());
         }
 
         @Override
@@ -297,11 +344,26 @@ public class MediaService extends MediaBrowserServiceCompat {
 
         @Override
         public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
-            return super.onMediaButtonEvent(mediaButtonEvent);
+            KeyEvent ke = mediaButtonEvent.getParcelableExtra("android.intent.extra.KEY_EVENT");
+            Bundle extras = mediaButtonEvent.getExtras();
+            Log.e(TAG, "onMediaButtonEvent: extra=" + extras.toString());
+            switch (ke.getKeyCode()) {
+                case KeyEvent.KEYCODE_MEDIA_NEXT:
+                    onMediaChange(mPlayBack.onSkipToNext());
+                    break;
+                case KeyEvent.KEYCODE_MEDIA_STOP:
+                    handleStopRequest(true);
+                    break;
+                default:
+                    break;
+            }
+            return false;
         }
     }
 
-
+    /**
+     * 处理播放请求
+     */
     public void handlePlayRequest() {
         if (mCurrentMedia == null) {
             return;
@@ -345,6 +407,7 @@ public class MediaService extends MediaBrowserServiceCompat {
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            //当收到耳机被拔出时暂停播放
             if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
                 handlePauseRequest();
             }

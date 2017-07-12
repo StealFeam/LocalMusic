@@ -62,7 +62,6 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     }
 
     public void onPlay(String mediaId) {
-        Log.e(TAG, "onPlay: started");
         mPlayOnFocusGain = true;
         getAudioFocus();
         boolean isChanged = !TextUtils.equals(mediaId, mCurrentMediaId);
@@ -70,7 +69,6 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
             mCurrentPosition = 0;
             mCurrentMediaId = mediaId;
         }
-        Log.e(TAG, "onPlay: state="+mState );
         if (mState == PlaybackStateCompat.STATE_PAUSED && !isChanged && mMediaPlayer != null) {
             configMediaPlayerState();
         } else {
@@ -86,27 +84,25 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
                 if (mCallBack != null) {
                     mCallBack.onPlayBackStateChange(mState);
                 }
-                Log.e(TAG, "onPlay: music init complete path="+musicById.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI));
+                Log.e(TAG, "onPlay: music init complete path=" + musicById.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI));
             } catch (IOException e) {
-                Log.e(TAG, "onPlay: "+e.getMessage());
+                Log.e(TAG, "onPlay: " + e.getMessage());
                 if (mCallBack != null) {
-                    mCallBack.onError(0,e.getMessage());
+                    mCallBack.onError(0, e.getMessage());
                 }
             }
         }
-        Log.e(TAG, "onPlay: end");
 
     }
 
     private void configMediaPlayerState() {
-        Log.e(TAG, "configMediaPlayerState: started,"+mAudioFocus);
+        Log.e(TAG, "configMediaPlayerState: started," + mAudioFocus);
         if (mAudioFocus == AUDIO_NO_FOCUS_NO_DUCK) {
             //如果没有获取到硬件的播放权限则暂停播放
             if (mState == PlaybackStateCompat.STATE_PLAYING) {
-                Log.e(TAG, "config:paused" );
+                Log.e(TAG, "config:paused");
                 pause();
             }
-            Log.e(TAG, "config:AUDIO_NO_FOCUS_NO_DUCK end" );
         } else {
             if (mAudioFocus == AUDIO_NO_FOCUS_CAN_DUCK) {
                 mMediaPlayer.setVolume(0.2f, 0.2f);
@@ -115,16 +111,13 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
                     mMediaPlayer.setVolume(1.0f, 1.0f);
                 }
             }
-            Log.e(TAG, "configMediaPlayerState: "+mPlayOnFocusGain+","+mMediaPlayer );
             //当失去音频的焦点时，如果在播放状态要恢复播放
             if (mPlayOnFocusGain) {
                 if (mMediaPlayer != null && !mMediaPlayer.isPlaying()) {
                     if (mCurrentPosition == mMediaPlayer.getCurrentPosition()) {
-                        Log.e(TAG, "configMediaPlayerState: playing");
                         mMediaPlayer.start();
                         mState = PlaybackStateCompat.STATE_PLAYING;
                     } else {
-                        Log.e(TAG, "configMediaPlayerState: seek position" );
                         mMediaPlayer.seekTo(mCurrentPosition);
                         mState = PlaybackStateCompat.STATE_BUFFERING;
                     }
@@ -135,12 +128,11 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
         if (mCallBack != null) {
             mCallBack.onPlayBackStateChange(mState);
         }
-        Log.e(TAG, "configMediaPlayerState: end" );
     }
 
     private void pause() {
-        if(mState == PlaybackStateCompat.STATE_PLAYING){
-            if(mMediaPlayer != null && mMediaPlayer.isPlaying()){
+        if (mState == PlaybackStateCompat.STATE_PLAYING) {
+            if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
                 mMediaPlayer.pause();
                 mCurrentPosition = mMediaPlayer.getCurrentPosition();
             }
@@ -171,10 +163,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
 
     public void play() {
         if (mMediaPlayer == null) {
-            Log.e(TAG, "play: MediaPlayer is null" );
             return;
-        }else{
-            Log.e(TAG, "play: started");
         }
         if (mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
@@ -186,7 +175,6 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
         if (mCallBack != null) {
             mCallBack.onPlayBackStateChange(mState);
         }
-        Log.e(TAG, "play: end" );
     }
 
     private void releasePlayer(boolean releasePlayer) {
@@ -196,30 +184,44 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
-
     }
 
-    public void onSkipToNext() {
-        int queueIndex = ScanMusicFile.getInstance().getPositionFromMediaId(mCurrentMediaId);
-        if(queueIndex == (mPlayQueue.size()-1)){
+    public int getCurrentIndex() {
+        return mPlayQueue.indexOf(mCurrentMediaId);
+    }
+
+    public int getMediaIndex(String mediaId) {
+        return mPlayQueue.indexOf(mediaId);
+    }
+
+    public String onSkipToNext() {
+        int queueIndex = mPlayQueue.indexOf(mCurrentMediaId);
+        if (queueIndex == (mPlayQueue.size() - 1)) {
             queueIndex = -1;
         }
-        queueIndex = Math.min(mPlayQueue.size(),Math.max(0,queueIndex+1));
-        String nextMediaId = ScanMusicFile.getInstance().getMediaIdByPosition(++queueIndex);
-        Log.d(TAG, "onSkipToNext() called..."+queueIndex);
-        onPlay(nextMediaId);
+        String nextMediaId = mPlayQueue.get(++queueIndex);
+        Log.d(TAG, "onSkipToNext() called..." + queueIndex);
+        return nextMediaId;
     }
 
-    public void onSkipToPrevious() {
-        int queueIndex = ScanMusicFile.getInstance().getPositionFromMediaId(mCurrentMediaId);
-        if(queueIndex == 0){
+    public String onSkipToPrevious() {
+        int queueIndex = mPlayQueue.indexOf(mCurrentMediaId);
+        if (queueIndex == 0) {
             queueIndex = mPlayQueue.size();
         }
-        String preMediaId = ScanMusicFile.getInstance().getMediaIdByPosition(--queueIndex);
-        Log.d(TAG, "onSkipToPrevious() called..."+queueIndex+","+preMediaId);
-        onPlay(preMediaId);
+        String preMediaId = mPlayQueue.get(--queueIndex);
+        Log.d(TAG, "onSkipToPrevious() called..." + queueIndex + "," + preMediaId);
+        return preMediaId;
     }
 
+    public void stopPlayer() {
+        mMediaService.stopForeground(false);
+        if (mMediaPlayer != null) {
+            mMediaPlayer.reset();
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
+    }
 
     /**
      * 创建播放器或者重置
@@ -245,17 +247,17 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     @Override
     public void onAudioFocusChange(int focusChange) {
         Log.d(TAG, "onAudioFocusChange() called with: focusChange = [" + focusChange + "]");
-        if(focusChange == AudioManager.AUDIOFOCUS_GAIN){
+        if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
             mAudioFocus = AUDIO_FOCUSED;
-        }else if(focusChange == AudioManager.AUDIOFOCUS_LOSS || focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
-                ||focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK){
+        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS || focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
+                || focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
             boolean canDuck = focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK;
-            mAudioFocus = canDuck?AUDIO_NO_FOCUS_CAN_DUCK:AUDIO_NO_FOCUS_NO_DUCK;
-            if(mState == PlaybackStateCompat.STATE_PLAYING && !canDuck){
+            mAudioFocus = canDuck ? AUDIO_NO_FOCUS_CAN_DUCK : AUDIO_NO_FOCUS_NO_DUCK;
+            if (mState == PlaybackStateCompat.STATE_PLAYING && !canDuck) {
                 mPlayOnFocusGain = true;
             }
-        }else{
-            Log.e(TAG, "onAudioFocusChange: "+focusChange );
+        } else {
+            Log.e(TAG, "onAudioFocusChange: " + focusChange);
         }
         configMediaPlayerState();
     }
@@ -284,7 +286,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
         if (mCallBack != null) {
-            mCallBack.onError(what,"errorExtra="+extra);
+            mCallBack.onError(what, "errorExtra=" + extra);
         }
         return true;
     }
@@ -309,7 +311,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     @Override
     public void onSeekComplete(MediaPlayer mp) {
         mCurrentPosition = mp.getCurrentPosition();
-        if(mState == PlaybackStateCompat.STATE_BUFFERING){
+        if (mState == PlaybackStateCompat.STATE_BUFFERING) {
             mMediaPlayer.start();
             mState = PlaybackStateCompat.STATE_PLAYING;
         }

@@ -3,6 +3,7 @@ package com.zy.ppmusic
 import org.junit.Test
 
 import org.junit.Assert.*
+import java.nio.charset.Charset
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -15,6 +16,15 @@ class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
         println(countPositionInSize(true))
+    }
+
+    @Test
+    fun testMapValue(){
+        val list = ArrayList<String>()
+        list.add("ssss")
+        val s = String("ssss".toByteArray(Charset.forName("UTF-8")))
+
+        println("index="+list.indexOf(s))
     }
 
     private fun countPositionInSize(isUp: Boolean): Int {

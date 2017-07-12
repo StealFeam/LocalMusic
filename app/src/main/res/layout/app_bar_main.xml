@@ -68,7 +68,7 @@
                     android:marqueeRepeatLimit="marquee_forever"
                     android:focusable="true"
                     android:singleLine="true"
-                    android:maxWidth="@dimen/do100"
+                    android:maxWidth="@dimen/dp100"
                     android:layout_marginStart="8dp" />
 
                 <ImageView

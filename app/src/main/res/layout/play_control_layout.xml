@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false">
+
+    <ImageView
+        android:id="@+id/control_artist_head_iv"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:contentDescription="@string/artist_headset"
+        android:src="@drawable/pp_launcher" />
+
+    <TextView
+        android:id="@+id/control_display_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dp10"
+        android:layout_toEndOf="@id/control_artist_head_iv"
+        android:ellipsize="end"
+        android:lines="1"
+        android:text="@string/normal_text" />
+
+    <TextView
+        android:id="@+id/control_display_sub_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@id/control_display_title"
+        android:layout_below="@id/control_display_title"
+        android:layout_toEndOf="@id/control_artist_head_iv"
+        android:ellipsize="end"
+        android:lines="1"
+        android:text="@string/normal_text" />
+
+    <ImageView
+        android:id="@+id/control_action_show_queue"
+        android:layout_width="@dimen/dp30"
+        android:layout_height="@dimen/dp30"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="@dimen/dp10"
+        android:layout_marginRight="@dimen/dp10"
+        android:background="@drawable/ic_menu"
+        android:contentDescription="@string/action_close_notify" />
+
+    <ImageView
+        android:id="@+id/control_action_play_pause"
+        android:layout_width="@dimen/dp30"
+        android:layout_height="@dimen/dp30"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@+id/control_action_next"
+        android:contentDescription="@string/action_start_pause"
+        android:src="@drawable/ic_black_play" />
+
+    <ImageView
+        android:id="@id/control_action_next"
+        android:layout_width="@dimen/dp30"
+        android:layout_height="@dimen/dp30"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="@dimen/dp10"
+        android:layout_toStartOf="@id/control_action_show_queue"
+        android:background="@drawable/ic_black_next"
+        android:contentDescription="@string/action_next" />
+</RelativeLayout>

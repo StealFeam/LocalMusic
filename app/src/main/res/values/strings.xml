@@ -14,4 +14,8 @@
     <string name="menu_refresh">刷新</string>
     <string name="mic_head">音乐头像</string>
     <string name="fun_des_img">功能图片</string>
+    <string name="action_close_notify">关闭notification</string>
+    <string name="action_start_pause">开始或者暂停</string>
+    <string name="action_next">下一首</string>
+    <string name="artist_headset">专辑封面</string>
 </resources>

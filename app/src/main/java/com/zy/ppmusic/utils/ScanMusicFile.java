@@ -44,7 +44,7 @@ public class ScanMusicFile {
         private static ScanMusicFile scanMusicFile = new ScanMusicFile();
     }
 
-    public ScanMusicFile() {
+    private ScanMusicFile() {
         format.setMaximumIntegerDigits(2);
         format.setMaximumFractionDigits(2);
         mMusicListById = new LinkedHashMap<>();
@@ -107,7 +107,7 @@ public class ScanMusicFile {
                 mScanTask = new Runnable() {
                     @Override
                     public void run() {
-                        Log.e(TAG, "run: 扫描开始");
+                        Log.d(TAG, "run: 扫描开始");
                         searchFile(new File(mInnerStoragePath));
                         Log.e(TAG, "run: 扫描内部存储结束");
                         if (mExternalStoragePath != null) {
@@ -207,8 +207,6 @@ public class ScanMusicFile {
                     default:
                         break;
                 }
-
-
             }
         }
     }
