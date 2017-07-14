@@ -14,17 +14,13 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_music_normal"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:name=".App"
         android:supportsRtl="true"
+        android:roundIcon="@drawable/ic_music_normal_round"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
 
-        </activity>
         <activity
             android:name=".bl.BlScanActivity"
             android:label="@string/bl_title"
@@ -34,20 +30,6 @@
 
         <receiver android:name=".receiver.KeyDownReceiver">
         </receiver>
-
-        <receiver android:name=".receiver.WeakReceiver">
-            <intent-filter>
-                <action android:name="com.zy.ppmusic.receiver.WeakReceiver" />
-            </intent-filter>
-        </receiver>
-
-        <service
-            android:name=".service.PlayService"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.zy.media.service.PlayService"/>
-            </intent-filter>
-        </service>
 
         <service
             android:name=".service.MediaService"
@@ -63,13 +45,8 @@
             </intent-filter>
         </receiver>
 
-        <!--<receiver android:name=".service.PlayService$SimpleMediaButtonReceiver">-->
-            <!--<intent-filter>-->
-                <!--<action android:name="android.intent.action.MEDIA_BUTTON" />-->
-            <!--</intent-filter>-->
-        <!--</receiver>-->
-
-        <activity android:name=".MediaActivity">
+        <activity android:name=".ui.MediaActivity"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -6,12 +6,20 @@
 
     <ImageView
         android:id="@+id/control_artist_head_iv"
-        android:layout_width="wrap_content"
+        android:layout_width="@dimen/dp60"
         android:layout_height="match_parent"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
         android:contentDescription="@string/artist_headset"
         android:src="@drawable/pp_launcher" />
+
+    <SeekBar
+        android:id="@+id/control_display_progress"
+        style="@style/SelfSeekBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@id/control_artist_head_iv"
+        android:max="100"
+        android:progress="0" />
 
     <TextView
         android:id="@+id/control_display_title"
@@ -19,6 +27,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/dp10"
         android:layout_toEndOf="@id/control_artist_head_iv"
+        android:layout_toStartOf="@id/control_action_play_pause"
         android:ellipsize="end"
         android:lines="1"
         android:text="@string/normal_text" />
@@ -30,6 +39,7 @@
         android:layout_alignStart="@id/control_display_title"
         android:layout_below="@id/control_display_title"
         android:layout_toEndOf="@id/control_artist_head_iv"
+        android:layout_toStartOf="@id/control_action_play_pause"
         android:ellipsize="end"
         android:lines="1"
         android:text="@string/normal_text" />

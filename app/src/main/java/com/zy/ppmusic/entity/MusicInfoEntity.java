@@ -1,86 +1,83 @@
 package com.zy.ppmusic.entity;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import java.io.Serializable;
 
-public class MusicInfoEntity implements Serializable,Parcelable{
-    private String name;
-    private String path;
-    private int length;
+public class MusicInfoEntity implements Serializable{
+    private String mediaId;
+    private String musicName;
+    private String artist;
+    private String queryPath;
+    private long size;//文件大小
+    private long duration;//时长
 
-    public MusicInfoEntity(){
-
+    public MusicInfoEntity() {
     }
 
-    public MusicInfoEntity(String name, int length,String path) {
-        this.name = name;
-        this.length = length;
-        this.path = path;
+    public MusicInfoEntity(String mediaId,String musicName, String artist, String queryPath, long size, long duration) {
+        this.mediaId = mediaId;
+        this.musicName = musicName;
+        this.artist = artist;
+        this.queryPath = queryPath;
+        this.size = size;
+        this.duration = duration;
     }
 
-    protected MusicInfoEntity(Parcel in) {
-        name = in.readString();
-        path = in.readString();
-        length = in.readInt();
+    public String getMusicName() {
+        return musicName;
     }
 
-    public static final Creator<MusicInfoEntity> CREATOR = new Creator<MusicInfoEntity>() {
-        @Override
-        public MusicInfoEntity createFromParcel(Parcel in) {
-            return new MusicInfoEntity(in);
-        }
-
-        @Override
-        public MusicInfoEntity[] newArray(int size) {
-            return new MusicInfoEntity[size];
-        }
-    };
-
-    public String getPath() {
-        return path;
+    public void setMusicName(String musicName) {
+        this.musicName = musicName;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public String getArtist() {
+        return artist;
     }
 
-    public String getName() {
-        return name;
+    public void setArtist(String artist) {
+        this.artist = artist;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getQueryPath() {
+        return queryPath;
     }
 
-    public int getLength() {
-        return length;
+    public void setQueryPath(String queryPath) {
+        this.queryPath = queryPath;
     }
 
-    public void setLength(int length) {
-        this.length = length;
+    public long getSize() {
+        return size;
     }
 
-
-    @Override
-    public int describeContents() {
-        return 0;
+    public void setSize(long size) {
+        this.size = size;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(name);
-        dest.writeString(path);
-        dest.writeInt(length);
+    public long getDuration() {
+        return duration;
+    }
+
+    public void setDuration(long duration) {
+        this.duration = duration;
+    }
+
+    public String getMediaId() {
+        return mediaId;
+    }
+
+    public void setMediaId(String mediaId) {
+        this.mediaId = mediaId;
     }
 
     @Override
     public String toString() {
         return "MusicInfoEntity{" +
-                "name='" + name + '\'' +
-                ", path='" + path + '\'' +
-                ", length=" + length +
+                "musicName='" + musicName + '\'' +
+                ", artist='" + artist + '\'' +
+                ", queryPath='" + queryPath + '\'' +
+                ", size=" + size +
+                ", length=" + duration +
                 '}';
     }
 }

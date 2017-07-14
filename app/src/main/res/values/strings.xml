@@ -18,4 +18,6 @@
     <string name="action_start_pause">开始或者暂停</string>
     <string name="action_next">下一首</string>
     <string name="artist_headset">专辑封面</string>
+    <string name="action_previous">上一首</string>
+    <string name="string_add_all">全部加入播放队列</string>
 </resources>

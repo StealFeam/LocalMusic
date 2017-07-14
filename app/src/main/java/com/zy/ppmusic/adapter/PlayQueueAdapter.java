@@ -10,9 +10,8 @@ import android.widget.TextView;
 
 import com.zy.ppmusic.R;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
+import java.util.Locale;
 
 public class PlayQueueAdapter extends RecyclerView.Adapter{
     private List<MediaBrowserCompat.MediaItem> mData;
@@ -44,6 +43,7 @@ public class PlayQueueAdapter extends RecyclerView.Adapter{
             MediaDescriptionCompat description = mData.get(i).getDescription();
             holder.tvSubTitle.setText(description.getSubtitle());
             holder.tvTitle.setText(description.getTitle());
+            holder.tvPosition.setText(String.format(Locale.CHINA,"%02d",(i+1)));
             holder.tvSubTitle.setTag(mData.get(i));
         }
     }
@@ -59,6 +59,7 @@ public class PlayQueueAdapter extends RecyclerView.Adapter{
     private class PlayQueueHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         private TextView tvTitle;
         private TextView tvSubTitle;
+        private TextView tvPosition;
         private OnQueueItemClickListener onQueueItemClickListener;
 
         private PlayQueueHolder(View itemView,OnQueueItemClickListener l) {
@@ -67,12 +68,13 @@ public class PlayQueueAdapter extends RecyclerView.Adapter{
             itemView.setOnClickListener(this);
             tvSubTitle = (TextView) itemView.findViewById(R.id.queue_item_display_sub_title);
             tvTitle = (TextView) itemView.findViewById(R.id.queue_item_display_title);
+            tvPosition = (TextView) itemView.findViewById(R.id.queue_item_position);
         }
 
         @Override
         public void onClick(View v) {
             if (onQueueItemClickListener != null) {
-                    onQueueItemClickListener.onItemClick(tvSubTitle.getTag(),getAdapterPosition());
+                onQueueItemClickListener.onItemClick(tvSubTitle.getTag(),getAdapterPosition());
             }
         }
     }

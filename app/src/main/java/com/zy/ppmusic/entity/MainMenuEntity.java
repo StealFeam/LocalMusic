@@ -1,9 +1,9 @@
 package com.zy.ppmusic.entity;
 
-import com.zy.ppmusic.MainActivity;
-import com.zy.ppmusic.bl.BlScanActivity;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-public class MainMenuEntity {
+public class MainMenuEntity implements Parcelable{
     private String menuTitle;
     private int menuRes;
 
@@ -14,6 +14,23 @@ public class MainMenuEntity {
         this.menuTitle = menuTitle;
         this.menuRes = menuRes;
     }
+
+    protected MainMenuEntity(Parcel in) {
+        menuTitle = in.readString();
+        menuRes = in.readInt();
+    }
+
+    public static final Creator<MainMenuEntity> CREATOR = new Creator<MainMenuEntity>() {
+        @Override
+        public MainMenuEntity createFromParcel(Parcel in) {
+            return new MainMenuEntity(in);
+        }
+
+        @Override
+        public MainMenuEntity[] newArray(int size) {
+            return new MainMenuEntity[size];
+        }
+    };
 
     public String getMenuTitle() {
         return menuTitle;
@@ -29,5 +46,16 @@ public class MainMenuEntity {
 
     public void setMenuRes(int menuRes) {
         this.menuRes = menuRes;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(menuTitle);
+        dest.writeInt(menuRes);
     }
 }

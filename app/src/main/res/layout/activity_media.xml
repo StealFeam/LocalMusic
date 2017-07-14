@@ -4,19 +4,37 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.zy.ppmusic.MediaActivity">
+    android:clipChildren="false"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context="com.zy.ppmusic.ui.MediaActivity">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/more_function_recycle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layoutManager="GridLayoutManager" />
+
+    <FrameLayout
+        android:id="@+id/function_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_play_card"
+        app:layout_constraintTop_toBottomOf="@id/more_function_recycle" />
 
     <android.support.v7.widget.CardView
+        android:id="@id/bottom_play_card"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/dp70"
-        app:cardElevation="@dimen/dp10"
+        android:layout_height="@dimen/dp60"
+        app:cardBackgroundColor="@android:color/white"
+        app:cardCornerRadius="0dp"
+        app:cardPreventCornerOverlap="false"
+        app:cardUseCompatPadding="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <include android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            layout="@layout/play_control_layout" />
+        <include layout="@layout/play_control_layout" />
 
     </android.support.v7.widget.CardView>
 

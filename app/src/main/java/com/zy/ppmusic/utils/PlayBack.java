@@ -3,6 +3,10 @@ package com.zy.ppmusic.utils;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.TimedMetaData;
+import android.media.TimedText;
+import android.os.Handler;
+import android.os.Message;
 import android.os.PowerManager;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -12,6 +16,7 @@ import android.util.Log;
 import com.zy.ppmusic.service.MediaService;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
@@ -27,7 +32,6 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     private static final int AUDIO_FOCUSED = 2;
 
     private MediaPlayer mMediaPlayer;
-    private MediaMetadataCompat mediaMetadataCompat;
     private final MediaService mMediaService;
     private List<String> mPlayQueue;//当前播放队列
     private volatile int mCurrentPosition;
@@ -35,6 +39,8 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     private CallBack mCallBack;
     private AudioManager audioManager;
     private int mAudioFocus = AUDIO_NO_FOCUS_NO_DUCK;
+
+    private boolean mIsAutoStart = false;
 
     private boolean mPlayOnFocusGain;
     private int mState = PlaybackStateCompat.STATE_NONE;
@@ -61,7 +67,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
         this.mPlayQueue = queue;
     }
 
-    public void onPlay(String mediaId) {
+    public void preparedWithMediaId(String mediaId) {
         mPlayOnFocusGain = true;
         getAudioFocus();
         boolean isChanged = !TextUtils.equals(mediaId, mCurrentMediaId);
@@ -74,13 +80,13 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
         } else {
             mState = PlaybackStateCompat.STATE_STOPPED;
             releasePlayer(false);
-            MediaMetadataCompat musicById = ScanMusicFile.getInstance().getMusicById(mediaId);
+            MediaMetadataCompat musicById = DataTransform.getInstance().getMetadataItem(mediaId);
             createPlayerOrReset();
             mState = PlaybackStateCompat.STATE_BUFFERING;
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             try {
                 mMediaPlayer.setDataSource(musicById.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI));
-                mMediaPlayer.prepareAsync();
+                mMediaPlayer.prepare();
                 if (mCallBack != null) {
                     mCallBack.onPlayBackStateChange(mState);
                 }
@@ -130,7 +136,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
         }
     }
 
-    private void pause() {
+    public void pause() {
         if (mState == PlaybackStateCompat.STATE_PLAYING) {
             if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
                 mMediaPlayer.pause();
@@ -158,32 +164,65 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     }
 
     public boolean isPlaying() {
-        return mPlayOnFocusGain || (mMediaPlayer != null && mMediaPlayer.isPlaying());
+        return mState == PlaybackStateCompat.STATE_PLAYING ||
+                (mMediaPlayer != null && mMediaPlayer.isPlaying());
     }
 
     public void play() {
         if (mMediaPlayer == null) {
             return;
         }
-        if (mMediaPlayer.isPlaying()) {
-            mMediaPlayer.pause();
+        if (mAudioFocus != AUDIO_FOCUSED) {
+            getAudioFocus();
+        }
+        Log.w(TAG, "play: called");
+        if (mState == PlaybackStateCompat.STATE_PLAYING) {
+            if (mMediaPlayer.isPlaying()) {
+                mMediaPlayer.pause();
+                mCurrentPosition = mMediaPlayer.getCurrentPosition();
+            }
             mState = PlaybackStateCompat.STATE_PAUSED;
         } else {
-            mMediaPlayer.start();
+            if (mState == PlaybackStateCompat.STATE_BUFFERING ||
+                    mState == PlaybackStateCompat.STATE_PAUSED) {
+                mMediaPlayer.start();
+            }
             mState = PlaybackStateCompat.STATE_PLAYING;
         }
+
+        if (mCallBack != null) {
+            mCallBack.onPlayBackStateChange(mState);
+        }
+    }
+
+
+    public void seekTo(int position,boolean isAutoStart) {
+        if (mMediaPlayer == null) {
+            return;
+        }
+        if (mAudioFocus != AUDIO_FOCUSED) {
+            getAudioFocus();
+        }
+        mIsAutoStart = isAutoStart;
+        mMediaPlayer.seekTo(position);
+        mState = PlaybackStateCompat.STATE_BUFFERING;
+
         if (mCallBack != null) {
             mCallBack.onPlayBackStateChange(mState);
         }
     }
 
     private void releasePlayer(boolean releasePlayer) {
-        mMediaService.stopForeground(true);
         if (mMediaPlayer != null && releasePlayer) {
             mMediaPlayer.reset();
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
+
+    }
+
+    public String getCurrentMediaId() {
+        return mCurrentMediaId;
     }
 
     public int getCurrentIndex() {
@@ -216,10 +255,14 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
 
     public void stopPlayer() {
         mMediaService.stopForeground(false);
+        mState  = PlaybackStateCompat.STATE_STOPPED;
         if (mMediaPlayer != null) {
             mMediaPlayer.reset();
             mMediaPlayer.release();
             mMediaPlayer = null;
+        }
+        if (mCallBack != null) {
+            mCallBack.onPlayBackStateChange(mState);
         }
     }
 
@@ -299,21 +342,32 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
      */
     @Override
     public void onPrepared(MediaPlayer mp) {
-        Log.e(TAG, "onPrepared: called");
-        configMediaPlayerState();
+        Log.e(TAG, "onPrepared: called " + mMediaPlayer.getCurrentPosition());
+        if (mState == PlaybackStateCompat.STATE_BUFFERING) {
+            mState = PlaybackStateCompat.STATE_PAUSED;
+        }
+        if (mCallBack != null) {
+            mCallBack.onPlayBackStateChange(mState);
+        }
     }
 
     /**
      * 快进到指定位置完成，可以播放了
-     *
      * @param mp 播放器
      */
     @Override
     public void onSeekComplete(MediaPlayer mp) {
         mCurrentPosition = mp.getCurrentPosition();
+        Log.d(TAG, "onSeekComplete() called=" + mCurrentPosition);
+
         if (mState == PlaybackStateCompat.STATE_BUFFERING) {
+            mState = PlaybackStateCompat.STATE_PAUSED;
+        }
+
+        if(mIsAutoStart){
             mMediaPlayer.start();
             mState = PlaybackStateCompat.STATE_PLAYING;
+            mIsAutoStart = false;
         }
         if (mCallBack != null) {
             mCallBack.onPlayBackStateChange(mState);

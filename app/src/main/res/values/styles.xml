@@ -3,8 +3,8 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorPrimary">@color/colorTheme</item>
+        <item name="colorPrimaryDark">@color/colorThemeDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
@@ -19,5 +19,14 @@
 
     <style name="NotificationContent" parent="@android:style/TextAppearance.Small">
         <item name="android:textColor">?android:attr/textColorPrimaryInverse</item>
+    </style>
+
+    <style name="SelfSeekBarStyle">
+        <item name="android:indeterminateOnly">false</item>
+        <item name="android:indeterminateDrawable">@drawable/self_progress_horizontal</item>
+        <item name="android:progressDrawable">@drawable/self_progress_horizontal</item>
+        <item name="android:thumb">@drawable/selector_seek_bar</item>
+        <item name="android:maxHeight">@dimen/dp2</item>
+        <item name="android:minHeight">@dimen/dp2</item>
     </style>
 </resources>
