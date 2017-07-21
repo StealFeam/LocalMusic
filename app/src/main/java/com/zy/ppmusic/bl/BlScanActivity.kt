@@ -44,8 +44,6 @@ class BlScanActivity : AppCompatActivity() {
     private var adapterShowResult: ScanResultAdapter? = null
     private var context: Context? = null
     private var blDeviceFoundReceiver: DeviceFoundReceiver? = null
-
-
     private var receiverManager:LocalBroadcastManager ?=null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,7 +52,7 @@ class BlScanActivity : AppCompatActivity() {
         val toolbar = findViewById(R.id.toolbar_bl) as Toolbar
         setSupportActionBar(toolbar)
 
-        defaultAdapter = BluetoothAdapter.getDefaultAdapter();
+        defaultAdapter = BluetoothAdapter.getDefaultAdapter()
 
         if (defaultAdapter == null) {
             showToast("设备不支持蓝牙")
@@ -108,6 +106,7 @@ class BlScanActivity : AppCompatActivity() {
                         if(defaultAdapter!!.isDiscovering){
                             defaultAdapter!!.cancelDiscovery()
                         }
+                        showToast("连接成功 "+device.name)
                         open(context!!,true)
                         refreshDevice()
                         defaultAdapter!!.startDiscovery()
@@ -332,6 +331,8 @@ class BlScanActivity : AppCompatActivity() {
         if (defaultAdapter != null && defaultAdapter!!.isDiscovering) {
             defaultAdapter!!.cancelDiscovery()
         }
-        open(context!!,false)
+        if(context != null){
+            open(context!!,false)
+        }
     }
 }

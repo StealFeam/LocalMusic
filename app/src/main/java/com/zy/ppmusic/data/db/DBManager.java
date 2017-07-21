@@ -1,10 +1,7 @@
 package com.zy.ppmusic.data.db;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.ResultReceiver;
 
-import com.zy.ppmusic.MusicInfoEntity;
 import com.zy.ppmusic.data.db.dao.DaoMaster;
 import com.zy.ppmusic.data.db.dao.DaoSession;
 import com.zy.ppmusic.entity.MusicDbEntity;

@@ -26,6 +26,7 @@ import android.widget.TextView
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.MainMenuAdapter
 import com.zy.ppmusic.adapter.PlayQueueAdapter
+import com.zy.ppmusic.bl.BlScanActivity
 import com.zy.ppmusic.contract.IMediaActivityContract
 import com.zy.ppmusic.entity.MainMenuEntity
 import com.zy.ppmusic.presenter.MediaPresenterImpl
@@ -33,21 +34,27 @@ import com.zy.ppmusic.ui.fragment.BlScanFragment
 import com.zy.ppmusic.service.MediaService
 import java.lang.ref.WeakReference
 
+/**
+ * 与MediaService两种通信方式：
+ *      1.MediaController.transportControls.playFromMediaId(String, Bundle);//只发送消息（最好与播放器状态相关）
+ *      2.SessionCompat.sendCommand(String,Bundle,ResultReceiver);//需要获取结果
+ *
+ */
 class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
     private var mMediaBrowser: MediaBrowserCompat? = null
     var mMediaId: String? = null
-    var mediaController: MediaControllerCompat? = null
-    var playQueue: MutableList<MediaBrowserCompat.MediaItem>? = null
+    var mMediaController: MediaControllerCompat? = null
+    var mPlayQueueList: MutableList<MediaBrowserCompat.MediaItem>? = null
     var ivNextAction: ImageView? = null
     var ivPlayAction: ImageView? = null
     var ivMenuAction: ImageView? = null
     var tvDisPlayName: TextView? = null
     var tvSubName: TextView? = null
-    var queueRecycle: RecyclerView? = null
-    var queueDialog: BottomSheetDialog? = null
-    var queueAdapter: PlayQueueAdapter? = null
-    var currentMediaId: String? = null
-    var displayProgress: SeekBar? = null
+    var mQueueRecycler: RecyclerView? = null
+    var mBottomQueueDialog: BottomSheetDialog? = null
+    var mBottomQueueAdapter: PlayQueueAdapter? = null
+    var mCurrentMediaIdStr: String? = null
+    var mProgressSeekBar: SeekBar? = null
     var endPosition: Long = 0//结束位置
     var stepPosition: Long = 0//自增量
     var startPosition: Long = 0//起始位置
@@ -97,7 +104,7 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
                     startPosition = position
                     percent = ((startPosition * 1.0f) / endPosition * 1.0f)
                     if (mIsTrackingBar!!.not()) {
-                        displayProgress!!.progress = (percent * 100f).toInt()
+                        mProgressSeekBar!!.progress = (percent * 100f).toInt()
                     }
                 }
                 else -> {
@@ -133,28 +140,31 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
 
         adapter.setListener { _, position -> //view,position
             val beginTransaction = mFragmentManager!!.beginTransaction()
-
             when(position){
                 0->{//刷新播放列表
-                    mPresenter!!.refreshQueue()
+                    mPresenter!!.refreshQueue(applicationContext)
                 }
                 1->{
-                    if(mFragmentMap!![BlScanFragment.TAG] == null){
-                        mFragmentMap!!.put(BlScanFragment.TAG, BlScanFragment())
-                        beginTransaction.add(R.id.function_content,mFragmentMap!![BlScanFragment.TAG])
-                    }
-                    if(mFragmentMap!![BlScanFragment.TAG]!!.isHidden){
-                        beginTransaction.show(mFragmentMap!![BlScanFragment.TAG])
-                    }else{
-                        beginTransaction.hide(mFragmentMap!![BlScanFragment.TAG])
-                    }
+//                    var isInit = false
+//                    if(mFragmentMap!![BlScanFragment.TAG] == null){
+//                        mFragmentMap!!.put(BlScanFragment.TAG, BlScanFragment())
+//                        beginTransaction.add(R.id.function_content,mFragmentMap!![BlScanFragment.TAG])
+//                        isInit = true
+//                    }
+//                    if(mFragmentMap!![BlScanFragment.TAG]!!.isHidden || isInit){
+//                        beginTransaction.show(mFragmentMap!![BlScanFragment.TAG])
+//                    }else{
+//                        beginTransaction.hide(mFragmentMap!![BlScanFragment.TAG])
+//                    }
+                    val intent = Intent(this@MediaActivity,BlScanActivity::class.java)
+                    startActivity(intent)
                 }
             }
             beginTransaction.commitNowAllowingStateLoss()
         }
 
-        displayProgress = findViewById(R.id.control_display_progress) as SeekBar
-        displayProgress!!.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        mProgressSeekBar = findViewById(R.id.control_display_progress) as SeekBar
+        mProgressSeekBar!!.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
             }
 
@@ -167,7 +177,7 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
                 val extra = Bundle()
                 extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_SEEK_TO)
                 extra.putInt("position", (seekBar!!.progress * stepPosition).toInt())
-                mediaController!!.transportControls.playFromMediaId(currentMediaId, extra)
+                mMediaController!!.transportControls.playFromMediaId(mCurrentMediaIdStr, extra)
                 mIsTrackingBar = false
             }
         })
@@ -176,47 +186,46 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
         tvSubName = findViewById(R.id.control_display_sub_title) as TextView
 
         ivNextAction!!.setOnClickListener({
-            mediaController!!.transportControls.skipToNext()
+            mMediaController!!.transportControls.skipToNext()
         })
 
         ivPlayAction!!.setOnClickListener({
             //初始化的时候点击的按钮直接播放当前的media
             val extra = Bundle()
-            if (mediaController!!.playbackState.state == PlaybackStateCompat.STATE_PLAYING) {
+            if (mMediaController!!.playbackState.state == PlaybackStateCompat.STATE_PLAYING) {
                 extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_OR_PAUSE)
             } else {
                 extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_WITH_ID)
             }
-            mediaController!!.transportControls.playFromMediaId(currentMediaId, extra)
+            mMediaController!!.transportControls.playFromMediaId(mCurrentMediaIdStr, extra)
         })
 
         ivMenuAction!!.setOnClickListener({
-            queueDialog = BottomSheetDialog(this@MediaActivity)
+            mBottomQueueDialog = BottomSheetDialog(this@MediaActivity)
             val contentView = LayoutInflater.from(this@MediaActivity).inflate(R.layout.play_queue_layout, null)
-            queueDialog!!.setContentView(contentView)
-            queueRecycle = contentView.findViewById(R.id.control_queue_recycle) as RecyclerView
-            println("plauQueue.size="+playQueue!!.size)
-            queueAdapter = PlayQueueAdapter(playQueue)
-            queueAdapter!!.setOnQueueItemClickListener { obj, _ ->
+            mBottomQueueDialog!!.setContentView(contentView)
+            mQueueRecycler = contentView.findViewById(R.id.control_queue_recycle) as RecyclerView
+            mBottomQueueAdapter = PlayQueueAdapter(mPlayQueueList)
+            mBottomQueueAdapter!!.setOnQueueItemClickListener { obj, _ ->
                 if (obj is MediaBrowserCompat.MediaItem) {
                     //点击播放列表直接播放选中的media
                     val extra = Bundle()
                     extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_WITH_ID)
-                    mediaController!!.transportControls.playFromMediaId(obj.mediaId, extra)
+                    mMediaController!!.transportControls.playFromMediaId(obj.mediaId, extra)
                 }
-                if (queueDialog!!.isShowing) {
-                    queueDialog!!.cancel()
-                    queueDialog!!.dismiss()
+                if (mBottomQueueDialog!!.isShowing) {
+                    mBottomQueueDialog!!.cancel()
+                    mBottomQueueDialog!!.dismiss()
                 }
             }
-            queueRecycle!!.adapter = queueAdapter
-            queueRecycle!!.layoutManager = LinearLayoutManager(this)
-            queueDialog!!.show()
+            mQueueRecycler!!.adapter = mBottomQueueAdapter
+            mQueueRecycler!!.layoutManager = LinearLayoutManager(this)
+            mBottomQueueDialog!!.show()
         })
     }
 
     override fun refreshQueue(mPathList: java.util.ArrayList<String>?) {
-
+        mMediaController!!.sendCommand(MediaService.COMMAND_UPDATE_QUEUE,null,mResultReceive)
     }
 
     override fun onStart() {
@@ -238,11 +247,11 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
             println("connected service....")
             mMediaId = mMediaBrowser!!.root
             mMediaBrowser!!.subscribe(mMediaId!!, subscriptionCallBack)
-            mediaController = MediaControllerCompat(this@MediaActivity, mMediaBrowser!!.sessionToken)
+            mMediaController = MediaControllerCompat(this@MediaActivity, mMediaBrowser!!.sessionToken)
             mResultReceive = MediaResultReceive(Handler())
-            mLooperHandler = LoopHandler(mediaController!!, mResultReceive!!)
-            MediaControllerCompat.setMediaController(this@MediaActivity, mediaController)
-            mediaController!!.registerCallback(mControllerCallBack)
+            mLooperHandler = LoopHandler(mMediaController!!, mResultReceive!!)
+            MediaControllerCompat.setMediaController(this@MediaActivity, mMediaController)
+            mMediaController!!.registerCallback(mControllerCallBack)
         }
 
         override fun onConnectionSuspended() {
@@ -270,30 +279,30 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
         override fun onChildrenLoaded(parentId: String, children: MutableList<MediaBrowserCompat.MediaItem>) {
             super.onChildrenLoaded(parentId, children)
             println("onChildrenLoaded.....activity")
-            if (queueAdapter != null) {
-                queueAdapter!!.setData(children)
+            if (mBottomQueueAdapter != null) {
+                mBottomQueueAdapter!!.setData(children)
             }
-            playQueue = children
-            if (playQueue != null && playQueue!!.size > 0) {
+            mPlayQueueList = children
+            if (mPlayQueueList != null && mPlayQueueList!!.size > 0) {
                 //如果当前在播放状态
-                if (mediaController!!.playbackState.state != PlaybackStateCompat.STATE_NONE) {
-                    val metadata = mediaController!!.metadata
+                if (mMediaController!!.playbackState.state != PlaybackStateCompat.STATE_NONE) {
+                    val metadata = mMediaController!!.metadata
                     //请求获取当前播放位置
                     if (metadata != null) {
-                        currentMediaId = metadata.description.mediaId
+                        mCurrentMediaIdStr = metadata.description.mediaId
                         val displayTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE)
                         val subTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE)
                         endPosition = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
                         mLooperHandler!!.sendEmptyMessage(0)
                         setMediaInfo(displayTitle, subTitle)
                     }
-                    handlePlayState(mediaController!!.playbackState.state)
+                    handlePlayState(mMediaController!!.playbackState.state)
                 } else {
-                    setMediaInfo(playQueue!![0].description.title as String, playQueue!![0].description.subtitle as String)
-                    currentMediaId = playQueue!![0].mediaId
+                    setMediaInfo(mPlayQueueList!![0].description.title as String, mPlayQueueList!![0].description.subtitle as String)
+                    mCurrentMediaIdStr = mPlayQueueList!![0].mediaId
                     val extra = Bundle()
                     extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_INIT)
-                    mediaController!!.transportControls.playFromMediaId(currentMediaId, extra)
+                    mMediaController!!.transportControls.playFromMediaId(mCurrentMediaIdStr, extra)
                 }
             }
         }
@@ -313,7 +322,7 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
             super.onMetadataChanged(metadata)
             println("onMetadataChanged called")
             if (metadata != null) {
-                currentMediaId = metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
+                mCurrentMediaIdStr = metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID)
                 val displayTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE)
                 val subTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE)
                 endPosition = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
@@ -327,9 +336,11 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
         //播放列表变化回调
         override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
             super.onQueueChanged(queue)
-            queue!!.forEachIndexed { _, queueItem ->
+            println("queueSize="+queue!!.size)
+            queue.forEachIndexed { _, queueItem ->
                 println(queueItem.toString())
             }
+
         }
 
         override fun onRepeatModeChanged(repeatMode: Int) {
@@ -344,7 +355,7 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
                 println("position=" + state.position + ",buffer=" + state.bufferedPosition)
                 startPosition = state.position
                 percent = ((startPosition * 1.0f) / endPosition * 1.0f)
-                displayProgress!!.progress = (percent * 100f).toInt()
+                mProgressSeekBar!!.progress = (percent * 100f).toInt()
                 handlePlayState(state.state)
             })
         }
@@ -369,7 +380,7 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
             stopLoop()
             ivPlayAction!!.setImageResource(R.drawable.ic_black_play)
             if(state == PlaybackStateCompat.STATE_STOPPED){
-                displayProgress!!.progress = 0
+                mProgressSeekBar!!.progress = 0
             }
         } else {
             startLoop()
@@ -382,7 +393,7 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
             mLooperHandler!!.removeCallbacksAndMessages(null)
             mLooperHandler = null
         }
-        mLooperHandler = LoopHandler(mediaController!!, mResultReceive!!)
+        mLooperHandler = LoopHandler(mMediaController!!, mResultReceive!!)
         mLooperHandler!!.sendEmptyMessage(0)
     }
 
@@ -419,6 +430,9 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
 
     override fun onDestroy() {
         super.onDestroy()
+        if(mPresenter != null){
+            mPresenter!!.destroyView()
+        }
         println("MediaActivity is destroy")
     }
 }

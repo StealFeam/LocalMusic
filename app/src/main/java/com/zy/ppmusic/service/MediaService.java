@@ -40,6 +40,7 @@ import java.util.Objects;
 
 public class MediaService extends MediaBrowserServiceCompat {
     private static final String TAG = "MediaService";
+    /*-------------------play action--------------------------*/
     //播放指定id
     public static final String ACTION_PLAY_WITH_ID = "PLAY_WITH_ID";
     //缓冲指定id
@@ -51,13 +52,22 @@ public class MediaService extends MediaBrowserServiceCompat {
     //快进
     public static final String ACTION_SEEK_TO = "SEEK_TO";
 
+    /*-------------------play action end--------------------------*/
+
     //获取参数
     public static final String ACTION_PARAM = "ACTION_PARAM";
 
+
+    /*-------------------command action--------------------------*/
     //获取播放位置
     public static final String COMMAND_POSITION = "COMMAND_POSITION";
     //获取播放位置 resultCode
     public static final int COMMAND_POSITION_CODE = 0x001;
+
+    //更新播放列表
+    public static final String COMMAND_UPDATE_QUEUE = "COMMAND_UPDATE_QUEUE";
+    /*-------------------command action end--------------------------*/
+
 
     //通知的id
     public static final int NOTIFY_ID = 412;
@@ -158,12 +168,12 @@ public class MediaService extends MediaBrowserServiceCompat {
                     mQueueItemList = DataTransform.getInstance().getQueueItemList();
                     mPlayQueueMediaId = DataTransform.getInstance().getMediaIdList();
                     mPlayBack.setPlayQueue(mPlayQueueMediaId);
+                    mMediaSessionCompat.setQueue(mQueueItemList);
                     result.sendResult(mMediaItemList);
                 } else {
                     ScanMusicFile.getInstance().scanMusicFile(this).setOnScanComplete(new ScanMusicFile.OnScanComplete() {
                         @Override
                         protected void onComplete(ArrayList<String> paths) {
-                            Log.e(TAG, "onComplete: service "+paths);
                             DataTransform.getInstance().transFormData(getApplicationContext(),paths);
                             mMediaItemList = DataTransform.getInstance().getMediaItemList();
                             mQueueItemList = DataTransform.getInstance().getQueueItemList();
@@ -250,8 +260,8 @@ public class MediaService extends MediaBrowserServiceCompat {
     /**
      * 当播放状态发生改变时
      *
-     * @param errorCode
-     * @param error
+     * @param errorCode 错误代码
+     * @param error 错误描述
      */
     private void onPlayStateChange(int errorCode, String error) {
         Log.d(TAG, "onPlayStateChange() called with: " + mPlayBack.getState());
@@ -306,6 +316,20 @@ public class MediaService extends MediaBrowserServiceCompat {
         } else {
             mPlayBack.stopPlayer();
         }
+    }
+
+    /**
+     * 更新列表
+     */
+    private void updateQueue(){
+        mMediaItemList = DataTransform.getInstance().getMediaItemList();
+        mQueueItemList = DataTransform.getInstance().getQueueItemList();
+        mPlayQueueMediaId = DataTransform.getInstance().getMediaIdList();
+        mPlayBack.setPlayQueue(mPlayQueueMediaId);
+        mMediaSessionCompat.setQueue(mQueueItemList);
+        //覆盖本地缓存
+        FileUtils.saveObject(DataTransform.getInstance().getMusicInfoEntities(),
+                getCacheDir().getAbsolutePath());
     }
 
     /**
@@ -415,6 +439,9 @@ public class MediaService extends MediaBrowserServiceCompat {
                 case COMMAND_POSITION:
                     extra.putInt("position", mPlayBack.getCurrentStreamPosition());
                     cb.send(COMMAND_POSITION_CODE, extra);
+                    break;
+                case COMMAND_UPDATE_QUEUE:
+                    updateQueue();
                     break;
                 default:
                     System.out.println("onCommand no match");
