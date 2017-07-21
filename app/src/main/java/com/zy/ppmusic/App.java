@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
-public class App extends Application{
+public class App extends Application {
     public static final String LOCAL_DATA_TABLE_NAME = "CACHE_PATH_LIST";
 
     @Override
