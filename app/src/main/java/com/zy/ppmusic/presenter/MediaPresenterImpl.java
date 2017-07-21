@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.zy.ppmusic.contract.IMediaActivityContract;
 import com.zy.ppmusic.model.MediaModelImpl;
+import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.ScanMusicFile;
 
 import java.lang.ref.WeakReference;
@@ -19,10 +20,11 @@ public class MediaPresenterImpl implements IMediaActivityContract.IPresenter {
     }
 
     @Override
-    public void refreshQueue(Context context) {
+    public void refreshQueue(final Context context) {
        mModel.refreshQueue(context,new ScanMusicFile.OnScanComplete() {
            @Override
            protected void onComplete(ArrayList<String> paths) {
+               DataTransform.getInstance().transFormData(context,paths);
                if (mViewWeak.get() != null) {
                    mViewWeak.get().refreshQueue(paths);
                }

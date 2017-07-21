@@ -92,8 +92,10 @@ public class ScanMusicFile {
                 switch (msg.what) {
                     case SCAN_COMPLETE:
                         if (scanMusicFile.callBackList.size() > 0) {
-                            for (OnScanComplete onScanComplete : scanMusicFile.callBackList) {
+                            for (int i = scanMusicFile.callBackList.size() - 1; i >= 0; i--) {
+                                OnScanComplete onScanComplete = scanMusicFile.callBackList.get(i);
                                 onScanComplete.onComplete(scanMusicFile.mPathList);
+                                scanMusicFile.callBackList.remove(onScanComplete);
                             }
                         }
                         break;
@@ -133,6 +135,7 @@ public class ScanMusicFile {
             if (file.getName().endsWith(format)) {
                 double size = ((double) file.length() / 1024d) / 1024d;
                 if (size > 1d) {
+                    Log.w(TAG, file.getAbsolutePath());
                     mPathList.add(file.getAbsolutePath());
                     mHandler.sendEmptyMessage(COUNT_CHANGE);
                 }

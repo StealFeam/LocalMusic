@@ -45,8 +45,6 @@ public class MediaService extends MediaBrowserServiceCompat {
     public static final String ACTION_PLAY_WITH_ID = "PLAY_WITH_ID";
     //缓冲指定id
     public static final String ACTION_PREPARED_WITH_ID = "PREPARED_WITH_ID";
-    //播放或者暂停
-    public static final String ACTION_PLAY_OR_PAUSE = "PLAY_OR_PAUSE";
     //初始化播放器
     public static final String ACTION_PLAY_INIT = "PLAY_INIT";
     //快进
@@ -67,6 +65,9 @@ public class MediaService extends MediaBrowserServiceCompat {
     //更新播放列表
     public static final String COMMAND_UPDATE_QUEUE = "COMMAND_UPDATE_QUEUE";
     /*-------------------command action end--------------------------*/
+
+    //播放列表为空，本地未搜索到曲目
+    public static final String ERROR_PLAY_QUEUE = "ERROR_PLAY_QUEUE";
 
 
     //通知的id
@@ -151,7 +152,11 @@ public class MediaService extends MediaBrowserServiceCompat {
     @Nullable
     @Override
     public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUId, @Nullable Bundle bundle) {
-        return new BrowserRoot(clientPackageName, bundle);
+        if(clientPackageName.equals(getPackageName())){
+            return new BrowserRoot(clientPackageName, bundle);
+        }else{
+            return null;
+        }
     }
 
     @Override
@@ -174,6 +179,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                     ScanMusicFile.getInstance().scanMusicFile(this).setOnScanComplete(new ScanMusicFile.OnScanComplete() {
                         @Override
                         protected void onComplete(ArrayList<String> paths) {
+                            System.out.println("service onComplete called");
                             DataTransform.getInstance().transFormData(getApplicationContext(),paths);
                             mMediaItemList = DataTransform.getInstance().getMediaItemList();
                             mQueueItemList = DataTransform.getInstance().getQueueItemList();
@@ -322,7 +328,10 @@ public class MediaService extends MediaBrowserServiceCompat {
      * 更新列表
      */
     private void updateQueue(){
+
         mMediaItemList = DataTransform.getInstance().getMediaItemList();
+        Log.e(TAG, "updateQueue: "+mMediaItemList.toString() );
+
         mQueueItemList = DataTransform.getInstance().getQueueItemList();
         mPlayQueueMediaId = DataTransform.getInstance().getMediaIdList();
         mPlayBack.setPlayQueue(mPlayQueueMediaId);
@@ -345,10 +354,16 @@ public class MediaService extends MediaBrowserServiceCompat {
             if (extras != null) {
                 String action = extras.getString(ACTION_PARAM);
                 Log.d(TAG, "onPlayFromMediaId: extra=" + action);
-                if (ACTION_PLAY_OR_PAUSE.equals(action)) {//开始暂停请求
-                    handlePlayOrPauseRequest();
-                } else if (ACTION_PREPARED_WITH_ID.equals(action)) {//缓冲请求
-                    onMediaChange(mediaId);
+                if (ACTION_PREPARED_WITH_ID.equals(action)) {//缓冲请求
+                    if("-1".equals(mediaId)){
+                        if(mPlayQueueMediaId != null && mPlayQueueMediaId.size() > 0){
+                            onMediaChange(mPlayQueueMediaId.get(0));
+                        }else{
+                            mMediaSessionCompat.sendSessionEvent("error",null);
+                        }
+                    }else{
+                        onMediaChange(mediaId);
+                    }
                 } else if (ACTION_PLAY_WITH_ID.equals(action)) {//播放指定id请求
                     //如果和当前的mediaId相同则视为暂停或播放操作，不同则替换曲目
                     if (!Objects.equals(mediaId, mCurrentMedia != null ?
@@ -367,6 +382,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                 }else if(ACTION_SEEK_TO.equals(action)){
                     int seekPosition = extras.getInt("position");
                     mPlayBack.seekTo(seekPosition,true);
+                    Log.e(TAG, "onPlayFromMediaId: "+seekPosition);
                 }else {
                     onMediaChange(mediaId);
                 }
@@ -438,7 +454,9 @@ public class MediaService extends MediaBrowserServiceCompat {
             switch (command) {
                 case COMMAND_POSITION:
                     extra.putInt("position", mPlayBack.getCurrentStreamPosition());
-                    cb.send(COMMAND_POSITION_CODE, extra);
+                    if(cb != null){
+                        cb.send(COMMAND_POSITION_CODE, extra);
+                    }
                     break;
                 case COMMAND_UPDATE_QUEUE:
                     updateQueue();

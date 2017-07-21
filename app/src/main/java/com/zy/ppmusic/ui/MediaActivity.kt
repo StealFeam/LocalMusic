@@ -23,6 +23,7 @@ import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.Toast
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.MainMenuAdapter
 import com.zy.ppmusic.adapter.PlayQueueAdapter
@@ -30,7 +31,6 @@ import com.zy.ppmusic.bl.BlScanActivity
 import com.zy.ppmusic.contract.IMediaActivityContract
 import com.zy.ppmusic.entity.MainMenuEntity
 import com.zy.ppmusic.presenter.MediaPresenterImpl
-import com.zy.ppmusic.ui.fragment.BlScanFragment
 import com.zy.ppmusic.service.MediaService
 import java.lang.ref.WeakReference
 
@@ -63,8 +63,6 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
     var mResultReceive: MediaResultReceive? = null//媒体播放进度处理
     var mIsTrackingBar: Boolean? = false//是否正在拖动进度条
     var mFunctionRecycler:RecyclerView?=null
-    var mFragmentManager:FragmentManager ?= null
-    var mFragmentMap:ArrayMap<String,Fragment> ?= null
     var mPresenter:IMediaActivityContract.IPresenter ?=null
     /*
      * kotlin静态内部类
@@ -80,8 +78,10 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
             super.handleMessage(msg)
             when (msg!!.what) {
                 0 -> { //开始循环
-                    mMediaController.get()!!.sendCommand(MediaService.COMMAND_POSITION, null, mReceiver.get()!!)
-                    this.sendEmptyMessageDelayed(0, 1000)
+                    if(mMediaController.get() !=null){
+                        mMediaController.get()!!.sendCommand(MediaService.COMMAND_POSITION, null, mReceiver.get()!!)
+                        this.sendEmptyMessageDelayed(0, 1000)
+                    }
                 }
                 else -> {//结束循环
                     this.removeCallbacksAndMessages(null)
@@ -117,8 +117,6 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media)
-        val serviceComponentName = ComponentName(this, MediaService::class.java)
-        mMediaBrowser = MediaBrowserCompat(this, serviceComponentName, mConnectionCallBack, null)
 
         ivNextAction = findViewById(R.id.control_action_next) as ImageView
         ivPlayAction = findViewById(R.id.control_action_play_pause) as ImageView
@@ -134,33 +132,17 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
         val adapter = MainMenuAdapter(dataList)
         mFunctionRecycler!!.adapter = adapter
         mFunctionRecycler!!.layoutManager = GridLayoutManager(this,2)
-        mFragmentManager = supportFragmentManager
-
-        mFragmentMap = ArrayMap()
 
         adapter.setListener { _, position -> //view,position
-            val beginTransaction = mFragmentManager!!.beginTransaction()
             when(position){
                 0->{//刷新播放列表
                     mPresenter!!.refreshQueue(applicationContext)
                 }
                 1->{
-//                    var isInit = false
-//                    if(mFragmentMap!![BlScanFragment.TAG] == null){
-//                        mFragmentMap!!.put(BlScanFragment.TAG, BlScanFragment())
-//                        beginTransaction.add(R.id.function_content,mFragmentMap!![BlScanFragment.TAG])
-//                        isInit = true
-//                    }
-//                    if(mFragmentMap!![BlScanFragment.TAG]!!.isHidden || isInit){
-//                        beginTransaction.show(mFragmentMap!![BlScanFragment.TAG])
-//                    }else{
-//                        beginTransaction.hide(mFragmentMap!![BlScanFragment.TAG])
-//                    }
                     val intent = Intent(this@MediaActivity,BlScanActivity::class.java)
                     startActivity(intent)
                 }
             }
-            beginTransaction.commitNowAllowingStateLoss()
         }
 
         mProgressSeekBar = findViewById(R.id.control_display_progress) as SeekBar
@@ -192,12 +174,17 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
         ivPlayAction!!.setOnClickListener({
             //初始化的时候点击的按钮直接播放当前的media
             val extra = Bundle()
-            if (mMediaController!!.playbackState.state == PlaybackStateCompat.STATE_PLAYING) {
-                extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_OR_PAUSE)
+            if(mMediaController!!.playbackState.state == PlaybackStateCompat.STATE_NONE){
+                extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PREPARED_WITH_ID)
             } else {
                 extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_WITH_ID)
             }
-            mMediaController!!.transportControls.playFromMediaId(mCurrentMediaIdStr, extra)
+            if(mCurrentMediaIdStr != null){
+                mMediaController!!.transportControls.playFromMediaId(mCurrentMediaIdStr, extra)
+            }else{
+                println("播放列表为空")
+                mMediaController!!.transportControls.playFromMediaId("-1", extra)
+            }
         })
 
         ivMenuAction!!.setOnClickListener({
@@ -230,7 +217,26 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
 
     override fun onStart() {
         super.onStart()
+        val serviceComponentName = ComponentName(this, MediaService::class.java)
+        mMediaBrowser = MediaBrowserCompat(this, serviceComponentName, mConnectionCallBack, null)
         mMediaBrowser!!.connect()
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        if(mMediaBrowser != null){
+            mMediaBrowser!!.connect()
+        }
+        startLoop()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateMediaInfoAndPosition()
+    }
+
+    private fun updateMediaInfoAndPosition() {
+
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -293,6 +299,8 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
                         val displayTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE)
                         val subTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE)
                         endPosition = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
+                        stepPosition = endPosition / 100L
+                        startPosition = 0
                         mLooperHandler!!.sendEmptyMessage(0)
                         setMediaInfo(displayTitle, subTitle)
                     }
@@ -362,7 +370,10 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
 
         override fun onSessionEvent(event: String?, extras: Bundle?) {
             super.onSessionEvent(event, extras)
-            println("onSessionEvent.....")
+            println("onSessionEvent....."+event)
+            if(MediaService.ERROR_PLAY_QUEUE == event){
+                showMsg("本地未发现支持的曲目")
+            }
         }
 
         override fun onExtrasChanged(extras: Bundle?) {
@@ -404,6 +415,10 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
         }
     }
 
+    fun showMsg(msg:String){
+        Toast.makeText(this@MediaActivity,msg,Toast.LENGTH_SHORT).show()
+    }
+
     /**
      * 更新媒体信息
      */
@@ -412,8 +427,14 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
         tvSubName!!.text = subTitle
     }
 
+    override fun onPause() {
+        super.onPause()
+        println("onPause called")
+    }
+
     override fun onStop() {
         super.onStop()
+        println("onStop called")
         //释放控制器
         val mediaController = MediaControllerCompat.getMediaController(this@MediaActivity)
         if (mediaController != null) {
@@ -426,6 +447,7 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
         mMediaBrowser!!.unsubscribe(mMediaId!!, subscriptionCallBack)
         //断开与媒体服务的链接
         mMediaBrowser!!.disconnect()
+        mMediaBrowser = null
     }
 
     override fun onDestroy() {

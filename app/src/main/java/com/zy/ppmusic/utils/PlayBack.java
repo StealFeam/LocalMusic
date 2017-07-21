@@ -33,7 +33,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
 
     private MediaPlayer mMediaPlayer;
     private final MediaService mMediaService;
-    private List<String> mPlayQueue;//当前播放队列
+    private volatile List<String> mPlayQueue;//当前播放队列
     private volatile int mCurrentPosition;
     private volatile String mCurrentMediaId;
     private CallBack mCallBack;
@@ -203,6 +203,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
         if (mAudioFocus != AUDIO_FOCUSED) {
             getAudioFocus();
         }
+        System.out.println("seek to "+position+","+isAutoStart);
         mIsAutoStart = isAutoStart;
         mMediaPlayer.seekTo(position);
         mState = PlaybackStateCompat.STATE_BUFFERING;
@@ -234,6 +235,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     }
 
     public String onSkipToNext() {
+        checkPlayQueue();
         int queueIndex = mPlayQueue.indexOf(mCurrentMediaId);
         if (queueIndex == (mPlayQueue.size() - 1)) {
             queueIndex = -1;
@@ -241,6 +243,12 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
         String nextMediaId = mPlayQueue.get(++queueIndex);
         Log.d(TAG, "onSkipToNext() called..." + queueIndex);
         return nextMediaId;
+    }
+
+    private void checkPlayQueue() {
+        if(mPlayQueue == null){
+            mPlayQueue = DataTransform.getInstance().getPathList();
+        }
     }
 
     public String onSkipToPrevious() {
