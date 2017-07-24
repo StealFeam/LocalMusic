@@ -99,6 +99,11 @@ public class DataTransform {
                         long duration = query.getLong(query.getColumnIndex(MediaStore.Audio.Media.DURATION));
                         String size = query.getString(query.getColumnIndex(MediaStore.Audio.Media.SIZE));
                         String queryPath = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DATA));
+                        //过滤小于20s的文件
+                        if(duration < 20 * 1000){
+                            continue;
+                        }
+
                         builder = new MediaMetadataCompat.Builder();
                         //唯一id
                         builder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, String.valueOf(queryPath.hashCode()));
@@ -138,6 +143,13 @@ public class DataTransform {
                 builder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, itemPath);
                 builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, musicName);
 
+                //作者
+                builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, "未知");
+                //作者
+                builder.putString(MediaMetadataCompat.METADATA_KEY_AUTHOR, "未知");
+                //时长
+                builder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, 0);
+
                 MediaMetadataCompat metadataCompatItem = builder.build();
 
                 mapMetadataArray.put(String.valueOf(itemPath.hashCode()), metadataCompatItem);
@@ -158,7 +170,6 @@ public class DataTransform {
             }
             oldUri = audioUri;
         }
-
         Log.d(TAG, "queryResolver() called with: context = [" + context + "]");
     }
 

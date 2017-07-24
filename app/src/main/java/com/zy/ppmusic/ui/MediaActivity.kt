@@ -7,8 +7,6 @@ import android.os.Handler
 import android.os.Message
 import android.os.ResultReceiver
 import android.support.design.widget.BottomSheetDialog
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -18,7 +16,6 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.util.ArrayMap
 import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.SeekBar

@@ -13,23 +13,19 @@
         android:required="true" />
 
     <application
+        android:name=".App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_music_normal"
         android:label="@string/app_name"
-        android:name=".App"
-        android:supportsRtl="true"
         android:roundIcon="@drawable/ic_music_normal_round"
+        android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity
             android:name=".bl.BlScanActivity"
             android:label="@string/bl_title"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"></activity>
 
-        </activity>
-
-        <receiver android:name=".receiver.KeyDownReceiver">
-        </receiver>
+        <receiver android:name=".receiver.KeyDownReceiver"></receiver>
 
         <service
             android:name=".service.MediaService"
@@ -45,8 +41,17 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".ui.MediaActivity"
+        <activity
+            android:name=".ui.MediaActivity"
             android:launchMode="singleTop">
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.MAIN" />-->
+
+                <!--<category android:name="android.intent.category.LAUNCHER" />-->
+            <!--</intent-filter>-->
+        </activity>
+        <activity android:name=".ui.SplashActivity"
+            android:theme="@style/AppTheme.SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

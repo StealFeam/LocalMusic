@@ -1,0 +1,4 @@
+<resources>
+    <string name="rationale_ask_again" translatable="false">如果没有这些权限应用将无法正常运行，打开应用设置去允许</string>
+    <string name="title_settings_dialog" translatable="false">权限申请</string>
+</resources>

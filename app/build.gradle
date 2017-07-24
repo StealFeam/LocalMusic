@@ -47,6 +47,10 @@ dependencies {
     implementation 'com.jakewharton:disklrucache:2.0.2'
     // add library
     implementation 'com.google.code.gson:gson:2.8.0'
+    implementation project(':easypermissions')
 }
+
 buildscript {
 }
+
+apply plugin: 'kotlin-android-extensions'

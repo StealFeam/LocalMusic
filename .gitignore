@@ -7,3 +7,5 @@
 /build
 /captures
 .externalNativeBuild
+/easypermissions/build
+/easypermissions/*.iml

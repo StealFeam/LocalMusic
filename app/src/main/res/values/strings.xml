@@ -1,15 +1,11 @@
 <resources>
     <string name="app_name">LMusicPlayer</string>
-
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
-
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">设置</string>
     <string name="app_subtitle">日常听歌的好帮手</string>
     <string name="local_music">LocalMusic</string>
     <string name="email">2295573743@qq.com</string>
     <string name="bl_title">蓝牙</string>
-    <string name="normal_text">nomal text</string>
+    <string name="normal_text">normal text</string>
     <string name="scan_result_icon">扫描设备的标识</string>
     <string name="menu_refresh">刷新</string>
     <string name="mic_head">音乐头像</string>
@@ -20,4 +16,8 @@
     <string name="artist_headset">专辑封面</string>
     <string name="action_previous">上一首</string>
     <string name="string_add_all">全部加入播放队列</string>
+    <string name="string_read_external">android.permission.READ_EXTERNAL_STORAGE</string>
+    <string name="string_write_external">android.permission.WRITE_EXTERNAL_STORAGE</string>
+    <string name="string_permission_read">只有得到本地存储权限才能获取到本地媒体文件</string>
+    <string name="exit">退出</string>
 </resources>
