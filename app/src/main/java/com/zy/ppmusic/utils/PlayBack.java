@@ -80,17 +80,17 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
         } else {
             mState = PlaybackStateCompat.STATE_STOPPED;
             releasePlayer(false);
-            MediaMetadataCompat musicById = DataTransform.getInstance().getMetadataItem(mediaId);
+            int index = DataTransform.getInstance().getMediaIndex(mediaId);
             createPlayerOrReset();
             mState = PlaybackStateCompat.STATE_BUFFERING;
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             try {
-                mMediaPlayer.setDataSource(musicById.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI));
+                Log.e(TAG, "onPlay: music init complete index="+index+" path=" + DataTransform.getInstance().getPath(index));
+                mMediaPlayer.setDataSource(DataTransform.getInstance().getPath(index));
                 mMediaPlayer.prepare();
                 if (mCallBack != null) {
                     mCallBack.onPlayBackStateChange(mState);
                 }
-                Log.e(TAG, "onPlay: music init complete path=" + musicById.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI));
             } catch (IOException e) {
                 Log.e(TAG, "onPlay: " + e.getMessage());
                 if (mCallBack != null) {

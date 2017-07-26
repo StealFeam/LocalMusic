@@ -54,6 +54,9 @@ public class MediaService extends MediaBrowserServiceCompat {
 
     //获取参数
     public static final String ACTION_PARAM = "ACTION_PARAM";
+    //快进
+    public static final String SEEK_TO_POSITION_PARAM = "SEEK_TO_POSITION_PARAM";
+
 
 
     /*-------------------command action--------------------------*/
@@ -67,7 +70,11 @@ public class MediaService extends MediaBrowserServiceCompat {
     /*-------------------command action end--------------------------*/
 
     //播放列表为空，本地未搜索到曲目
-    public static final String ERROR_PLAY_QUEUE = "ERROR_PLAY_QUEUE";
+    public static final String ERROR_PLAY_QUEUE_EVENT = "ERROR_PLAY_QUEUE_EVENT";
+    //加载中....
+    public static final String LOADING_QUEUE_EVENT = "LOADING_QUEUE_EVENT";
+
+
 
 
     //通知的id
@@ -162,6 +169,7 @@ public class MediaService extends MediaBrowserServiceCompat {
     @Override
     public void onLoadChildren(@NonNull String s, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
         Log.d(TAG, "service onLoadChildren() called with: s = [" + s + "], result = [" + result + "]");
+        mMediaSessionCompat.sendSessionEvent(LOADING_QUEUE_EVENT,null);
         if (s.equals(getPackageName())) {
             //如果当前队列为空时
             if (mMediaItemList.size() == 0) {
@@ -179,7 +187,6 @@ public class MediaService extends MediaBrowserServiceCompat {
                     ScanMusicFile.getInstance().scanMusicFile(this).setOnScanComplete(new ScanMusicFile.OnScanComplete() {
                         @Override
                         protected void onComplete(ArrayList<String> paths) {
-                            System.out.println("service onComplete called");
                             DataTransform.getInstance().transFormData(getApplicationContext(),paths);
                             mMediaItemList = DataTransform.getInstance().getMediaItemList();
                             mQueueItemList = DataTransform.getInstance().getQueueItemList();
@@ -324,11 +331,11 @@ public class MediaService extends MediaBrowserServiceCompat {
         }
     }
 
+
     /**
      * 更新列表
      */
     private void updateQueue(){
-
         mMediaItemList = DataTransform.getInstance().getMediaItemList();
         Log.e(TAG, "updateQueue: "+mMediaItemList.toString() );
 
@@ -336,6 +343,9 @@ public class MediaService extends MediaBrowserServiceCompat {
         mPlayQueueMediaId = DataTransform.getInstance().getMediaIdList();
         mPlayBack.setPlayQueue(mPlayQueueMediaId);
         mMediaSessionCompat.setQueue(mQueueItemList);
+        if(mPlayQueueMediaId.size() > 0){
+            onMediaChange(mPlayQueueMediaId.get(0));
+        }
         //覆盖本地缓存
         FileUtils.saveObject(DataTransform.getInstance().getMusicInfoEntities(),
                 getCacheDir().getAbsolutePath());
@@ -359,7 +369,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                         if(mPlayQueueMediaId != null && mPlayQueueMediaId.size() > 0){
                             onMediaChange(mPlayQueueMediaId.get(0));
                         }else{
-                            mMediaSessionCompat.sendSessionEvent("error",null);
+                            mMediaSessionCompat.sendSessionEvent(ERROR_PLAY_QUEUE_EVENT,null);
                         }
                     }else{
                         onMediaChange(mediaId);
@@ -380,7 +390,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                         onMediaChange(mediaId);
                     }
                 }else if(ACTION_SEEK_TO.equals(action)){
-                    int seekPosition = extras.getInt("position");
+                    int seekPosition = extras.getInt(SEEK_TO_POSITION_PARAM);
                     mPlayBack.seekTo(seekPosition,true);
                     Log.e(TAG, "onPlayFromMediaId: "+seekPosition);
                 }else {
@@ -425,25 +435,29 @@ public class MediaService extends MediaBrowserServiceCompat {
         @Override
         public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
             KeyEvent ke = mediaButtonEvent.getParcelableExtra("android.intent.extra.KEY_EVENT");
-            Bundle extras = mediaButtonEvent.getExtras();
-            Log.e(TAG, "onMediaButtonEvent: extra=" + extras.toString());
-            switch (ke.getKeyCode()) {
-                case KeyEvent.KEYCODE_MEDIA_NEXT:
-                    onMediaChange(mPlayBack.onSkipToNext());
-                    handlePlayOrPauseRequest();
-                    break;
-                case KeyEvent.KEYCODE_MEDIA_STOP:
-                    handleStopRequest(true);
-                    break;
-                case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
-                    onMediaChange(mPlayBack.onSkipToPrevious());
-                    handlePlayOrPauseRequest();
-                    break;
-                case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                    handlePlayOrPauseRequest();
-                    break;
-                default:
-                    break;
+            if(ke.getAction() == KeyEvent.ACTION_DOWN){
+                switch (ke.getKeyCode()) {
+                    case KeyEvent.KEYCODE_MEDIA_NEXT:
+                        onMediaChange(mPlayBack.onSkipToNext());
+                        handlePlayOrPauseRequest();
+                        break;
+                    case KeyEvent.KEYCODE_MEDIA_STOP:
+                        handleStopRequest(true);
+                        break;
+                    case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+                        onMediaChange(mPlayBack.onSkipToPrevious());
+                        handlePlayOrPauseRequest();
+                        break;
+                    case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                    case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                    case KeyEvent.KEYCODE_MEDIA_PLAY:
+                        handlePlayOrPauseRequest();
+                        break;
+                    default:
+                        break;
+                }
+            }else{
+                Log.w(TAG, "onMediaButtonEvent: action="+ke.getAction()+",code="+ke.getKeyCode());
             }
             return true;
         }

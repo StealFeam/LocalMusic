@@ -53,44 +53,44 @@ public class DataTransform {
      */
     public void transFormData(Context context, ArrayList<String> pathList) {
         clearData();
-        if (this.pathList.size() > 0) {
-            this.pathList.clear();
-            this.pathList.addAll(pathList);
-        } else {
-            this.pathList.addAll(pathList);
-        }
-        queryResolver(context);
+        queryResolver(context,pathList);
+        System.out.println(toString());
     }
 
     private void clearData() {
-        Log.d(TAG, "clearData() called");
-        musicInfoEntities.clear();
-        mapMetadataArray.clear();
-        indexMediaArray.clear();
-        queueItemList.clear();
-        mediaIdList.clear();
-        mediaItemList.clear();
+        if (this.pathList.size() > 0) {
+            this.pathList.clear();
+            musicInfoEntities.clear();
+            mapMetadataArray.clear();
+            indexMediaArray.clear();
+            queueItemList.clear();
+            mediaIdList.clear();
+            mediaItemList.clear();
+        }
     }
 
-    private void queryResolver(Context context) {
+    private void queryResolver(Context context,List<String> localList) {
         ContentResolver contentResolver = context.getContentResolver();
         Uri oldUri = null;
         int index = 0;
-        for (String itemPath : pathList) {
-            indexMediaArray.put(index, String.valueOf(itemPath.hashCode()));
-            mediaIdList.add(String.valueOf(itemPath.hashCode()));
-            index++;
+        for (String itemPath : localList) {
+            if(mediaIdList.contains(String.valueOf(itemPath.hashCode()))){
+                continue;
+            }else{
+                System.out.println(itemPath);
+            }
             //根据音频地址获取uri，区分为内部存储和外部存储
             Uri audioUri = MediaStore.Audio.Media.getContentUriForPath(itemPath);
-            Cursor query = contentResolver.query(audioUri, null,
-                    null, null, null);
+            Cursor query = contentResolver.query(audioUri, null, null, null,null);
             MediaMetadataCompat.Builder builder = null;
             if (query != null) {
                 //判断如果是上次扫描的uri则跳过，系统分为内部存储uri的音频和外部存储的uri
                 if (oldUri != null && oldUri.equals(audioUri)) {
+                    System.out.println("old continue ... ");
                     query.close();
                     continue;
                 } else {
+                    System.out.println("old else ... ");
                     //遍历得到内部或者外部存储的所有媒体文件的信息
                     while (query.moveToNext()) {
                         String name = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
@@ -99,6 +99,7 @@ public class DataTransform {
                         long duration = query.getLong(query.getColumnIndex(MediaStore.Audio.Media.DURATION));
                         String size = query.getString(query.getColumnIndex(MediaStore.Audio.Media.SIZE));
                         String queryPath = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DATA));
+
                         //过滤小于20s的文件
                         if(duration < 20 * 1000){
                             continue;
@@ -133,6 +134,14 @@ public class DataTransform {
                         MusicInfoEntity infoEntity = new MusicInfoEntity(String.valueOf(queryPath.hashCode()),
                                 title, artist, queryPath, Long.parseLong(size), duration);
                         musicInfoEntities.add(infoEntity);
+                        pathList.add(queryPath);
+                        indexMediaArray.put(index, String.valueOf(queryPath.hashCode()));
+                        mediaIdList.add(String.valueOf(queryPath.hashCode()));
+                        index++;
+                    }
+                    //去除媒体库中不存在的
+                    if(!mediaIdList.contains(String.valueOf(itemPath.hashCode()))){
+                        pathList.remove(itemPath);
                     }
                     query.close();
                 }
@@ -165,8 +174,11 @@ public class DataTransform {
                 MusicInfoEntity infoEntity = new MusicInfoEntity(String.valueOf(itemPath.hashCode()),
                         musicName, "未知", itemPath, 0, 0);
                 musicInfoEntities.add(infoEntity);
-
-
+                System.out.println("put else index="+index+",path="+itemPath);
+                pathList.add(itemPath);
+                indexMediaArray.put(index, String.valueOf(itemPath.hashCode()));
+                mediaIdList.add(String.valueOf(itemPath.hashCode()));
+                index++;
             }
             oldUri = audioUri;
         }
@@ -183,7 +195,7 @@ public class DataTransform {
         MediaMetadataCompat metadataCompatItem;
         for (int i = 0; i < musicInfoEntities.size(); i++) {
             MusicInfoEntity itemEntity = musicInfoEntities.get(i);
-
+            pathList.add(itemEntity.getQueryPath());
             indexMediaArray.put(i, itemEntity.getMediaId());
             mediaIdList.add(itemEntity.getMediaId());
 
@@ -243,6 +255,14 @@ public class DataTransform {
         return mediaIdList;
     }
 
+    public String getPath(int position){
+        if(position >= 0 && position < pathList.size()){
+            return pathList.get(position);
+        }else{
+            return null;
+        }
+    }
+
     public int getMediaIndex(String mediaId) {
         if (mediaIdList.contains(mediaId)) {
             return mediaIdList.indexOf(mediaId);
@@ -260,5 +280,19 @@ public class DataTransform {
 
     public Map<String, MediaMetadataCompat> getMetadataCompatList() {
         return mapMetadataArray;
+    }
+
+
+    @Override
+    public String toString() {
+        return "DataTransform{" +
+                "musicInfoEntities=" + musicInfoEntities.size() +
+                ", queueItemList=" + queueItemList.size() +
+                ", mediaItemList=" + mediaItemList.size() +
+                ", mapMetadataArray=" + mapMetadataArray.size() +
+                ", indexMediaArray=" + indexMediaArray.size() +
+                ", pathList=" + pathList.size() +
+                ", mediaIdList=" + mediaIdList.size() +
+                '}';
     }
 }

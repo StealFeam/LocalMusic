@@ -9,8 +9,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.zy.ppmusic.R
 import com.zy.ppmusic.entity.ScanResultEntity
-import android.bluetooth.BluetoothHeadset
-
+import android.text.TextUtils
 
 
 class ScanResultAdapter(mData:ArrayList<ScanResultEntity>): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -29,7 +28,11 @@ class ScanResultAdapter(mData:ArrayList<ScanResultEntity>): RecyclerView.Adapter
     }
 
     fun updateData(mData: ArrayList<ScanResultEntity>){
-        this.mData = mData;
+        this.mData = mData
+    }
+
+    fun updateChildData(position: Int){
+        notifyItemChanged((position + 1))
     }
 
     override fun onCreateViewHolder(p0: ViewGroup?, p1: Int): RecyclerView.ViewHolder {
@@ -51,6 +54,12 @@ class ScanResultAdapter(mData:ArrayList<ScanResultEntity>): RecyclerView.Adapter
         }else if(p0 is ScanResultHolder){
             p0.name!!.text = mData!![p1].device.name
             p0.name!!.tag = mData!![p1].device
+            println("position="+p1+","+mData!![p1].state)
+            if(!TextUtils.isEmpty(mData!![p1].state)){
+                p0.showState(mData!![p1].state)
+            }else{
+                p0.hideState()
+            }
         }
     }
 
@@ -67,7 +76,6 @@ class ScanResultAdapter(mData:ArrayList<ScanResultEntity>): RecyclerView.Adapter
         init {
             title = itemView.findViewById(R.id.tv_scan_result_title) as TextView
         }
-
     }
 
     class ScanResultHolder(itemView:View,l:OnItemClickListener): RecyclerView.ViewHolder(itemView),View.OnClickListener {
@@ -78,13 +86,28 @@ class ScanResultAdapter(mData:ArrayList<ScanResultEntity>): RecyclerView.Adapter
         }
 
         var name:TextView?=null
+        var tvState:TextView?=null
         var icon:ImageView?=null
         var listener:OnItemClickListener ?= null
         init {
-            this.listener = l;
+            this.listener = l
             itemView.setOnClickListener(this)
             icon = itemView.findViewById(R.id.iv_scan_result_icon) as ImageView
             name = itemView.findViewById(R.id.tv_scan_result_name) as TextView
+            tvState = itemView.findViewById(R.id.tv_connect_state) as TextView
+        }
+
+        fun showState(state:String){
+            tvState!!.text  = state
+            if(tvState!!.visibility != View.VISIBLE){
+                tvState!!.visibility = View.VISIBLE
+            }
+        }
+
+        fun hideState(){
+            if(tvState!!.visibility == View.VISIBLE){
+                tvState!!.visibility = View.GONE
+            }
         }
 
     }

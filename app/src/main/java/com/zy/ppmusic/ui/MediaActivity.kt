@@ -133,6 +133,7 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
         adapter.setListener { _, position -> //view,position
             when(position){
                 0->{//刷新播放列表
+                    showMsg("开始扫描本地文件")
                     mPresenter!!.refreshQueue(applicationContext)
                 }
                 1->{
@@ -155,7 +156,7 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
                 //初始化的时候点击的按钮直接播放当前的media
                 val extra = Bundle()
                 extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_SEEK_TO)
-                extra.putInt("position", (seekBar!!.progress * stepPosition).toInt())
+                extra.putInt(MediaService.SEEK_TO_POSITION_PARAM, (seekBar!!.progress * stepPosition).toInt())
                 mMediaController!!.transportControls.playFromMediaId(mCurrentMediaIdStr, extra)
                 mIsTrackingBar = false
             }
@@ -209,7 +210,13 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
     }
 
     override fun refreshQueue(mPathList: java.util.ArrayList<String>?) {
-        mMediaController!!.sendCommand(MediaService.COMMAND_UPDATE_QUEUE,null,mResultReceive)
+        if(mPathList != null && mPathList.size > 0){
+            showMsg("扫描到"+mPathList.size+"首曲目")
+            mMediaController!!.sendCommand(MediaService.COMMAND_UPDATE_QUEUE,null,mResultReceive)
+        }else{
+            showMsg("未扫描到曲目")
+            mMediaController!!.transportControls.playFromMediaId("-1", null)
+        }
     }
 
     override fun onStart() {
@@ -229,11 +236,6 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
 
     override fun onResume() {
         super.onResume()
-        updateMediaInfoAndPosition()
-    }
-
-    private fun updateMediaInfoAndPosition() {
-
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -367,9 +369,9 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
 
         override fun onSessionEvent(event: String?, extras: Bundle?) {
             super.onSessionEvent(event, extras)
-            println("onSessionEvent....."+event)
-            if(MediaService.ERROR_PLAY_QUEUE == event){
-                showMsg("本地未发现支持的曲目")
+            println("onSessionEvent....."+event+","+extras.toString())
+            if(MediaService.ERROR_PLAY_QUEUE_EVENT == event){
+                showMsg("播放列表为空，未发现曲目")
             }
         }
 

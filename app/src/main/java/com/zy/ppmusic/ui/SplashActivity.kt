@@ -64,6 +64,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
     fun actionToMain(){
         val mediaIntent = Intent(this@SplashActivity,MediaActivity::class.java)
         startActivity(mediaIntent)
+        finish()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

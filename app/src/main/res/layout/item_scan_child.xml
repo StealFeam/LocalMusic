@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="horizontal"
     android:padding="@dimen/dp10"
     android:layout_width="match_parent"
@@ -7,8 +9,6 @@
 
     <ImageView
         android:id="@+id/iv_scan_result_icon"
-        android:layout_marginLeft="@dimen/dp10"
-        android:layout_marginStart="@dimen/dp10"
         android:contentDescription="@string/scan_result_icon"
         android:src="@mipmap/ic_launcher_round"
         android:layout_width="@dimen/dp40"
@@ -16,11 +16,36 @@
 
     <TextView
         android:id="@+id/tv_scan_result_name"
-        android:layout_marginLeft="@dimen/dp10"
-        android:layout_marginStart="@dimen/dp10"
         android:text="@string/normal_text"
         android:textStyle="bold"
         android:layout_gravity="center_vertical"
+        android:layout_marginTop="@dimen/dp5"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-</LinearLayout>
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp10"
+        app:layout_constraintStart_toEndOf="@id/iv_scan_result_icon"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@android:drawable/ic_menu_preferences"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <TextView
+        android:id="@+id/tv_connect_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        android:textStyle="italic"
+        app:layout_goneMarginBottom="@dimen/dp10"
+        android:visibility="gone"
+        android:textSize="@dimen/sp12"
+        android:layout_marginTop="@dimen/dp5"
+        app:layout_constraintTop_toBottomOf="@id/tv_scan_result_name"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/tv_scan_result_name"/>
+</android.support.constraint.ConstraintLayout>

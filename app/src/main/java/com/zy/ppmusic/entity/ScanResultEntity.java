@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 public class ScanResultEntity {
     private int type;//布局的id
     private String title;//头布局的标题
+    private String state;
     private BluetoothDevice device;
 
     public ScanResultEntity() {
@@ -44,10 +45,20 @@ public class ScanResultEntity {
         this.title = title;
     }
 
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
     @Override
     public String toString() {
         return "ScanResultEntity{" +
                 "type=" + type +
+                ", title='" + title + '\'' +
+                ", state='" + state + '\'' +
                 ", device=" + device +
                 '}';
     }

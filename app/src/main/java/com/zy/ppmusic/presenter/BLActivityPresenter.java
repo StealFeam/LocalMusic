@@ -1,0 +1,143 @@
+package com.zy.ppmusic.presenter;
+
+import android.bluetooth.BluetoothA2dp;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothProfile;
+import android.content.Context;
+
+import com.zy.ppmusic.contract.IBLActivityContract;
+import com.zy.ppmusic.entity.ScanResultEntity;
+import com.zy.ppmusic.model.BLActivityModel;
+
+import org.jetbrains.annotations.NotNull;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
+
+public class BLActivityPresenter implements IBLActivityContract.IPresenter {
+    private BluetoothAdapter mBlueAdapter;
+    private BluetoothA2dp mBlueA2dp;
+    private IBLActivityContract.IModel mModel;
+    private WeakReference<IBLActivityContract.IView> mView;
+    private boolean isNeedRe = false;
+    private Context context;
+
+    public BLActivityPresenter(IBLActivityContract.IView mView) {
+        this.mView = new WeakReference<IBLActivityContract.IView>(mView);
+        context = mView.getContext();
+        mModel = new BLActivityModel();
+        mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
+    }
+
+    private void initBlueA2dp() {
+        mBlueAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
+            @Override
+            public void onServiceConnected(int profile, BluetoothProfile proxy) {
+                if (profile == BluetoothA2dp.A2DP) {
+                    mBlueA2dp = (BluetoothA2dp) proxy;
+                    if(isNeedRe){
+                        List<ScanResultEntity> exitDevices = mModel.getExitDevices(mBlueAdapter, mBlueA2dp);
+                        if(mView.get() != null){
+                            mView.get().setExitDevices(exitDevices);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onServiceDisconnected(int profile) {
+                mBlueA2dp = null;
+            }
+        }, BluetoothA2dp.A2DP);
+    }
+
+    @Override
+    public void getExitDevices() {
+        if(mBlueA2dp != null){
+            List<ScanResultEntity> exitDevices = mModel.getExitDevices(mBlueAdapter, mBlueA2dp);
+            if(mView.get() != null){
+                mView.get().setExitDevices(exitDevices);
+            }
+        }else{
+            isNeedRe = true;
+            initBlueA2dp();
+        }
+    }
+
+    @Override
+    public boolean startDiscovery() {
+        if(mBlueAdapter != null && mBlueAdapter.isDiscovering()){
+            mBlueAdapter.cancelDiscovery();
+        }
+        return mBlueAdapter != null && mBlueAdapter.startDiscovery();
+    }
+
+    @Override
+    public boolean cancelDiscovery() {
+        return mBlueAdapter != null && mBlueAdapter.cancelDiscovery();
+    }
+
+    @Override
+    public boolean connectDevice(@NotNull BluetoothDevice device) {
+        return mModel.connectDevice(device,mBlueAdapter,mBlueA2dp);
+    }
+
+    @Override
+    public boolean disconnectDevice(@NotNull BluetoothDevice device) {
+        return mModel.disconnectDevice(device,mBlueAdapter,mBlueA2dp);
+    }
+
+    @Override
+    public boolean isSupportBl() {
+        return mBlueAdapter != null;
+    }
+
+    @Override
+    public boolean isEnable() {
+        return mBlueAdapter != null && mBlueAdapter.isEnabled();
+    }
+
+    @Override
+    public void enable() {
+        if (mBlueAdapter != null) {
+            mBlueAdapter.enable();
+            initBlueA2dp();
+        }
+    }
+
+    @Override
+    public void disable() {
+        if (mBlueAdapter != null) {
+            mBlueAdapter.disable();
+        }
+    }
+
+    @Override
+    public void destroyView() {
+        if (mBlueAdapter == null) {
+            return;
+        }
+        if (mBlueAdapter.isDiscovering()) {
+            mBlueAdapter.cancelDiscovery();
+        }
+        if (mBlueAdapter != null) {
+            mBlueAdapter.closeProfileProxy(BluetoothA2dp.A2DP, mBlueA2dp);
+        }
+    }
+
+    @Override
+    public boolean isConnected(@NotNull BluetoothDevice device) {
+        return mBlueA2dp !=null && mBlueA2dp.getConnectedDevices().contains(device);
+    }
+
+    @NotNull
+    @Override
+    public List<BluetoothDevice> getBondDevice() {
+        if (mBlueA2dp == null) {
+            return new ArrayList<>();
+        }
+        return mBlueA2dp.getConnectedDevices();
+    }
+}

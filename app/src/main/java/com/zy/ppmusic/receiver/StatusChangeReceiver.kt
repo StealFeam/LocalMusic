@@ -34,9 +34,9 @@ class StatusChangeReceiver(ref:BlScanActivity): BroadcastReceiver() {
                     when (bondState) {
                         BluetoothDevice.BOND_BONDED-> {
                             println("Device:" + device.name + " bonded.")
-                            reference!!.get()!!.connectDevice(device)
+                            reference!!.get()!!.mPresenter!!.connectDevice(device)
                         }
-                        BluetoothDevice.BOND_BONDING -> println("Device:" + device.getName() + " bonding.")
+                        BluetoothDevice.BOND_BONDING -> println("Device:" + device.getName() + " bonding.....")
                         BluetoothDevice.BOND_NONE -> {
                             println("Device:" + device.getName() + " not bonded.")
                             //不知道是蓝牙耳机的关系还是什么原因，经常配对不成功
@@ -49,6 +49,14 @@ class StatusChangeReceiver(ref:BlScanActivity): BroadcastReceiver() {
                         }
                     }
 
+                }
+                BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED->{
+                    val state = intent.extras.getInt(BluetoothA2dp.EXTRA_STATE)
+                    val device = intent.extras.getParcelable<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                    reference!!.get()!!.connectStateChanged(state,device)
+                }
+                else->{
+                    println("other action="+intent.action)
                 }
             }
         }
