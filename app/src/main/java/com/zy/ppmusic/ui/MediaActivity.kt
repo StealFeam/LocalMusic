@@ -13,10 +13,12 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.app.AppCompatDialog
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
+import android.view.Window
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
@@ -38,6 +40,22 @@ import java.lang.ref.WeakReference
  *
  */
 class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
+    override fun showLoading() {
+        println("showLoading。。。。。")
+        if(mLoadingDialog == null){
+            mLoadingDialog = AppCompatDialog(this,R.style.TransDialog)
+            mLoadingDialog!!.setContentView(LayoutInflater.from(this).inflate(R.layout.loading_layout,null))
+        }
+        mLoadingDialog!!.show()
+    }
+
+    override fun hideLoading() {
+        println("hideLoading。。。。。")
+        if(mLoadingDialog!= null && mLoadingDialog!!.isShowing){
+            mLoadingDialog!!.dismiss()
+        }
+    }
+
     private var mMediaBrowser: MediaBrowserCompat? = null
     var mMediaId: String? = null
     var mMediaController: MediaControllerCompat? = null
@@ -61,6 +79,7 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
     var mIsTrackingBar: Boolean? = false//是否正在拖动进度条
     var mFunctionRecycler:RecyclerView?=null
     var mPresenter:IMediaActivityContract.IPresenter ?=null
+    var mLoadingDialog:AppCompatDialog ?= null
     /*
      * kotlin静态内部类
      * 实现自循环1s后请求播放器播放的位置
@@ -370,8 +389,18 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
         override fun onSessionEvent(event: String?, extras: Bundle?) {
             super.onSessionEvent(event, extras)
             println("onSessionEvent....."+event+","+extras.toString())
-            if(MediaService.ERROR_PLAY_QUEUE_EVENT == event){
-                showMsg("播放列表为空，未发现曲目")
+            when(event){
+                MediaService.ERROR_PLAY_QUEUE_EVENT->{
+                    showMsg("播放列表为空，未发现曲目")
+                }
+                MediaService.LOADING_QUEUE_EVENT->{
+                    showMsg("加载列表中...")
+                    showLoading()
+                }
+                MediaService.LOAD_COMPLETE_EVENT->{
+                    showMsg("加载完成....")
+                    hideLoading()
+                }
             }
         }
 
@@ -453,6 +482,10 @@ class MediaActivity : AppCompatActivity(),IMediaActivityContract.IView{
         super.onDestroy()
         if(mPresenter != null){
             mPresenter!!.destroyView()
+        }
+        if(mLoadingDialog != null){
+            mLoadingDialog!!.dismiss()
+            mLoadingDialog!!.cancel()
         }
         println("MediaActivity is destroy")
     }

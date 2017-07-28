@@ -12,6 +12,8 @@ import java.util.ArrayList;
 public interface IMediaActivityContract {
     interface IView extends IBaseView {
         void refreshQueue(ArrayList<String> mPathList);
+        void showLoading();
+        void hideLoading();
     }
 
     interface IPresenter extends IBasePresenter {

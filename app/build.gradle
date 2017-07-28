@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.greenrobot.greendao' // apply pluginapply plugin: 'org.greenrobot.greendao' // apply plugin
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 25
@@ -56,5 +57,3 @@ dependencies {
 
 buildscript {
 }
-
-apply plugin: 'kotlin-android-extensions'

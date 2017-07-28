@@ -28,12 +28,8 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         val animation = AnimationSet(true)
         val alphaAnim = AlphaAnimation(0f,1f)
         alphaAnim.fillAfter = true
-        alphaAnim.duration = 3000
-        val transAnim = TranslateAnimation(0f,0f,1f,0f)
-        transAnim.duration = 3000
+        alphaAnim.duration = 2000
         animation.addAnimation(alphaAnim)
-        animation.addAnimation(transAnim)
-
 
         tvSplash.animation = animation
         animation.start()

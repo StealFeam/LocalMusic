@@ -27,6 +27,13 @@ class ScanResultAdapter(mData:ArrayList<ScanResultEntity>): RecyclerView.Adapter
         return mData!![position].type
     }
 
+    fun clearData(){
+        if(this.mData != null){
+            this.mData!!.clear()
+            notifyDataSetChanged()
+        }
+    }
+
     fun updateData(mData: ArrayList<ScanResultEntity>){
         this.mData = mData
     }

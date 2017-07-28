@@ -55,6 +55,12 @@ class StatusChangeReceiver(ref:BlScanActivity): BroadcastReceiver() {
                     val device = intent.extras.getParcelable<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                     reference!!.get()!!.connectStateChanged(state,device)
                 }
+                BluetoothAdapter.ACTION_DISCOVERY_STARTED->{
+                    reference!!.get()!!.discoveryStateChange(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
+                }
+                BluetoothAdapter.ACTION_DISCOVERY_FINISHED->{
+                    reference!!.get()!!.discoveryStateChange(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+                }
                 else->{
                     println("other action="+intent.action)
                 }

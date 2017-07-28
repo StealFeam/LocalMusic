@@ -10,6 +10,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 扫描本地音乐文件
@@ -145,9 +146,6 @@ public class ScanMusicFile {
     }
 
     public abstract static class OnScanComplete {
-        public OnScanComplete() {
-
-        }
 
         protected abstract void onComplete(ArrayList<String> paths);
 

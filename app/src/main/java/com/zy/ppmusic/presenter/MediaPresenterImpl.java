@@ -21,12 +21,14 @@ public class MediaPresenterImpl implements IMediaActivityContract.IPresenter {
 
     @Override
     public void refreshQueue(final Context context) {
+        mViewWeak.get().showLoading();
        mModel.refreshQueue(context,new ScanMusicFile.OnScanComplete() {
            @Override
            protected void onComplete(ArrayList<String> paths) {
                DataTransform.getInstance().transFormData(context,paths);
                if (mViewWeak.get() != null) {
                    mViewWeak.get().refreshQueue(paths);
+                   mViewWeak.get().hideLoading();
                }
            }
        });

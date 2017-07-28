@@ -73,9 +73,8 @@ public class MediaService extends MediaBrowserServiceCompat {
     public static final String ERROR_PLAY_QUEUE_EVENT = "ERROR_PLAY_QUEUE_EVENT";
     //加载中....
     public static final String LOADING_QUEUE_EVENT = "LOADING_QUEUE_EVENT";
-
-
-
+    //加载完成....
+    public static final String LOAD_COMPLETE_EVENT = "LOAD_COMPLETE_EVENT";
 
     //通知的id
     public static final int NOTIFY_ID = 412;
@@ -204,6 +203,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                 result.sendResult(mMediaItemList);
             }
         }
+        mMediaSessionCompat.sendSessionEvent(LOAD_COMPLETE_EVENT,null);
     }
 
     /**
@@ -394,7 +394,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                     mPlayBack.seekTo(seekPosition,true);
                     Log.e(TAG, "onPlayFromMediaId: "+seekPosition);
                 }else {
-                    onMediaChange(mediaId);
+//                    onMediaChange(mediaId);
                 }
             }
         }

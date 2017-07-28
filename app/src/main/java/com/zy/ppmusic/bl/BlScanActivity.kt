@@ -13,6 +13,8 @@ import android.support.v7.widget.SwitchCompat
 import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
+import android.view.animation.LinearInterpolator
+import android.view.animation.RotateAnimation
 import android.widget.TextView
 import android.widget.Toast
 import com.zy.ppmusic.R
@@ -25,12 +27,8 @@ import com.zy.ppmusic.receiver.StatusChangeReceiver
 import java.util.*
 
 class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
-
-
     private val TAG = "BlScanActivity"
     private val REQUEST_ENABLE_BL = 0x001
-
-    private var tv_bl_status: TextView? = null
     private var sw_bl: SwitchCompat? = null
     private var blStateChangeReceiver: StatusChangeReceiver? = null
     private var mScanDeviceList: ArrayList<ScanResultEntity>? = null
@@ -38,12 +36,14 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
     private var adapterShowResult: ScanResultAdapter? = null
     private var mDeviceFoundReceiver: DeviceFoundReceiver? = null
     var mPresenter : BLActivityPresenter?=null
+    private var mToolBar: Toolbar ?= null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bl_scan)
-        val toolbar = findViewById(R.id.toolbar_bl) as Toolbar
-        setSupportActionBar(toolbar)
+        mToolBar = findViewById(R.id.toolbar_bl) as Toolbar
+
+        setSupportActionBar(mToolBar)
         mPresenter = BLActivityPresenter(this)
         if(mPresenter!!.isSupportBl().not()){
             showToast("设备不支持蓝牙")
@@ -53,9 +53,8 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
 
         mScanDeviceList = ArrayList()
         recyclerShowResult = findViewById(R.id.show_device_recycler) as RecyclerView
-        tv_bl_status = findViewById(R.id.tv_bl_status) as TextView
         sw_bl = findViewById(R.id.switch_bl) as SwitchCompat
-        tv_bl_status!!.text = if (mPresenter!!.isEnable()) {
+        mToolBar!!.title = if (mPresenter!!.isEnable()) {
             sw_bl!!.isChecked = true
             mPresenter!!.getExitDevices()
             mPresenter!!.startDiscovery()
@@ -78,6 +77,11 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
                 mPresenter!!.disable()
             }
         })
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        finish()
     }
 
     override fun setExitDevices(exitList: MutableList<ScanResultEntity>) {
@@ -118,6 +122,10 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
         mPresenter!!.startDiscovery()
     }
 
+    fun clearData(){
+        adapterShowResult!!.clearData()
+    }
+
     override fun getContext(): Context {
         return applicationContext
     }
@@ -134,6 +142,9 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
                 mPresenter!!.cancelDiscovery()
                 mPresenter!!.startDiscovery()
             }
+            android.R.id.home->{
+                finish()
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -144,22 +155,54 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
     fun onBLStateChange(state: Int) {
         when (state) {
             BluetoothAdapter.STATE_TURNING_ON -> {
-                tv_bl_status!!.text = "蓝牙正在开启"
+                mToolBar!!.title = "蓝牙正在开启"
             }
             BluetoothAdapter.STATE_ON -> {
-                tv_bl_status!!.text = "蓝牙已开启"
+                mToolBar!!.title = "蓝牙已开启"
                 sw_bl!!.isChecked = true
             }
             BluetoothAdapter.STATE_TURNING_OFF -> {
-                tv_bl_status!!.text = "蓝牙正在关闭"
+                mToolBar!!.title = "蓝牙正在关闭"
             }
             BluetoothAdapter.STATE_OFF -> {
-                tv_bl_status!!.text = "蓝牙已关闭"
+                mToolBar!!.title = "蓝牙已关闭"
                 sw_bl!!.isChecked = false
+                clearData()
             }
             else -> {
                 println("收到其他状态...$state")
             }
+        }
+    }
+
+
+    fun discoveryStateChange(state: String){
+        when(state){
+            BluetoothAdapter.ACTION_DISCOVERY_FINISHED->{
+                stopDiscovery()
+            }
+            BluetoothAdapter.ACTION_DISCOVERY_STARTED->{
+                startDiscovery()
+            }
+        }
+    }
+    var anim :RotateAnimation?= null
+
+    fun startDiscovery(){
+        val v = findViewById(R.id.action_refresh)
+        anim = RotateAnimation(0f,360f,RotateAnimation.RELATIVE_TO_SELF,0.5f,RotateAnimation.RELATIVE_TO_SELF,0.5f)
+        anim!!.repeatCount = -1
+        anim!!.interpolator = LinearInterpolator()
+        anim!!.duration = 800
+        if(v!=null){
+            v.animation = anim
+        }
+        anim!!.start()
+    }
+
+    fun stopDiscovery(){
+        if(anim != null){
+            anim!!.cancel()
         }
     }
 
@@ -209,9 +252,10 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
         filter.addAction(BluetoothDevice.ACTION_FOUND)
         filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
+        filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
         registerReceiver(blStateChangeReceiver, filter)
-
-
     }
 
     /**

@@ -13,6 +13,7 @@
     <dimen name="sp12">12sp</dimen>
     <dimen name="sp16">16sp</dimen>
     <dimen name="sp18">18sp</dimen>
+    <dimen name="sp20">20sp</dimen>
     <dimen name="dp30">30dp</dimen>
     <dimen name="dp40">40dp</dimen>
     <dimen name="dp50">50dp</dimen>
