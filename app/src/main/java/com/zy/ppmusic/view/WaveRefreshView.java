@@ -10,6 +10,7 @@ import android.graphics.RectF;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.View;
 
@@ -18,6 +19,7 @@ import com.zy.ppmusic.R;
 import java.util.ArrayList;
 
 public class WaveRefreshView extends View {
+    private static final String TAG = "WaveRefreshView";
     private final float LINE_AREA = 3f / 5f;
     private final float OTHER_AREA = 2f / 5f;
     private Paint mCirclePaint;
@@ -42,7 +44,8 @@ public class WaveRefreshView extends View {
         super(context, attrs, defStyleAttr);
         mCirclePaint = new Paint();
         mCirclePaint.setColor(Color.WHITE);
-        mCirclePaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        mCirclePaint.setAntiAlias(true);
+        mCirclePaint.setStyle(Paint.Style.FILL);
         mCirclePaint.setStrokeWidth(5);
     }
 
@@ -60,6 +63,7 @@ public class WaveRefreshView extends View {
         for (int i = 0; i < lineRectF.length; i++) {
             lineRectF[i] = new RectF((lineWidth + whiteWidth) * i, maxChange,
                     (lineWidth + whiteWidth) * i + lineWidth, getMeasuredHeight() - maxChange);
+            Log.w(TAG, "onSizeChanged: "+lineRectF[i].toString());
         }
         startAnim();
     }
@@ -75,11 +79,12 @@ public class WaveRefreshView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         for (RectF aLineRectF : lineRectF) {
-            canvas.drawRoundRect(aLineRectF, 10, 10, mCirclePaint);
+            canvas.drawRoundRect(aLineRectF, 20, 20, mCirclePaint);
         }
     }
 
     public void startAnim() {
+        stopAnim();
         for (int i = 0; i < delayArray.length; i++) {
             final int index = i;
             ValueAnimator animator = ValueAnimator.ofInt(maxChange, 0, maxChange);

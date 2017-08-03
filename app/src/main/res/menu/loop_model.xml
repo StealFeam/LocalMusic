@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/loop_model_list"
+        android:checked="true"
+        android:icon="@drawable/ic_loop_model_normal"
+        android:title="@string/string_loop_model_list"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/loop_model_only"
+        android:icon="@drawable/ic_loop_model_only"
+        android:title="@string/string_loop_model_only"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/loop_model_random"
+        android:checked="true"
+        android:icon="@drawable/ic_loop_model_random"
+        android:title="@string/string_loop_model_random"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
+</menu>

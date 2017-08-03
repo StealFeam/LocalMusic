@@ -1,40 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="?android:attr/selectableItemBackground"
     android:orientation="horizontal"
-    android:layout_marginTop="@dimen/dp10"
-    android:layout_marginBottom="@dimen/dp10"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/dp40">
+    android:padding="@dimen/dp10"
+    android:layout_height="wrap_content">
 
     <TextView
         android:id="@+id/queue_item_position"
         android:text="@string/normal_text"
         android:layout_centerVertical="true"
-        android:layout_marginStart="@dimen/dp10"
         android:gravity="center"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
 
     <TextView
         android:id="@+id/queue_item_display_title"
         android:text="@string/normal_text"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:gravity="center_vertical"
         android:layout_toEndOf="@id/queue_item_position"
-        android:paddingStart="@dimen/dp10"
         android:textColor="#000"
         android:textSize="@dimen/sp16"
-        android:paddingEnd="@dimen/dp10"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp10"
+        app:layout_constraintStart_toEndOf="@+id/queue_item_position"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/queue_item_display_sub_title"
         android:text="@string/normal_text"
-        android:layout_width="match_parent"
-        android:paddingStart="@dimen/dp10"
+        android:layout_width="wrap_content"
         android:layout_below="@id/queue_item_display_title"
         android:layout_toEndOf="@id/queue_item_position"
-        android:paddingEnd="@dimen/dp10"
         android:gravity="center_vertical"
-        android:layout_height="wrap_content" />
-</RelativeLayout>
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp5"
+        android:layout_marginStart="@dimen/dp10"
+        app:layout_constraintTop_toBottomOf="@+id/queue_item_display_title"
+        app:layout_constraintStart_toEndOf="@+id/queue_item_position" />
+
+
+    <ImageView
+        android:id="@+id/queue_item_del"
+        android:src="@mipmap/ic_del_media"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
+        android:padding="@dimen/dp5"
+        android:background="?android:attr/selectableItemBackground"
+        android:contentDescription="@string/string_del_media"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/queue_item_display_title"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintBottom_toBottomOf="@+id/queue_item_display_sub_title"
+        app:layout_constraintTop_toTopOf="@+id/queue_item_display_title"/>
+</android.support.constraint.ConstraintLayout>

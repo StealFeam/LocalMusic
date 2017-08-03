@@ -13,29 +13,121 @@
         android:id="@+id/more_function_recycle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layoutManager="GridLayoutManager" />
+        app:layoutManager="GridLayoutManager"
+        app:layout_constraintBottom_toTopOf="@+id/control_display_title"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
-    <FrameLayout
-        android:id="@+id/function_content"
+    <SeekBar
+        android:id="@+id/control_display_progress"
+        style="@style/SelfSeekBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@+id/bottom_play_card"
-        app:layout_constraintTop_toBottomOf="@id/more_function_recycle" />
+        android:layout_alignParentTop="true"
+        android:max="100"
+        android:progress="0"
+        app:layout_constraintBottom_toTopOf="@+id/horizontal_guideline" />
 
-    <android.support.v7.widget.CardView
-        android:id="@id/bottom_play_card"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp60"
-        app:cardBackgroundColor="@android:color/white"
-        app:cardCornerRadius="0dp"
-        app:cardPreventCornerOverlap="false"
-        app:cardUseCompatPadding="false"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <TextView
+        android:id="@+id/control_display_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dp10"
+        android:ellipsize="end"
+        android:lines="1"
+        android:text="@string/normal_text"
+        app:layout_constraintBottom_toTopOf="@+id/control_display_sub_title"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent" />
 
-        <include layout="@layout/play_control_layout" />
+    <TextView
+        android:id="@+id/control_display_sub_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/dp10"
+        android:ellipsize="end"
+        android:lines="1"
+        android:text="@string/normal_text"
+        app:layout_constraintBottom_toTopOf="@+id/control_display_progress"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-    </android.support.v7.widget.CardView>
+    <ImageView
+        android:id="@+id/control_action_show_queue"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
+        android:contentDescription="@string/action_close_notify"
+        android:padding="@dimen/dp5"
+        android:src="@drawable/ic_menu"
+        android:background="?android:attr/selectableItemBackground"
+        app:layout_constraintBottom_toBottomOf="@+id/control_action_next"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/control_action_next"
+        app:layout_constraintTop_toTopOf="@+id/control_action_next" />
+
+    <ImageView
+        android:id="@+id/control_action_previous"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
+        android:src="@mipmap/ic_black_previous"
+        android:background="?android:attr/selectableItemBackground"
+        android:contentDescription="@string/action_next"
+        app:layout_constraintEnd_toStartOf="@+id/control_action_play_pause"
+        app:layout_constraintStart_toEndOf="@+id/control_action_loop_model"
+        app:layout_constraintTop_toTopOf="@+id/control_action_play_pause" />
+
+    <ImageView
+        android:id="@+id/control_action_next"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
+        android:src="@mipmap/ic_black_next"
+        android:contentDescription="@string/action_next"
+        android:background="?android:attr/selectableItemBackground"
+        app:layout_constraintBottom_toBottomOf="@+id/control_action_play_pause"
+        app:layout_constraintEnd_toStartOf="@+id/control_action_show_queue"
+        app:layout_constraintStart_toEndOf="@+id/control_action_play_pause"
+        app:layout_constraintTop_toTopOf="@+id/control_action_play_pause" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/vertical_guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
+
+    <ImageView
+        android:id="@+id/control_action_play_pause"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="@string/action_start_pause"
+        android:background="?android:attr/selectableItemBackground"
+        android:src="@drawable/ic_black_play"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/vertical_guideline"
+        app:layout_constraintStart_toStartOf="@+id/vertical_guideline"
+        app:layout_constraintTop_toTopOf="@+id/horizontal_guideline"
+        app:layout_constraintVertical_bias="0.51" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/horizontal_guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.85" />
+
+    <ImageView
+        android:id="@+id/control_action_loop_model"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
+        android:contentDescription="@string/string_loop_mode"
+        android:padding="@dimen/dp10"
+        android:background="?android:attr/selectableItemBackground"
+        android:src="@drawable/ic_loop_model_normal"
+        app:layout_constraintBottom_toBottomOf="@+id/control_action_previous"
+        app:layout_constraintEnd_toStartOf="@+id/control_action_previous"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/control_action_previous"
+        app:layout_constraintVertical_bias="1.0" />
 
 </android.support.constraint.ConstraintLayout>

@@ -10,7 +10,7 @@
     <ImageView
         android:id="@+id/iv_scan_result_icon"
         android:contentDescription="@string/scan_result_icon"
-        android:src="@mipmap/ic_launcher_round"
+        android:src="@mipmap/ic_device"
         android:layout_width="@dimen/dp40"
         android:layout_height="wrap_content" />
 
@@ -24,13 +24,15 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/dp10"
         app:layout_constraintStart_toEndOf="@id/iv_scan_result_icon"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/tv_connect_state" />
 
     <ImageView
         android:id="@+id/bl_setting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
+        android:visibility="visible"
         app:srcCompat="@android:drawable/ic_menu_preferences"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -42,11 +44,8 @@
         android:layout_height="wrap_content"
         android:text="TextView"
         android:textStyle="italic"
-        app:layout_goneMarginBottom="@dimen/dp10"
         android:visibility="gone"
         android:textSize="@dimen/sp12"
-        android:layout_marginTop="@dimen/dp5"
-        app:layout_constraintTop_toBottomOf="@id/tv_scan_result_name"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@+id/tv_scan_result_name"/>
 </android.support.constraint.ConstraintLayout>

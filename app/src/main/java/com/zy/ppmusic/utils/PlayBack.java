@@ -3,12 +3,7 @@ package com.zy.ppmusic.utils;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.TimedMetaData;
-import android.media.TimedText;
-import android.os.Handler;
-import android.os.Message;
 import android.os.PowerManager;
-import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 import android.util.Log;
@@ -16,8 +11,8 @@ import android.util.Log;
 import com.zy.ppmusic.service.MediaService;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.List;
+import java.util.Random;
 
 public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
         MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener, MediaPlayer.OnPreparedListener,
@@ -36,6 +31,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     private volatile List<String> mPlayQueue;//当前播放队列
     private volatile int mCurrentPosition;
     private volatile String mCurrentMediaId;
+    private int mCurrentIndex;
     private CallBack mCallBack;
     private AudioManager audioManager;
     private int mAudioFocus = AUDIO_NO_FOCUS_NO_DUCK;
@@ -44,6 +40,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
 
     private boolean mPlayOnFocusGain;
     private int mState = PlaybackStateCompat.STATE_NONE;
+    private Random mRandom;
 
     public interface CallBack {
         void onCompletion();
@@ -79,20 +76,26 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
             configMediaPlayerState();
         } else {
             mState = PlaybackStateCompat.STATE_STOPPED;
-            releasePlayer(false);
+            releasePlayer(true);
             int index = DataTransform.getInstance().getMediaIndex(mediaId);
-            createPlayerOrReset();
+            createPlayerIfNeed();
             mState = PlaybackStateCompat.STATE_BUFFERING;
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             try {
-                Log.e(TAG, "onPlay: music init complete index="+index+" path=" + DataTransform.getInstance().getPath(index));
-                mMediaPlayer.setDataSource(DataTransform.getInstance().getPath(index));
-                mMediaPlayer.prepare();
-                if (mCallBack != null) {
-                    mCallBack.onPlayBackStateChange(mState);
+                String path = DataTransform.getInstance().getPath(index);
+                if(TextUtils.isEmpty(path)){
+                    Log.e(TAG, "preparedWithMediaId error: path is null");
+                }else{
+                    Log.e(TAG, "preparedWithMediaId: path="+path );
+                    mMediaPlayer.setDataSource(path);
+                    mMediaPlayer.prepare();
+                    if (mCallBack != null) {
+                        mCallBack.onPlayBackStateChange(mState);
+                    }
+                    Log.e(TAG, "onPlay: music init complete index=" + index + " path=" + DataTransform.getInstance().getPath(index));
                 }
             } catch (IOException e) {
-                Log.e(TAG, "onPlay: " + e.getMessage());
+                Log.e(TAG, "preparedWithMediaId error: " + e.getMessage());
                 if (mCallBack != null) {
                     mCallBack.onError(0, e.getMessage());
                 }
@@ -196,14 +199,14 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     }
 
 
-    public void seekTo(int position,boolean isAutoStart) {
+    public void seekTo(int position, boolean isAutoStart) {
         if (mMediaPlayer == null) {
             return;
         }
         if (mAudioFocus != AUDIO_FOCUSED) {
             getAudioFocus();
         }
-        System.out.println("seek to "+position+","+isAutoStart);
+        System.out.println("seek to " + position + "," + isAutoStart);
         mIsAutoStart = isAutoStart;
         mMediaPlayer.seekTo(position);
         mState = PlaybackStateCompat.STATE_BUFFERING;
@@ -245,8 +248,25 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
         return nextMediaId;
     }
 
+    public String randomIndex() {
+        checkPlayQueue();
+        if (mRandom == null) {
+            mRandom = new Random();
+        }
+        mCurrentIndex = mPlayQueue.indexOf(mCurrentMediaId);
+        int index;
+        while(true){
+            index = mRandom.nextInt(mPlayQueue.size());
+            if(index >= 0 && index < mPlayQueue.size() && index != mCurrentIndex){
+                break;
+            }
+        }
+        Log.w(TAG, "randomIndex: " + index);
+        return mPlayQueue.get(index);
+    }
+
     private void checkPlayQueue() {
-        if(mPlayQueue == null){
+        if (mPlayQueue == null) {
             mPlayQueue = DataTransform.getInstance().getPathList();
         }
     }
@@ -263,7 +283,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
 
     public void stopPlayer() {
         mMediaService.stopForeground(false);
-        mState  = PlaybackStateCompat.STATE_STOPPED;
+        mState = PlaybackStateCompat.STATE_STOPPED;
         if (mMediaPlayer != null) {
             mMediaPlayer.reset();
             mMediaPlayer.release();
@@ -277,7 +297,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     /**
      * 创建播放器或者重置
      */
-    private void createPlayerOrReset() {
+    private void createPlayerIfNeed() {
         if (mMediaPlayer == null) {
             mMediaPlayer = new MediaPlayer();
             mMediaPlayer.setWakeMode(mMediaService.getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
@@ -285,8 +305,6 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.setOnErrorListener(this);
             mMediaPlayer.setOnSeekCompleteListener(this);
-        } else {
-            mMediaPlayer.reset();
         }
     }
 
@@ -361,6 +379,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
 
     /**
      * 快进到指定位置完成，可以播放了
+     *
      * @param mp 播放器
      */
     @Override
@@ -372,7 +391,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
             mState = PlaybackStateCompat.STATE_PAUSED;
         }
 
-        if(mIsAutoStart){
+        if (mIsAutoStart) {
             mMediaPlayer.start();
             mState = PlaybackStateCompat.STATE_PLAYING;
             mIsAutoStart = false;
