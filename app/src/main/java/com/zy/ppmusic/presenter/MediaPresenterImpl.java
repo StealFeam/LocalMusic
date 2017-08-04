@@ -35,6 +35,11 @@ public class MediaPresenterImpl implements IMediaActivityContract.IPresenter {
     }
 
     @Override
+    public void startTimeClock(long timeLength) {
+
+    }
+
+    @Override
     public void destroyView() {
         mViewWeak.clear();
         mViewWeak = null;

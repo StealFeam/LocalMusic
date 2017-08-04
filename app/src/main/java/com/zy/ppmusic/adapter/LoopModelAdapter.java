@@ -41,7 +41,7 @@ public class LoopModelAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
 
     private void createList(){
         entityList = new ArrayList<>();
-        entityList.add(new LoopModelEntity(R.drawable.ic_loop_model_normal,"列表播放",false));
+        entityList.add(new LoopModelEntity(R.drawable.ic_loop_model_normal,"列表播放",true));
         entityList.add(new LoopModelEntity(R.drawable.ic_loop_model_only,"单曲循环",false));
         entityList.add(new LoopModelEntity(R.drawable.ic_loop_model_random,"随机播放",false));
     }

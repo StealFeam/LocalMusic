@@ -226,11 +226,15 @@ public class DataTransform {
         Log.d(TAG, "queryResolver() called with: context = [" + context + "]");
     }
 
-    private void reQueryList(List<String> path){
+    /**
+     * 重新对数据遍历，筛选出系统ContentProvider中不存在的媒体
+     * @param pathList 扫描到的数据列表
+     */
+    private void reQueryList(List<String> pathList){
         MediaMetadataCompat.Builder builder;
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         int index = 0;
-        for (String itemPath : path) {
+        for (String itemPath : pathList) {
             if(!pathList.contains(itemPath)){
                 retriever.setDataSource(itemPath);
                 //METADATA_KEY_ALBUM 专辑

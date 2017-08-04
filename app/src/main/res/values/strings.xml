@@ -25,4 +25,10 @@
     <string name="string_loop_model_only">单曲循环</string>
     <string name="string_loop_model_random">随机播放</string>
     <string name="string_del_media">删除</string>
+    <string name="string_sure_del">确认删除吗</string>
+    <string name="string_del_desc">此操作会同时删除本地文件</string>
+    <string name="string_del">删除</string>
+    <string name="string_cancel">取消</string>
+    <string name="string_custom_time_hint">自定义时长</string>
+    <string name="string_sure">确定</string>
 </resources>

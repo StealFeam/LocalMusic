@@ -314,7 +314,9 @@ public class MediaService extends MediaBrowserServiceCompat {
 
         Notification notification = NotificationUtils.postNotify(this, mMediaSessionCompat,
                 mPlayBack.isPlaying());
-        startForeground(NOTIFY_ID, notification);
+        if(notification!=null){
+            startForeground(NOTIFY_ID, notification);
+        }
 
         if (state == PlaybackStateCompat.STATE_PLAYING) {
             mAudioReceiver.register();

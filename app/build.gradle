@@ -46,9 +46,11 @@ dependencies {
     implementation 'com.android.support:cardview-v7:25.3.1'
     implementation 'org.greenrobot:greendao:3.2.2'
     implementation 'com.jakewharton:disklrucache:2.0.2'
-    // add library
-    implementation 'com.google.code.gson:gson:2.8.0'
     implementation project(':easypermissions')
+
+    implementation 'com.github.bumptech.glide:glide:4.0.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.0.0'
+    implementation 'jp.wasabeef:glide-transformations:2.0.2'
 
     //compile 'com.google.android.exoplayer:exoplayer-core:r2.4.4'
 //    compile 'com.google.android.exoplayer:exoplayer-dash:r2.4.4'

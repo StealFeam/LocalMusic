@@ -5,18 +5,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipChildren="false"
+    android:id="@+id/media_content_root"
     android:fitsSystemWindows="true"
     android:orientation="vertical"
     tools:context="com.zy.ppmusic.ui.MediaActivity">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/more_function_recycle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layoutManager="GridLayoutManager"
         app:layout_constraintBottom_toTopOf="@+id/control_display_title"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <SeekBar
         android:id="@+id/control_display_progress"
@@ -52,7 +55,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <ImageView
+    <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_show_queue"
         android:layout_width="@dimen/dp40"
         android:layout_height="@dimen/dp40"
@@ -65,7 +68,7 @@
         app:layout_constraintStart_toEndOf="@+id/control_action_next"
         app:layout_constraintTop_toTopOf="@+id/control_action_next" />
 
-    <ImageView
+    <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_previous"
         android:layout_width="@dimen/dp40"
         android:layout_height="@dimen/dp40"
@@ -76,7 +79,7 @@
         app:layout_constraintStart_toEndOf="@+id/control_action_loop_model"
         app:layout_constraintTop_toTopOf="@+id/control_action_play_pause" />
 
-    <ImageView
+    <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_next"
         android:layout_width="@dimen/dp40"
         android:layout_height="@dimen/dp40"
@@ -95,7 +98,7 @@
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.5" />
 
-    <ImageView
+    <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_play_pause"
         android:layout_width="@dimen/dp40"
         android:layout_height="@dimen/dp40"
@@ -116,7 +119,7 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.85" />
 
-    <ImageView
+    <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_loop_model"
         android:layout_width="@dimen/dp40"
         android:layout_height="@dimen/dp40"

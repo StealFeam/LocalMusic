@@ -14,10 +14,12 @@ public interface IMediaActivityContract {
         void refreshQueue(ArrayList<String> mPathList);
         void showLoading();
         void hideLoading();
+        void onTimeEnd();
     }
 
     interface IPresenter extends IBasePresenter {
         void refreshQueue(Context context);
+        void startTimeClock(long timeLength);
     }
 
     interface IModel extends IBaseModel {
