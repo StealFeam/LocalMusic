@@ -16,6 +16,7 @@ import java.util.Locale;
 public class TimeClockAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
     private List<Integer> array;
     private MainMenuAdapter.OnRecycleItemClickListener listener;
+
     public TimeClockAdapter() {
         this.array = new ArrayList<>();
         for(int i=0;i<5;i++){
@@ -52,7 +53,6 @@ public class TimeClockAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         }
         return array.size();
     }
-
 
     private static class TimeClockHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         private TextView tvTime;

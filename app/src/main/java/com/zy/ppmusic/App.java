@@ -8,6 +8,14 @@ import android.content.pm.PackageManager;
 public class App extends Application {
     public static final String LOCAL_DATA_TABLE_NAME = "CACHE_PATH_LIST";
 
+    public static class SingleInstance{
+        public static App app = new App();
+    }
+
+    public static App getInstance(){
+        return SingleInstance.app;
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -21,6 +29,11 @@ public class App extends Application {
             e.printStackTrace();
         }
         return 1;
+    }
+
+
+    public Context getContext(){
+        return this.getApplicationContext();
     }
 
 }

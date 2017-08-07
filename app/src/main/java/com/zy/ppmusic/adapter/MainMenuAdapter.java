@@ -31,6 +31,18 @@ public class MainMenuAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         this.listener = listener;
     }
 
+    public void onUpdateItemTitle(int position,String title){
+        MainMenuEntity itemByTitle = getItemByPosition(position);
+        if(itemByTitle != null){
+            itemByTitle.setMenuTitle(title);
+            notifyItemChanged(position);
+        }
+    }
+
+    private MainMenuEntity getItemByPosition(int pos){
+        return mDatas.get(pos);
+    }
+
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         mContext = viewGroup.getContext();

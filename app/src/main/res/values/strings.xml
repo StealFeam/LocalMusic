@@ -29,6 +29,6 @@
     <string name="string_del_desc">此操作会同时删除本地文件</string>
     <string name="string_del">删除</string>
     <string name="string_cancel">取消</string>
-    <string name="string_custom_time_hint">自定义时长</string>
+    <string name="string_custom_time_hint">自定义</string>
     <string name="string_sure">确定</string>
 </resources>

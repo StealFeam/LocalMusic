@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.os.ResultReceiver;
 import android.os.SystemClock;
@@ -57,8 +58,6 @@ public class MediaService extends MediaBrowserServiceCompat {
     //快进
     public static final String SEEK_TO_POSITION_PARAM = "SEEK_TO_POSITION_PARAM";
 
-
-
     /*-------------------command action--------------------------*/
     //获取播放位置
     public static final String COMMAND_POSITION = "COMMAND_POSITION";
@@ -67,14 +66,20 @@ public class MediaService extends MediaBrowserServiceCompat {
 
     //更新播放列表
     public static final String COMMAND_UPDATE_QUEUE = "COMMAND_UPDATE_QUEUE";
-    /*-------------------command action end--------------------------*/
 
+
+    /*-------------------command action end--------------------------*/
+    /*-------------------custom action start--------------------------*/
     //播放列表为空，本地未搜索到曲目
     public static final String ERROR_PLAY_QUEUE_EVENT = "ERROR_PLAY_QUEUE_EVENT";
     //加载中....
     public static final String LOADING_QUEUE_EVENT = "LOADING_QUEUE_EVENT";
     //加载完成....
     public static final String LOAD_COMPLETE_EVENT = "LOAD_COMPLETE_EVENT";
+
+    public static final String ACTION_COUNT_DOWN_TIME = "ACTION_COUNT_DOWN_TIME";
+    public static final String ACTION_COUNT_DOWN_END = "ACTION_COUNT_DOWN_END";
+    /*-------------------custom action end--------------------------*/
 
     //通知的id
     public static final int NOTIFY_ID = 412;
@@ -90,6 +95,7 @@ public class MediaService extends MediaBrowserServiceCompat {
     private boolean isAutoContinuedPlay = true;//播放完成是否继续下一首
     private List<MediaBrowserCompat.MediaItem> mMediaItemList = new ArrayList<>();
     private List<MediaSessionCompat.QueueItem> mQueueItemList = new ArrayList<>();
+    private CountDownTimer timer;
 
     @Override
     public void onCreate() {
@@ -433,6 +439,12 @@ public class MediaService extends MediaBrowserServiceCompat {
         }
 
         @Override
+        public void onStop() {
+            super.onStop();
+            handleStopRequest(true);
+        }
+
+        @Override
         public void onSkipToNext() {
             Log.d(TAG, "onSkipToNext() called");
             changeMediaByMode(true,false);
@@ -473,21 +485,22 @@ public class MediaService extends MediaBrowserServiceCompat {
         }
 
         @Override
-        public void onCommand(String command, Bundle extras, ResultReceiver cb) {
-            Bundle extra = new Bundle();
+        public void onCommand(String command, final Bundle reqExtra, final ResultReceiver cb) {
+            final Bundle resultExtra = new Bundle();
             switch (command) {
                 case COMMAND_POSITION:
-                    extra.putInt("position", mPlayBack.getCurrentStreamPosition());
+                    resultExtra.putInt("position", mPlayBack.getCurrentStreamPosition());
                     if(cb != null){
-                        cb.send(COMMAND_POSITION_CODE, extra);
+                        cb.send(COMMAND_POSITION_CODE, resultExtra);
                     }
                     break;
                 case COMMAND_UPDATE_QUEUE:
                     updateQueue();
                     break;
+
                 default:
                     System.out.println("onCommand no match");
-                    super.onCommand(command, extras, cb);
+                    super.onCommand(command, reqExtra, cb);
                     break;
             }
         }
@@ -504,6 +517,31 @@ public class MediaService extends MediaBrowserServiceCompat {
             removeQueueItemAt(index);
         }
 
+
+        @Override
+        public void onCustomAction(String action, Bundle extras) {
+            super.onCustomAction(action, extras);
+            switch (action){
+                case ACTION_COUNT_DOWN_TIME:
+                    if(timer == null){
+                        timer = new CountDownTimer(extras.getLong(ACTION_COUNT_DOWN_TIME),1000) {
+                            @Override
+                            public void onTick(long millisUntilFinished) {
+                                Bundle bundle = new Bundle();
+                                bundle.putLong(ACTION_COUNT_DOWN_TIME,millisUntilFinished);
+                                mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_TIME,bundle);
+                            }
+
+                            @Override
+                            public void onFinish() {
+                                mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_END,null);
+                            }
+                        };
+                        timer.start();
+                    }
+                    break;
+            }
+        }
     }
 
     public void removeQueueItemAt(int index){

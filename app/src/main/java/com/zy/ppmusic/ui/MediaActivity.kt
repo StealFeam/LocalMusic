@@ -1,14 +1,13 @@
 package com.zy.ppmusic.ui
 
-import android.animation.*
 import android.content.ComponentName
 import android.content.Intent
-import android.content.res.ColorStateList
-import android.os.*
+import android.os.Bundle
+import android.os.Handler
+import android.os.Message
+import android.os.ResultReceiver
 import android.support.design.widget.BottomSheetDialog
 import android.support.design.widget.Snackbar
-import android.support.v4.content.ContextCompat
-import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -21,6 +20,7 @@ import android.support.v7.widget.*
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
 import com.zy.ppmusic.R
@@ -34,6 +34,7 @@ import com.zy.ppmusic.entity.MainMenuEntity
 import com.zy.ppmusic.presenter.MediaPresenterImpl
 import com.zy.ppmusic.service.MediaService
 import java.lang.ref.WeakReference
+import java.util.*
 
 /**
  * 与MediaService两种通信方式：
@@ -42,27 +43,11 @@ import java.lang.ref.WeakReference
  *
  */
 class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
-    override fun onTimeEnd() {
-        finish()
-    }
 
-    override fun showLoading() {
-        println("showLoading。。。。。")
-        if (mLoadingDialog == null) {
-            mLoadingDialog = AppCompatDialog(this, R.style.TransDialog)
-            mLoadingDialog!!.setContentView(LayoutInflater.from(this).inflate(R.layout.loading_layout, null))
-        }
-        mLoadingDialog!!.show()
-    }
-
-    override fun hideLoading() {
-        println("hideLoading。。。。。")
-        if (mLoadingDialog != null && mLoadingDialog!!.isShowing) {
-            mLoadingDialog!!.dismiss()
-        }
-    }
 
     private var mMediaBrowser: MediaBrowserCompat? = null
+    var mMainMenuRecycler: RecyclerView? = null
+    var mMainMenuAdapter:MainMenuAdapter ?= null
     var mMediaId: String? = null
     var mMediaController: MediaControllerCompat? = null//媒体控制器
     var mPlayQueueList: MutableList<MediaSessionCompat.QueueItem>? = null//播放列表与service同步
@@ -85,7 +70,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     var mLooperHandler: LoopHandler? = null//循环处理
     var mResultReceive: MediaResultReceive? = null//媒体播放进度处理
     var mIsTrackingBar: Boolean? = false//是否正在拖动进度条
-    var mFunctionRecycler: RecyclerView? = null
+
     var mPresenter: IMediaActivityContract.IPresenter? = null
     var mLoadingDialog: AppCompatDialog? = null//加载中的dialog
     var mLoopModelRecycler: RecyclerView? = null//播放模式的recycler
@@ -93,10 +78,11 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     var mBottomLoopModeDialog: BottomSheetDialog? = null//播放模式的dialog
     var mLoopModelContentView: View? = null//播放模式dialog的content
 
-    var mTimeClockDialog:BottomSheetDialog ?=null//倒计时选择的dialog
-    var mTimeContentView:View?=null
-    var mTimeClockAdapter:TimeClockAdapter ?= null
-    var mTimeClockRecycler:RecyclerView?=null
+    var mTimeClockDialog: BottomSheetDialog? = null//倒计时选择的dialog
+    var mTimeContentView: View? = null
+    var mTimeClockAdapter: TimeClockAdapter? = null
+    var mTimeClockRecycler: RecyclerView? = null
+    var mDelayHandler: Handler? = null
 
     /*
      * 实现自循环1s后请求播放器播放的位置
@@ -163,19 +149,19 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         ivPreviousAction = findViewById(R.id.control_action_previous) as AppCompatImageView
         ivModelAction = findViewById(R.id.control_action_loop_model) as AppCompatImageView
 
-        mFunctionRecycler = findViewById(R.id.more_function_recycle) as RecyclerView
+        mMainMenuRecycler = findViewById(R.id.more_function_recycle) as RecyclerView
 
         mPresenter = MediaPresenterImpl(this)
 
         val dataList = ArrayList<MainMenuEntity>()
         dataList.add(MainMenuEntity("扫描音乐", R.drawable.ic_search_music))
         dataList.add(MainMenuEntity("蓝牙管理", R.drawable.ic_bl_manager))
-        dataList.add(MainMenuEntity("定时关闭",R.drawable.ic_time_clock))
-        val adapter = MainMenuAdapter(dataList)
-        mFunctionRecycler!!.adapter = adapter
-        mFunctionRecycler!!.layoutManager = GridLayoutManager(this, 3)
+        dataList.add(MainMenuEntity("定时关闭", R.drawable.ic_time_clock))
+        mMainMenuAdapter = MainMenuAdapter(dataList)
+        mMainMenuRecycler!!.adapter = mMainMenuAdapter
+        mMainMenuRecycler!!.layoutManager = GridLayoutManager(this, 3)
 
-        adapter.setListener { _, position ->
+        mMainMenuAdapter!!.setListener { _, position ->
             //view,position
             when (position) {
                 0 -> {//刷新播放列表
@@ -186,18 +172,60 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                     val intent = Intent(this@MediaActivity, BlScanActivity::class.java)
                     startActivity(intent)
                 }
-                2->{//定时关闭
-                    if(mTimeContentView == null){
-                        mTimeClockDialog = BottomSheetDialog(this@MediaActivity)
+                2 -> {//定时关闭
+                    if (mTimeContentView == null) {
+                        mTimeClockDialog = BottomSheetDialog(this@MediaActivity, R.style.DialogWithEditStyle)
                         mTimeContentView = LayoutInflater.from(this@MediaActivity).
-                                inflate(R.layout.layout_time_lock,null)
+                                inflate(R.layout.layout_time_lock, null)
                         mTimeClockRecycler = mTimeContentView!!.findViewById(R.id.time_selector_recycler) as RecyclerView
                         mTimeClockRecycler!!.layoutManager = LinearLayoutManager(this@MediaActivity)
-                        mTimeClockRecycler!!.adapter = TimeClockAdapter()
-                        mTimeClockAdapter!!.setListener { _, position ->
-                            var length = mTimeClockAdapter!!.getItem(position)
+                        mTimeClockAdapter = TimeClockAdapter()
+                        mTimeClockRecycler!!.adapter = mTimeClockAdapter
+                        mTimeClockAdapter!!.setListener { _, p ->
+                            var length = mTimeClockAdapter!!.getItem(p)
                             length *= 1000 * 60
-                            mPresenter!!.startTimeClock(length.toLong())
+                            val bundle = Bundle()
+                            bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME, length.toLong())
+                            mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME,bundle)
+                            mTimeClockDialog!!.dismiss()
+                        }
+                        val lengthSeekBar = mTimeContentView!!.findViewById(R.id.time_selector_seek_bar) as AppCompatSeekBar
+                        val progressHintTv = mTimeContentView!!.findViewById(R.id.time_selector_progress_hint_tv) as TextView
+                        lengthSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                            var percent = 0f
+                            override fun onProgressChanged(s: SeekBar?, progress: Int, fromUser: Boolean) {
+                                progressHintTv.translationX = percent * progress
+                                progressHintTv.text = String.format(Locale.CHINA, "%d", (progress + 1))
+                            }
+
+                            override fun onStartTrackingTouch(s: SeekBar?) {
+                                val transXRound = (s!!.measuredWidth - s.paddingLeft - s.paddingEnd
+                                        + progressHintTv.measuredWidth / 2).toFloat()
+                                println("onStartTrackingTouch  $transXRound," + s.measuredWidth)
+                                val mMaxProgress = s.max.toFloat()
+                                percent = transXRound / mMaxProgress
+                                if (mDelayHandler == null) {
+                                    mDelayHandler = Handler()
+                                }
+                                mDelayHandler!!.removeCallbacksAndMessages(null)
+                                progressHintTv.visibility = View.VISIBLE
+                            }
+
+                            override fun onStopTrackingTouch(s: SeekBar?) {
+                                mDelayHandler!!.postDelayed({
+                                    progressHintTv.visibility = View.INVISIBLE
+                                }, 1000)
+                            }
+
+                        })
+                        val btnSure = mTimeContentView!!.findViewById(R.id.time_selector_sure_btn) as Button
+                        btnSure.setOnClickListener {
+                            println("current Thread...."+mainLooper.thread)
+                            val bundle = Bundle()
+                            bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME,
+                                    ((lengthSeekBar.progress + 1) * 1000 * 60).toLong())
+                            mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME,bundle)
+                            mTimeClockDialog!!.dismiss()
                         }
                         mTimeClockDialog!!.setContentView(mTimeContentView)
                     }
@@ -311,20 +339,20 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             }
 
             mBottomQueueAdapter!!.setOnDelListener { position ->
-                    val dialog = AlertDialog.Builder(this@MediaActivity)
-                    dialog.setTitle(getString(R.string.string_sure_del))
-                    dialog.setMessage(getString(R.string.string_del_desc))
-                    dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
-                        mMediaController!!.removeQueueItemAt(position)
-                        mPlayQueueList!!.removeAt(position)
-                        mBottomQueueAdapter!!.setData(mPlayQueueList)
-                        mBottomQueueAdapter!!.notifyItemRemoved(position)
-                    }
-                    dialog.setNegativeButton(getString(R.string.string_cancel)) { d, _ ->
-                        d.cancel()
-                        d.dismiss()
-                    }
-                    dialog.create().show()
+                val dialog = AlertDialog.Builder(this@MediaActivity)
+                dialog.setTitle(getString(R.string.string_sure_del))
+                dialog.setMessage(getString(R.string.string_del_desc))
+                dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
+                    mMediaController!!.removeQueueItemAt(position)
+                    mPlayQueueList!!.removeAt(position)
+                    mBottomQueueAdapter!!.setData(mPlayQueueList)
+                    mBottomQueueAdapter!!.notifyItemRemoved(position)
+                }
+                dialog.setNegativeButton(getString(R.string.string_cancel)) { d, _ ->
+                    d.cancel()
+                    d.dismiss()
+                }
+                dialog.create().show()
             }
             mQueueRecycler!!.adapter = mBottomQueueAdapter
             mQueueRecycler!!.layoutManager = LinearLayoutManager(this)
@@ -362,42 +390,12 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         startLoop()
     }
 
-    var mRootBgColorAnim: ValueAnimator? = null
-
     override fun onResume() {
         super.onResume()
-        if (mRootBgColorAnim == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mRootBgColorAnim = ValueAnimator.ofArgb(ContextCompat.getColor(this, R.color.colorBlack)
-                    , ContextCompat.getColor(this, R.color.colorAccent),
-                    ContextCompat.getColor(this, R.color.colorTheme))
-            mRootBgColorAnim!!.repeatCount = -1
-            mRootBgColorAnim!!.repeatMode = ObjectAnimator.REVERSE
-            mRootBgColorAnim!!.duration = 6000
-            mRootBgColorAnim!!.addUpdateListener { animation ->
-                val colorInt = animation.animatedValue as Int
-                changeColor(colorInt)
-            }
-            mRootBgColorAnim!!.start()
-        }
-    }
-
-    fun changeColor(color: Int) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            ivShowQueueAction!!.imageTintList = ColorStateList.valueOf(color)
-            ivModelAction!!.imageTintList = ColorStateList.valueOf(color)
-            ivNextAction!!.imageTintList = ColorStateList.valueOf(color)
-            ivPlayAction!!.imageTintList = ColorStateList.valueOf(color)
-            ivPreviousAction!!.imageTintList = ColorStateList.valueOf(color)
-        }
     }
 
     override fun onPause() {
         super.onPause()
-        if (mRootBgColorAnim != null) {
-            mRootBgColorAnim!!.pause()
-            mRootBgColorAnim!!.cancel()
-            mRootBgColorAnim = null
-        }
         println("onPause called")
     }
 
@@ -405,6 +403,23 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         super.onNewIntent(intent)
         println("called onNewIntent")
     }
+
+    override fun showLoading() {
+        println("showLoading。。。。。")
+        if (mLoadingDialog == null) {
+            mLoadingDialog = AppCompatDialog(this, R.style.TransDialog)
+            mLoadingDialog!!.setContentView(LayoutInflater.from(this).inflate(R.layout.loading_layout, null))
+        }
+        mLoadingDialog!!.show()
+    }
+
+    override fun hideLoading() {
+        println("hideLoading。。。。。")
+        if (mLoadingDialog != null && mLoadingDialog!!.isShowing) {
+            mLoadingDialog!!.dismiss()
+        }
+    }
+
 
     /**
      * 连接状态回调
@@ -534,7 +549,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
         override fun onSessionEvent(event: String?, extras: Bundle?) {
             super.onSessionEvent(event, extras)
-            println("onSessionEvent....." + event + "," + extras.toString())
             when (event) {
                 MediaService.ERROR_PLAY_QUEUE_EVENT -> {
                     showMsg("播放列表为空，未发现曲目")
@@ -546,6 +560,17 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 MediaService.LOAD_COMPLETE_EVENT -> {
                     showMsg("加载完成....")
                     hideLoading()
+                }
+                MediaService.ACTION_COUNT_DOWN_TIME->{
+                    val mis = extras!!.getLong(MediaService.ACTION_COUNT_DOWN_TIME)
+                    mMainMenuAdapter!!.onUpdateItemTitle(2, String.format(Locale.CHINA,"%02d:%02d",mis/1000/60,mis/1000 % 60))
+                }
+
+                MediaService.ACTION_COUNT_DOWN_END->{
+                    mMainMenuAdapter!!.onUpdateItemTitle(2, "定时关闭")
+                }
+                else->{
+                    println("onSessionEvent....." + event + "," + extras.toString())
                 }
             }
         }
@@ -604,7 +629,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     /**
      * 断开媒体服务
      */
-    fun disConnectService(){
+    fun disConnectService() {
         //释放控制器
         val mediaController = MediaControllerCompat.getMediaController(this@MediaActivity)
         if (mediaController != null) {
