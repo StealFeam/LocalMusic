@@ -33,6 +33,7 @@ import com.zy.ppmusic.contract.IMediaActivityContract
 import com.zy.ppmusic.entity.MainMenuEntity
 import com.zy.ppmusic.presenter.MediaPresenterImpl
 import com.zy.ppmusic.service.MediaService
+import com.zy.ppmusic.view.BorderTextView
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -43,11 +44,9 @@ import java.util.*
  *
  */
 class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
-
-
     private var mMediaBrowser: MediaBrowserCompat? = null
     var mMainMenuRecycler: RecyclerView? = null
-    var mMainMenuAdapter:MainMenuAdapter ?= null
+    var mMainMenuAdapter: MainMenuAdapter? = null
     var mMediaId: String? = null
     var mMediaController: MediaControllerCompat? = null//媒体控制器
     var mPlayQueueList: MutableList<MediaSessionCompat.QueueItem>? = null//播放列表与service同步
@@ -83,6 +82,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     var mTimeClockAdapter: TimeClockAdapter? = null
     var mTimeClockRecycler: RecyclerView? = null
     var mDelayHandler: Handler? = null
+    var mBorderTextView: BorderTextView? = null
 
     /*
      * 实现自循环1s后请求播放器播放的位置
@@ -150,7 +150,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         ivModelAction = findViewById(R.id.control_action_loop_model) as AppCompatImageView
 
         mMainMenuRecycler = findViewById(R.id.more_function_recycle) as RecyclerView
-
         mPresenter = MediaPresenterImpl(this)
 
         val dataList = ArrayList<MainMenuEntity>()
@@ -182,12 +181,24 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                         mTimeClockAdapter = TimeClockAdapter()
                         mTimeClockRecycler!!.adapter = mTimeClockAdapter
                         mTimeClockAdapter!!.setListener { _, p ->
-                            var length = mTimeClockAdapter!!.getItem(p)
+                            mTimeClockDialog!!.dismiss()
+                            var length: Int = 0
+                            //如果正在倒计时判断是否需要停止倒计时
+                            if (mTimeClockAdapter!!.isTick) {
+                                if (p == 0) {//发送停止倒计时，隐藏倒计时文本
+                                    mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_STOP_COUNT_DOWN, null)
+                                    mBorderTextView!!.hide()
+                                    return@setListener
+                                } else {
+                                    length = mTimeClockAdapter!!.getItem(p - 1)
+                                }
+                            } else {
+                                length = mTimeClockAdapter!!.getItem(p)
+                            }
                             length *= 1000 * 60
                             val bundle = Bundle()
                             bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME, length.toLong())
-                            mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME,bundle)
-                            mTimeClockDialog!!.dismiss()
+                            mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME, bundle)
                         }
                         val lengthSeekBar = mTimeContentView!!.findViewById(R.id.time_selector_seek_bar) as AppCompatSeekBar
                         val progressHintTv = mTimeContentView!!.findViewById(R.id.time_selector_progress_hint_tv) as TextView
@@ -201,7 +212,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                             override fun onStartTrackingTouch(s: SeekBar?) {
                                 val transXRound = (s!!.measuredWidth - s.paddingLeft - s.paddingEnd
                                         + progressHintTv.measuredWidth / 2).toFloat()
-                                println("onStartTrackingTouch  $transXRound," + s.measuredWidth)
                                 val mMaxProgress = s.max.toFloat()
                                 percent = transXRound / mMaxProgress
                                 if (mDelayHandler == null) {
@@ -220,14 +230,18 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                         })
                         val btnSure = mTimeContentView!!.findViewById(R.id.time_selector_sure_btn) as Button
                         btnSure.setOnClickListener {
-                            println("current Thread...."+mainLooper.thread)
                             val bundle = Bundle()
                             bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME,
                                     ((lengthSeekBar.progress + 1) * 1000 * 60).toLong())
-                            mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME,bundle)
+                            mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME, bundle)
                             mTimeClockDialog!!.dismiss()
                         }
                         mTimeClockDialog!!.setContentView(mTimeContentView)
+                    }
+                    if (mBorderTextView != null && mBorderTextView!!.visibility == View.VISIBLE) {
+                        mTimeClockAdapter!!.setTicking(true)
+                    } else {
+                        mTimeClockAdapter!!.setTicking(false)
                     }
                     mTimeClockDialog!!.show()
                 }
@@ -360,7 +374,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         })
     }
 
-
     /**
      * IView
      * 刷新列表的回调
@@ -419,7 +432,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             mLoadingDialog!!.dismiss()
         }
     }
-
 
     /**
      * 连接状态回调
@@ -561,15 +573,32 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                     showMsg("加载完成....")
                     hideLoading()
                 }
-                MediaService.ACTION_COUNT_DOWN_TIME->{
+                MediaService.ACTION_COUNT_DOWN_TIME -> {
                     val mis = extras!!.getLong(MediaService.ACTION_COUNT_DOWN_TIME)
-                    mMainMenuAdapter!!.onUpdateItemTitle(2, String.format(Locale.CHINA,"%02d:%02d",mis/1000/60,mis/1000 % 60))
-                }
+                    if (mBorderTextView == null) {
+                        mBorderTextView = BorderTextView(this@MediaActivity)
+                    }
+                    val h = mis / (60L * 60L * 1000L)
+                    val m = (mis / (60L * 1000L)) - h * 60L
+                    val s = (mis % (60L * 1000L)) / 1000L
+                    val formatStr: String
+                    if (h > 0) {
+                        formatStr = "%dh:%02dm:%02ds关闭"
+                        mBorderTextView!!.show(ivNextAction, String.format(Locale.CHINA, formatStr, h, m, s))
+                    } else {
+                        formatStr = "%02d:%02d关闭"
+                        mBorderTextView!!.show(ivNextAction, String.format(Locale.CHINA, formatStr, m, s))
+                    }
 
-                MediaService.ACTION_COUNT_DOWN_END->{
-                    mMainMenuAdapter!!.onUpdateItemTitle(2, "定时关闭")
                 }
-                else->{
+                MediaService.ACTION_COUNT_DOWN_END -> {
+                    if (mBorderTextView != null) {
+                        mBorderTextView!!.hide()
+                        disConnectService()
+                        finish()
+                    }
+                }
+                else -> {
                     println("onSessionEvent....." + event + "," + extras.toString())
                 }
             }
@@ -644,7 +673,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         mMediaBrowser!!.disconnect()
         mMediaBrowser = null
     }
-
 
     override fun onStop() {
         super.onStop()

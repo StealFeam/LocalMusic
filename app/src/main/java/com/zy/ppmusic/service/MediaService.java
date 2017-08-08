@@ -25,10 +25,10 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 
-import com.zy.ppmusic.ui.MediaActivity;
 import com.zy.ppmusic.data.db.DBManager;
 import com.zy.ppmusic.entity.MusicDbEntity;
 import com.zy.ppmusic.entity.MusicInfoEntity;
+import com.zy.ppmusic.ui.MediaActivity;
 import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.FileUtils;
 import com.zy.ppmusic.utils.NotificationUtils;
@@ -76,9 +76,12 @@ public class MediaService extends MediaBrowserServiceCompat {
     public static final String LOADING_QUEUE_EVENT = "LOADING_QUEUE_EVENT";
     //加载完成....
     public static final String LOAD_COMPLETE_EVENT = "LOAD_COMPLETE_EVENT";
-
+    //开始倒计时
     public static final String ACTION_COUNT_DOWN_TIME = "ACTION_COUNT_DOWN_TIME";
+    //倒计时结束
     public static final String ACTION_COUNT_DOWN_END = "ACTION_COUNT_DOWN_END";
+    //停止倒计时
+    public static final String ACTION_STOP_COUNT_DOWN = "ACTION_STOP_COUNT_DOWN";
     /*-------------------custom action end--------------------------*/
 
     //通知的id
@@ -111,7 +114,7 @@ public class MediaService extends MediaBrowserServiceCompat {
         mMediaSessionCompat.setPlaybackState(mPlayBackStateBuilder.build());
         mMediaSessionCompat.setCallback(new MediaSessionCallBack());
         mMediaSessionCompat.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
-                MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS|MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS);
+                MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS | MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS);
 
         mMediaSessionCompat.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE);
 
@@ -161,9 +164,9 @@ public class MediaService extends MediaBrowserServiceCompat {
     @Nullable
     @Override
     public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUId, @Nullable Bundle bundle) {
-        if(clientPackageName.equals(getPackageName())){
+        if (clientPackageName.equals(getPackageName())) {
             return new BrowserRoot(clientPackageName, bundle);
-        }else{
+        } else {
             return null;
         }
     }
@@ -171,7 +174,7 @@ public class MediaService extends MediaBrowserServiceCompat {
     @Override
     public void onLoadChildren(@NonNull String s, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
         Log.d(TAG, "service onLoadChildren() called with: s = [" + s + "], result = [" + result + "]");
-        mMediaSessionCompat.sendSessionEvent(LOADING_QUEUE_EVENT,null);
+        mMediaSessionCompat.sendSessionEvent(LOADING_QUEUE_EVENT, null);
         if (s.equals(getPackageName())) {
             //如果当前队列为空时
             if (mMediaItemList.size() == 0) {
@@ -185,19 +188,19 @@ public class MediaService extends MediaBrowserServiceCompat {
                     mPlayBack.setPlayQueue(mPlayQueueMediaId);
                     mMediaSessionCompat.setQueue(mQueueItemList);
                     result.sendResult(mMediaItemList);
-                    mMediaSessionCompat.sendSessionEvent(LOAD_COMPLETE_EVENT,null);
+                    mMediaSessionCompat.sendSessionEvent(LOAD_COMPLETE_EVENT, null);
                 } else {
                     ScanMusicFile.getInstance().scanMusicFile(this).setOnScanComplete(new ScanMusicFile.OnScanComplete() {
                         @Override
                         protected void onComplete(ArrayList<String> paths) {
-                            DataTransform.getInstance().transFormData(getApplicationContext(),paths);
+                            DataTransform.getInstance().transFormData(getApplicationContext(), paths);
                             mMediaItemList = DataTransform.getInstance().getMediaItemList();
                             mQueueItemList = DataTransform.getInstance().getQueueItemList();
                             mPlayQueueMediaId = DataTransform.getInstance().getMediaIdList();
                             mPlayBack.setPlayQueue(mPlayQueueMediaId);
                             mMediaSessionCompat.setQueue(mQueueItemList);
                             result.sendResult(mMediaItemList);
-                            mMediaSessionCompat.sendSessionEvent(LOAD_COMPLETE_EVENT,null);
+                            mMediaSessionCompat.sendSessionEvent(LOAD_COMPLETE_EVENT, null);
                             FileUtils.saveObject(DataTransform.getInstance().getMusicInfoEntities(),
                                     getCacheDir().getAbsolutePath());
                         }
@@ -205,7 +208,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                 }
             } else {//不为空直接替换列表
                 result.sendResult(mMediaItemList);
-                mMediaSessionCompat.sendSessionEvent(LOAD_COMPLETE_EVENT,null);
+                mMediaSessionCompat.sendSessionEvent(LOAD_COMPLETE_EVENT, null);
             }
         }
     }
@@ -221,7 +224,7 @@ public class MediaService extends MediaBrowserServiceCompat {
             savePlayingRecord();
         }
         if (!isNeedEnd) {
-            changeMediaByMode(true,true);
+            changeMediaByMode(true, true);
         } else {
             mNotificationManager.cancel(NOTIFY_ID);
             mMediaSessionCompat.setActive(false);
@@ -231,12 +234,11 @@ public class MediaService extends MediaBrowserServiceCompat {
     }
 
     /**
-     *
-     * @param isNext 是否是下一首操作
+     * @param isNext     是否是下一首操作
      * @param isComplete 调用是否来自歌曲播放完成
      */
-    private void changeMediaByMode(boolean isNext,boolean isComplete){
-        Log.e(TAG, "changeMediaByMode: "+mMediaSessionCompat.getController().getRepeatMode());
+    private void changeMediaByMode(boolean isNext, boolean isComplete) {
+        Log.e(TAG, "changeMediaByMode: " + mMediaSessionCompat.getController().getRepeatMode());
         //判断重复模式，单曲重复，随机播放，列表播放
         switch (mMediaSessionCompat.getController().getRepeatMode()) {
             //随机播放：自动下一首
@@ -253,17 +255,17 @@ public class MediaService extends MediaBrowserServiceCompat {
                 break;
             //列表播放：判断是否播放到列表的最后
             case PlaybackStateCompat.REPEAT_MODE_NONE:
-                if(isNext){
+                if (isNext) {
                     int position = mQueueItemList.indexOf(mCurrentMedia);
                     //如果不是当前歌曲播放完成自动调用的话，就直接播放下一首
-                    if (!isComplete||position < (mQueueItemList.size() - 1)) {
+                    if (!isComplete || position < (mQueueItemList.size() - 1)) {
                         onMediaChange(mPlayBack.onSkipToNext());
                         handlePlayOrPauseRequest();
                     } else {
                         onMediaChange(null);
                         Log.e(TAG, "handleStopRequest: 已播放到最后一首曲目");
                     }
-                }else{
+                } else {
                     onMediaChange(mPlayBack.onSkipToPrevious());
                     handlePlayOrPauseRequest();
                 }
@@ -292,7 +294,7 @@ public class MediaService extends MediaBrowserServiceCompat {
      * 当播放状态发生改变时
      *
      * @param errorCode 错误代码
-     * @param error 错误描述
+     * @param error     错误描述
      */
     private void onPlayStateChange(int errorCode, String error) {
         Log.d(TAG, "onPlayStateChange() called with: " + mPlayBack.getState());
@@ -320,7 +322,7 @@ public class MediaService extends MediaBrowserServiceCompat {
 
         Notification notification = NotificationUtils.postNotify(this, mMediaSessionCompat,
                 mPlayBack.isPlaying());
-        if(notification!=null){
+        if (notification != null) {
             startForeground(NOTIFY_ID, notification);
         }
 
@@ -355,15 +357,15 @@ public class MediaService extends MediaBrowserServiceCompat {
     /**
      * 更新列表
      */
-    private void updateQueue(){
+    private void updateQueue() {
         mMediaItemList = DataTransform.getInstance().getMediaItemList();
-        Log.e(TAG, "updateQueue: "+mMediaItemList.toString() );
+        Log.e(TAG, "updateQueue: " + mMediaItemList.toString());
 
         mQueueItemList = DataTransform.getInstance().getQueueItemList();
         mPlayQueueMediaId = DataTransform.getInstance().getMediaIdList();
         mPlayBack.setPlayQueue(mPlayQueueMediaId);
         mMediaSessionCompat.setQueue(mQueueItemList);
-        if(mPlayQueueMediaId.size() > 0){
+        if (mPlayQueueMediaId.size() > 0) {
             onMediaChange(mPlayQueueMediaId.get(0));
         }
         mMediaSessionCompat.setQueue(mQueueItemList);
@@ -386,13 +388,13 @@ public class MediaService extends MediaBrowserServiceCompat {
                 String action = extras.getString(ACTION_PARAM);
                 Log.d(TAG, "onPlayFromMediaId: extra=" + action);
                 if (ACTION_PREPARED_WITH_ID.equals(action)) {//缓冲请求
-                    if("-1".equals(mediaId)){
-                        if(mPlayQueueMediaId != null && mPlayQueueMediaId.size() > 0){
+                    if ("-1".equals(mediaId)) {
+                        if (mPlayQueueMediaId != null && mPlayQueueMediaId.size() > 0) {
                             onMediaChange(mPlayQueueMediaId.get(0));
-                        }else{
-                            mMediaSessionCompat.sendSessionEvent(ERROR_PLAY_QUEUE_EVENT,null);
+                        } else {
+                            mMediaSessionCompat.sendSessionEvent(ERROR_PLAY_QUEUE_EVENT, null);
                         }
-                    }else{
+                    } else {
                         onMediaChange(mediaId);
                     }
                 } else if (ACTION_PLAY_WITH_ID.equals(action)) {//播放指定id请求
@@ -406,15 +408,15 @@ public class MediaService extends MediaBrowserServiceCompat {
                     List<MusicDbEntity> entity = DBManager.getInstance().initDb(getApplicationContext()).getEntity();
                     if (entity.size() > 0) {
                         onMediaChange(entity.get(0).getLastMediaId());
-                        mPlayBack.seekTo(entity.get(0).getLastPlayedPosition(),false);
+                        mPlayBack.seekTo(entity.get(0).getLastPlayedPosition(), false);
                     } else {
                         onMediaChange(mediaId);
                     }
-                }else if(ACTION_SEEK_TO.equals(action)){
+                } else if (ACTION_SEEK_TO.equals(action)) {
                     int seekPosition = extras.getInt(SEEK_TO_POSITION_PARAM);
-                    mPlayBack.seekTo(seekPosition,true);
-                    Log.e(TAG, "onPlayFromMediaId: "+seekPosition);
-                }else {
+                    mPlayBack.seekTo(seekPosition, true);
+                    Log.e(TAG, "onPlayFromMediaId: " + seekPosition);
+                } else {
 //                    onMediaChange(mediaId);
                 }
             }
@@ -447,28 +449,28 @@ public class MediaService extends MediaBrowserServiceCompat {
         @Override
         public void onSkipToNext() {
             Log.d(TAG, "onSkipToNext() called");
-            changeMediaByMode(true,false);
+            changeMediaByMode(true, false);
         }
 
         @Override
         public void onSkipToPrevious() {
             Log.d(TAG, "onSkipToPrevious() called");
-            changeMediaByMode(false,false);
+            changeMediaByMode(false, false);
         }
 
         @Override
         public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
             KeyEvent ke = mediaButtonEvent.getParcelableExtra("android.intent.extra.KEY_EVENT");
-            if(ke.getAction() == KeyEvent.ACTION_DOWN){
+            if (ke.getAction() == KeyEvent.ACTION_DOWN) {
                 switch (ke.getKeyCode()) {
                     case KeyEvent.KEYCODE_MEDIA_NEXT:
-                        changeMediaByMode(true,false);
+                        changeMediaByMode(true, false);
                         break;
                     case KeyEvent.KEYCODE_MEDIA_STOP:
                         handleStopRequest(true);
                         break;
                     case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
-                        changeMediaByMode(false,false);
+                        changeMediaByMode(false, false);
                         break;
                     case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                     case KeyEvent.KEYCODE_MEDIA_PAUSE:
@@ -478,8 +480,8 @@ public class MediaService extends MediaBrowserServiceCompat {
                     default:
                         break;
                 }
-            }else{
-                Log.w(TAG, "onMediaButtonEvent: action="+ke.getAction()+",code="+ke.getKeyCode());
+            } else {
+                Log.w(TAG, "onMediaButtonEvent: action=" + ke.getAction() + ",code=" + ke.getKeyCode());
             }
             return true;
         }
@@ -490,7 +492,7 @@ public class MediaService extends MediaBrowserServiceCompat {
             switch (command) {
                 case COMMAND_POSITION:
                     resultExtra.putInt("position", mPlayBack.getCurrentStreamPosition());
-                    if(cb != null){
+                    if (cb != null) {
                         cb.send(COMMAND_POSITION_CODE, resultExtra);
                     }
                     break;
@@ -521,31 +523,40 @@ public class MediaService extends MediaBrowserServiceCompat {
         @Override
         public void onCustomAction(String action, Bundle extras) {
             super.onCustomAction(action, extras);
-            switch (action){
+            switch (action) {
                 case ACTION_COUNT_DOWN_TIME:
-                    if(timer == null){
-                        timer = new CountDownTimer(extras.getLong(ACTION_COUNT_DOWN_TIME),1000) {
-                            @Override
-                            public void onTick(long millisUntilFinished) {
-                                Bundle bundle = new Bundle();
-                                bundle.putLong(ACTION_COUNT_DOWN_TIME,millisUntilFinished);
-                                mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_TIME,bundle);
-                            }
+                    if (timer != null) {
+                        timer.cancel();
+                        timer = null;
+                    }
+                    timer = new CountDownTimer(extras.getLong(ACTION_COUNT_DOWN_TIME), 1000) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+                            Bundle bundle = new Bundle();
+                            bundle.putLong(ACTION_COUNT_DOWN_TIME, millisUntilFinished);
+                            mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_TIME, bundle);
+                        }
 
-                            @Override
-                            public void onFinish() {
-                                mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_END,null);
-                            }
-                        };
-                        timer.start();
+                        @Override
+                        public void onFinish() {
+                            mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_END, null);
+                            handleStopRequest(true);
+                        }
+                    };
+                    timer.start();
+                    break;
+                case ACTION_STOP_COUNT_DOWN:
+                    if (timer != null) {
+                        timer.cancel();
+                        timer = null;
                     }
                     break;
             }
         }
     }
 
-    public void removeQueueItemAt(int index){
-        DataTransform.getInstance().removeItem(getApplicationContext(),index);
+    public void removeQueueItemAt(int index) {
+        DataTransform.getInstance().removeItem(getApplicationContext(), index);
         updateQueue();
     }
 
@@ -557,8 +568,8 @@ public class MediaService extends MediaBrowserServiceCompat {
             return;
         }
         //如果状态不为暂停或者播放，则重置媒体信息
-        if(mPlayBack.getState() != PlaybackStateCompat.ACTION_PAUSE
-                && mPlayBack.getState() != PlaybackStateCompat.STATE_PLAYING){
+        if (mPlayBack.getState() != PlaybackStateCompat.ACTION_PAUSE
+                && mPlayBack.getState() != PlaybackStateCompat.STATE_PLAYING) {
             onMediaChange(String.valueOf(mCurrentMedia.getQueueId()));
         }
         mPlayBack.play();

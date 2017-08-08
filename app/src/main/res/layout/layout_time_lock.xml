@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="@dimen/dp5"
     android:orientation="vertical">
 
     <android.support.v7.widget.RecyclerView
@@ -32,7 +33,8 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toEndOf="@+id/time_selector_desc"
         app:layout_constraintEnd_toStartOf="@+id/time_selector_sure_btn"
-        app:layout_constraintTop_toBottomOf="@+id/time_selector_progress_hint_tv" />
+        app:layout_constraintTop_toTopOf="@+id/time_selector_sure_btn"
+        app:layout_constraintBottom_toBottomOf="@+id/time_selector_sure_btn" />
 
     <Button
         android:id="@+id/time_selector_sure_btn"
@@ -44,8 +46,7 @@
         android:textColor="@color/colorTheme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/time_selector_seek_bar"
-        app:layout_constraintTop_toBottomOf="@+id/time_selector_progress_hint_tv"
-        app:layout_constraintBottom_toBottomOf="@+id/time_selector_seek_bar" />
+        app:layout_constraintTop_toBottomOf="@+id/time_selector_progress_hint_tv" />
 
     <TextView
         android:id="@+id/time_selector_progress_hint_tv"

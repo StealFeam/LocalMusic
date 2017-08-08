@@ -17,4 +17,5 @@ public class MediaModelImpl implements IMediaActivityContract.IModel {
     public void refreshQueue(Context context,ScanMusicFile.OnScanComplete complete) {
         ScanMusicFile.getInstance().scanMusicFile(context).setOnScanComplete(complete);
     }
+
 }
