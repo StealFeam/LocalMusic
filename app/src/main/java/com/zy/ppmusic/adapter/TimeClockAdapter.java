@@ -30,6 +30,9 @@ public class TimeClockAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
      * 是否正在倒计时
      */
     public void setTicking(boolean flag) {
+        if(isTicking == flag){
+            return;
+        }
         isTicking = flag;
         notifyDataSetChanged();
     }

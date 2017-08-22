@@ -2,6 +2,7 @@ package com.zy.ppmusic.ui
 
 import android.content.ComponentName
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
@@ -34,6 +35,8 @@ import com.zy.ppmusic.entity.MainMenuEntity
 import com.zy.ppmusic.presenter.MediaPresenterImpl
 import com.zy.ppmusic.service.MediaService
 import com.zy.ppmusic.view.BorderTextView
+import com.zy.ppmusic.view.EasyTintView
+import kotlinx.android.synthetic.main.activity_media.*
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -45,44 +48,44 @@ import java.util.*
  */
 class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     private var mMediaBrowser: MediaBrowserCompat? = null
-    var mMainMenuRecycler: RecyclerView? = null
-    var mMainMenuAdapter: MainMenuAdapter? = null
-    var mMediaId: String? = null
-    var mMediaController: MediaControllerCompat? = null//媒体控制器
-    var mPlayQueueList: MutableList<MediaSessionCompat.QueueItem>? = null//播放列表与service同步
-    var ivNextAction: AppCompatImageView? = null//下一首
-    var ivPreviousAction: AppCompatImageView? = null//上一首
-    var ivPlayAction: AppCompatImageView? = null//播放按钮
-    var ivModelAction: AppCompatImageView? = null//模式切换按钮
-    var ivShowQueueAction: AppCompatImageView? = null//展示播放列表
-    var tvDisPlayName: TextView? = null//歌曲名称显示
-    var tvSubName: TextView? = null//作者名称显示
-    var mQueueRecycler: RecyclerView? = null//播放列表的recycler
-    var mBottomQueueDialog: BottomSheetDialog? = null//展示播放列表的dialog
-    var mBottomQueueAdapter: PlayQueueAdapter? = null//播放列表的适配器
-    var mCurrentMediaIdStr: String? = null//当前播放的媒体id
-    var mProgressSeekBar: SeekBar? = null//播放进度条
-    var endPosition: Long = 0//结束位置
-    var stepPosition: Long = 0//自增量
-    var startPosition: Long = 0//起始位置
-    var percent: Float = 0f//当前percent
-    var mLooperHandler: LoopHandler? = null//循环处理
-    var mResultReceive: MediaResultReceive? = null//媒体播放进度处理
-    var mIsTrackingBar: Boolean? = false//是否正在拖动进度条
+    private var mMainMenuRecycler: RecyclerView? = null
+    private var mMainMenuAdapter: MainMenuAdapter? = null
+    private var mMediaId: String? = null
+    private var mMediaController: MediaControllerCompat? = null//媒体控制器
+    private var mPlayQueueList: MutableList<MediaSessionCompat.QueueItem>? = null//播放列表与service同步
+    private var ivNextAction: AppCompatImageView? = null//下一首
+    private var ivPreviousAction: AppCompatImageView? = null//上一首
+    private var ivPlayAction: AppCompatImageView? = null//播放按钮
+    private var ivModelAction: AppCompatImageView? = null//模式切换按钮
+    private var ivShowQueueAction: AppCompatImageView? = null//展示播放列表
+    private var tvDisPlayName: TextView? = null//歌曲名称显示
+    private var tvSubName: TextView? = null//作者名称显示
+    private var mQueueRecycler: RecyclerView? = null//播放列表的recycler
+    private var mBottomQueueDialog: BottomSheetDialog? = null//展示播放列表的dialog
+    private var mBottomQueueAdapter: PlayQueueAdapter? = null//播放列表的适配器
+    private var mCurrentMediaIdStr: String? = null//当前播放的媒体id
+    private var mProgressSeekBar: SeekBar? = null//播放进度条
+    private var endPosition: Long = 0//结束位置
+    private var stepPosition: Long = 0//自增量
+    private var startPosition: Long = 0//起始位置
+    private var percent: Float = 0f//当前percent
+    private var mLooperHandler: LoopHandler? = null//循环处理
+    private var mResultReceive: MediaResultReceive? = null//媒体播放进度处理
+    private var mIsTrackingBar: Boolean? = false//是否正在拖动进度条
 
-    var mPresenter: IMediaActivityContract.IPresenter? = null
-    var mLoadingDialog: AppCompatDialog? = null//加载中的dialog
-    var mLoopModelRecycler: RecyclerView? = null//播放模式的recycler
-    var mLoopModelAdapter: LoopModelAdapter? = null//播放模式的适配器
-    var mBottomLoopModeDialog: BottomSheetDialog? = null//播放模式的dialog
-    var mLoopModelContentView: View? = null//播放模式dialog的content
+    private var mPresenter: IMediaActivityContract.IPresenter? = null
+    private var mLoadingDialog: AppCompatDialog? = null//加载中的dialog
+    private var mLoopModelRecycler: RecyclerView? = null//播放模式的recycler
+    private var mLoopModelAdapter: LoopModelAdapter? = null//播放模式的适配器
+    private var mBottomLoopModeDialog: BottomSheetDialog? = null//播放模式的dialog
+    private var mLoopModelContentView: View? = null//播放模式dialog的content
 
-    var mTimeClockDialog: BottomSheetDialog? = null//倒计时选择的dialog
-    var mTimeContentView: View? = null
-    var mTimeClockAdapter: TimeClockAdapter? = null
-    var mTimeClockRecycler: RecyclerView? = null
-    var mDelayHandler: Handler? = null
-    var mBorderTextView: BorderTextView? = null
+    private var mTimeClockDialog: BottomSheetDialog? = null//倒计时选择的dialog
+    private var mTimeContentView: View? = null
+    private var mTimeClockAdapter: TimeClockAdapter? = null
+    private var mTimeClockRecycler: RecyclerView? = null
+    private var mDelayHandler: Handler? = null
+    private var mBorderTextView: BorderTextView? = null
 
     /*
      * 实现自循环1s后请求播放器播放的位置
@@ -172,77 +175,79 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                     startActivity(intent)
                 }
                 2 -> {//定时关闭
-                    if (mTimeContentView == null) {
-                        mTimeClockDialog = BottomSheetDialog(this@MediaActivity, R.style.DialogWithEditStyle)
-                        mTimeContentView = LayoutInflater.from(this@MediaActivity).
-                                inflate(R.layout.layout_time_lock, null)
-                        mTimeClockRecycler = mTimeContentView!!.findViewById(R.id.time_selector_recycler) as RecyclerView
-                        mTimeClockRecycler!!.layoutManager = LinearLayoutManager(this@MediaActivity)
-                        mTimeClockAdapter = TimeClockAdapter()
-                        mTimeClockRecycler!!.adapter = mTimeClockAdapter
-                        mTimeClockAdapter!!.setListener { _, p ->
-                            mTimeClockDialog!!.dismiss()
-                            var length: Int = 0
-                            //如果正在倒计时判断是否需要停止倒计时
-                            if (mTimeClockAdapter!!.isTick) {
-                                if (p == 0) {//发送停止倒计时，隐藏倒计时文本
-                                    mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_STOP_COUNT_DOWN, null)
-                                    mBorderTextView!!.hide()
-                                    return@setListener
-                                } else {
-                                    length = mTimeClockAdapter!!.getItem(p - 1)
-                                }
-                            } else {
-                                length = mTimeClockAdapter!!.getItem(p)
-                            }
-                            length *= 1000 * 60
-                            val bundle = Bundle()
-                            bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME, length.toLong())
-                            mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME, bundle)
-                        }
-                        val lengthSeekBar = mTimeContentView!!.findViewById(R.id.time_selector_seek_bar) as AppCompatSeekBar
-                        val progressHintTv = mTimeContentView!!.findViewById(R.id.time_selector_progress_hint_tv) as TextView
-                        lengthSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                            var percent = 0f
-                            override fun onProgressChanged(s: SeekBar?, progress: Int, fromUser: Boolean) {
-                                progressHintTv.translationX = percent * progress
-                                progressHintTv.text = String.format(Locale.CHINA, "%d", (progress + 1))
-                            }
-
-                            override fun onStartTrackingTouch(s: SeekBar?) {
-                                val transXRound = (s!!.measuredWidth - s.paddingLeft - s.paddingEnd
-                                        + progressHintTv.measuredWidth / 2).toFloat()
-                                val mMaxProgress = s.max.toFloat()
-                                percent = transXRound / mMaxProgress
-                                if (mDelayHandler == null) {
-                                    mDelayHandler = Handler()
-                                }
-                                mDelayHandler!!.removeCallbacksAndMessages(null)
-                                progressHintTv.visibility = View.VISIBLE
-                            }
-
-                            override fun onStopTrackingTouch(s: SeekBar?) {
-                                mDelayHandler!!.postDelayed({
-                                    progressHintTv.visibility = View.INVISIBLE
-                                }, 1000)
-                            }
-
-                        })
-                        val btnSure = mTimeContentView!!.findViewById(R.id.time_selector_sure_btn) as Button
-                        btnSure.setOnClickListener {
-                            val bundle = Bundle()
-                            bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME,
-                                    ((lengthSeekBar.progress + 1) * 1000 * 60).toLong())
-                            mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME, bundle)
-                            mTimeClockDialog!!.dismiss()
-                        }
-                        mTimeClockDialog!!.setContentView(mTimeContentView)
-                    }
+                    mTimeClockDialog = BottomSheetDialog(this@MediaActivity)
+                    mTimeContentView = LayoutInflater.from(this@MediaActivity).
+                            inflate(R.layout.layout_time_lock, null)
+                    mTimeClockRecycler = mTimeContentView!!.findViewById(R.id.time_selector_recycler) as RecyclerView
+                    mTimeClockRecycler!!.layoutManager = LinearLayoutManager(this@MediaActivity)
+                    mTimeClockAdapter = TimeClockAdapter()
+                    //如果正在倒计时显示取消计时选项，否则隐藏
                     if (mBorderTextView != null && mBorderTextView!!.visibility == View.VISIBLE) {
                         mTimeClockAdapter!!.setTicking(true)
                     } else {
                         mTimeClockAdapter!!.setTicking(false)
                     }
+                    mTimeClockRecycler!!.adapter = mTimeClockAdapter
+                    mTimeClockAdapter!!.setListener { _, p ->
+                        mTimeClockDialog!!.cancel()
+
+                        var length: Int = if (mTimeClockAdapter!!.isTick) {
+                            if (p == 0) {//发送停止倒计时，隐藏倒计时文本
+                                mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_STOP_COUNT_DOWN, null)
+                                mBorderTextView!!.hide()
+                                return@setListener
+                            } else {
+                                mTimeClockAdapter!!.getItem(p - 1)
+                            }
+                        } else {
+                            mTimeClockAdapter!!.getItem(p)
+                        }
+                        //如果正在倒计时判断是否需要停止倒计时
+                        length *= 1000 * 60
+                        val bundle = Bundle()
+                        bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME, length.toLong())
+                        mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME, bundle)
+                        mTimeClockDialog = null
+                    }
+                    val lengthSeekBar = mTimeContentView!!.findViewById(R.id.time_selector_seek_bar) as AppCompatSeekBar
+                    val progressHintTv = mTimeContentView!!.findViewById(R.id.time_selector_progress_hint_tv) as TextView
+                    progressHintTv.visibility = View.VISIBLE
+                    progressHintTv.text = String.format(Locale.CHINA, "%d", (lengthSeekBar.progress + 1))
+                    lengthSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                        var percent = 0f
+                        override fun onProgressChanged(s: SeekBar?, progress: Int, fromUser: Boolean) {
+                            progressHintTv.translationX = percent * progress
+                            progressHintTv.text = String.format(Locale.CHINA, "%d", (progress + 1))
+                        }
+
+                        override fun onStartTrackingTouch(s: SeekBar?) {
+                            val transXRound = (s!!.measuredWidth - s.paddingLeft - s.paddingEnd
+                                    + progressHintTv.measuredWidth / 2).toFloat()
+                            val mMaxProgress = s.max.toFloat()
+                            percent = transXRound / mMaxProgress
+                            if (mDelayHandler == null) {
+                                mDelayHandler = Handler()
+                            }
+                            mDelayHandler!!.removeCallbacksAndMessages(null)
+                            progressHintTv.visibility = View.VISIBLE
+                        }
+
+                        override fun onStopTrackingTouch(s: SeekBar?) {
+                            mDelayHandler!!.postDelayed({
+                                progressHintTv.visibility = View.INVISIBLE
+                            }, 1000)
+                        }
+                    })
+                    val btnSure = mTimeContentView!!.findViewById(R.id.time_selector_sure_btn) as Button
+                    btnSure.setOnClickListener {
+                        val bundle = Bundle()
+                        bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME,
+                                ((lengthSeekBar.progress + 1) * 1000 * 60).toLong())
+                        mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME, bundle)
+                        mTimeClockDialog!!.cancel()
+                        mTimeClockDialog = null
+                    }
+                    mTimeClockDialog!!.setContentView(mTimeContentView)
                     mTimeClockDialog!!.show()
                 }
             }
@@ -372,6 +377,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             mQueueRecycler!!.layoutManager = LinearLayoutManager(this)
             mBottomQueueDialog!!.show()
         })
+
     }
 
     /**
@@ -436,7 +442,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     /**
      * 连接状态回调
      */
-    val mConnectionCallBack = object : MediaBrowserCompat.ConnectionCallback() {
+    private val mConnectionCallBack = object : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
             super.onConnected()
             println("connected service....")
@@ -469,7 +475,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     /**
      * 播放器相关回调
      */
-    val subscriptionCallBack = object : MediaBrowserCompat.SubscriptionCallback() {
+    private val subscriptionCallBack = object : MediaBrowserCompat.SubscriptionCallback() {
         //service加载完成列表回调
         override fun onChildrenLoaded(parentId: String, children: MutableList<MediaBrowserCompat.MediaItem>) {
             super.onChildrenLoaded(parentId, children)
@@ -512,7 +518,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     /**
      * 媒体控制
      */
-    val mControllerCallBack = object : MediaControllerCompat.Callback() {
+    private val mControllerCallBack = object : MediaControllerCompat.Callback() {
         //当前歌曲信息变化回调
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
             super.onMetadataChanged(metadata)
@@ -644,7 +650,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     }
 
     fun showMsg(msg: String) {
-        Snackbar.make(ivModelAction!!, msg, Snackbar.LENGTH_SHORT).show()
+        EasyTintView.makeText(ivNextAction,msg,EasyTintView.TINT_SHORT).show()
     }
 
     /**

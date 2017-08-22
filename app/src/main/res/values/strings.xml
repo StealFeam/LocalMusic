@@ -31,4 +31,5 @@
     <string name="string_cancel">取消</string>
     <string name="string_custom_time_hint">自定义</string>
     <string name="string_sure">确定</string>
+    <string name="itemImgDes">itemImg</string>
 </resources>

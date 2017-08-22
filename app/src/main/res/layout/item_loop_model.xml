@@ -9,6 +9,7 @@
         android:layout_width="@dimen/dp25"
         android:layout_height="@dimen/dp25"
         app:layout_constraintTop_toTopOf="parent"
+        android:contentDescription="@string/itemImgDes"
         app:layout_constraintBottom_toBottomOf="parent"
         android:id="@+id/item_icon_model_desc"
         app:layout_constraintStart_toStartOf="parent" />
@@ -23,4 +24,5 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toEndOf="@+id/item_icon_model_desc"
         app:layout_constraintBottom_toBottomOf="parent" />
+
 </android.support.constraint.ConstraintLayout>
