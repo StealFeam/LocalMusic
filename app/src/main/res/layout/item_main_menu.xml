@@ -9,7 +9,7 @@
         android:text="@string/app_subtitle"
         android:padding="@dimen/dp5"
         android:background="?android:attr/selectableItemBackground"
-        android:drawableTop="@mipmap/ic_launcher_round"
+        android:drawableTop="@mipmap/ic_music_launcher_round"
         android:drawablePadding="@dimen/dp5"
         android:gravity="center_horizontal"
         android:layout_gravity="center_horizontal"

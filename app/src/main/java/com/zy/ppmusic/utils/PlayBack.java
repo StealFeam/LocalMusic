@@ -206,6 +206,9 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
         if (mAudioFocus != AUDIO_FOCUSED) {
             getAudioFocus();
         }
+        if(mMediaPlayer.isPlaying()){
+            mMediaPlayer.pause();
+        }
         System.out.println("seek to " + position + "," + isAutoStart);
         mIsAutoStart = isAutoStart;
         mMediaPlayer.seekTo(position);
@@ -370,7 +373,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     public void onPrepared(MediaPlayer mp) {
         Log.e(TAG, "onPrepared: called " + mMediaPlayer.getCurrentPosition());
         if (mState == PlaybackStateCompat.STATE_BUFFERING) {
-            mState = PlaybackStateCompat.STATE_PAUSED;
+            mState = PlaybackStateCompat.STATE_CONNECTING;
         }
         if (mCallBack != null) {
             mCallBack.onPlayBackStateChange(mState);

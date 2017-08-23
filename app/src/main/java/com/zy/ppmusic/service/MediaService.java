@@ -66,7 +66,8 @@ public class MediaService extends MediaBrowserServiceCompat {
 
     //更新播放列表
     public static final String COMMAND_UPDATE_QUEUE = "COMMAND_UPDATE_QUEUE";
-
+    //更新播放列表resultCode
+    public static final int COMMAND_UPDATE_QUEUE_CODE = 0x002;
 
     /*-------------------command action end--------------------------*/
     /*-------------------custom action start--------------------------*/
@@ -319,13 +320,11 @@ public class MediaService extends MediaBrowserServiceCompat {
             stateBuilder.setActiveQueueItemId(mCurrentMedia.getQueueId());
         }
         mMediaSessionCompat.setPlaybackState(stateBuilder.build());
-
         Notification notification = NotificationUtils.postNotify(this, mMediaSessionCompat,
                 mPlayBack.isPlaying());
         if (notification != null) {
             startForeground(NOTIFY_ID, notification);
         }
-
         if (state == PlaybackStateCompat.STATE_PLAYING) {
             mAudioReceiver.register();
         } else {
@@ -353,7 +352,6 @@ public class MediaService extends MediaBrowserServiceCompat {
         }
     }
 
-
     /**
      * 更新列表
      */
@@ -365,10 +363,7 @@ public class MediaService extends MediaBrowserServiceCompat {
         mPlayQueueMediaId = DataTransform.getInstance().getMediaIdList();
         mPlayBack.setPlayQueue(mPlayQueueMediaId);
         mMediaSessionCompat.setQueue(mQueueItemList);
-        if (mPlayQueueMediaId.size() > 0) {
-            onMediaChange(mPlayQueueMediaId.get(0));
-        }
-        mMediaSessionCompat.setQueue(mQueueItemList);
+
         //覆盖本地缓存
         FileUtils.saveObject(DataTransform.getInstance().getMusicInfoEntities(),
                 getCacheDir().getAbsolutePath());
@@ -498,8 +493,11 @@ public class MediaService extends MediaBrowserServiceCompat {
                     break;
                 case COMMAND_UPDATE_QUEUE:
                     updateQueue();
+                    if (mPlayQueueMediaId.size() > 0) {
+                        onMediaChange(mPlayQueueMediaId.get(0));
+                    }
+                    cb.send(COMMAND_UPDATE_QUEUE_CODE,resultExtra);
                     break;
-
                 default:
                     System.out.println("onCommand no match");
                     super.onCommand(command, reqExtra, cb);
@@ -518,7 +516,6 @@ public class MediaService extends MediaBrowserServiceCompat {
             super.onRemoveQueueItemAt(index);
             removeQueueItemAt(index);
         }
-
 
         @Override
         public void onCustomAction(String action, Bundle extras) {
@@ -555,9 +552,40 @@ public class MediaService extends MediaBrowserServiceCompat {
         }
     }
 
+    /**
+     * 移除列表中的item
+     *
+     * @param index 要移除item的位置
+     */
     public void removeQueueItemAt(int index) {
-        DataTransform.getInstance().removeItem(getApplicationContext(), index);
-        updateQueue();
+        int state = mPlayBack.getState();
+        if(mPlayBack.isPlaying()){
+            mPlayBack.pause();
+        }
+        //如果删除的是当前播放的歌曲，则播放新的曲目
+        if (mPlayBack.getCurrentIndex() == index) {
+            DataTransform.getInstance().removeItem(getApplicationContext(), index);
+            updateQueue();
+            if (mPlayQueueMediaId.size() > 0 && index < mPlayQueueMediaId.size()) {
+                onMediaChange(mPlayQueueMediaId.get(index));
+                if (state == PlaybackStateCompat.STATE_PLAYING) {
+                    handlePlayOrPauseRequest();
+                }
+            } else {
+                mPlayBack.stopPlayer();
+            }
+        } else {//如果不是当前曲目，不能影响当前播放,记录下播放进度，更新列表后继续播放
+            int currentIndex = mPlayBack.getCurrentIndex();
+            int position = mPlayBack.getCurrentStreamPosition();
+            DataTransform.getInstance().removeItem(getApplicationContext(), index);
+            updateQueue();
+            if (currentIndex < index) {
+                onMediaChange(mPlayQueueMediaId.get(currentIndex));
+            } else {
+                onMediaChange(mPlayQueueMediaId.get(currentIndex - 1));
+            }
+            mPlayBack.seekTo(position, state == PlaybackStateCompat.STATE_PLAYING);
+        }
     }
 
     /**

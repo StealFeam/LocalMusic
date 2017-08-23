@@ -2,6 +2,7 @@ package com.zy.ppmusic.presenter;
 
 import android.content.Context;
 import android.os.CountDownTimer;
+import android.util.Log;
 
 import com.zy.ppmusic.contract.IMediaActivityContract;
 import com.zy.ppmusic.model.MediaModelImpl;
@@ -27,7 +28,9 @@ public class MediaPresenterImpl implements IMediaActivityContract.IPresenter {
         mModel.refreshQueue(context, new ScanMusicFile.OnScanComplete() {
             @Override
             protected void onComplete(ArrayList<String> paths) {
+                Log.e(TAG, "onComplete: 扫描出来的"+paths.toString());
                 DataTransform.getInstance().transFormData(context, paths);
+
                 if (mViewWeak.get() != null) {
                     mViewWeak.get().refreshQueue(paths);
                     mViewWeak.get().hideLoading();

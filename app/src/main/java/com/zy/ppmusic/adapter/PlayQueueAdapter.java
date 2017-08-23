@@ -19,8 +19,7 @@ public class PlayQueueAdapter extends RecyclerView.Adapter{
     private OnQueueItemClickListener onQueueItemClickListener;
     private OnDelQueueItemListener onDelListener;
 
-    public PlayQueueAdapter(List<MediaSessionCompat.QueueItem> mData) {
-        this.mData = mData;
+    public PlayQueueAdapter() {
     }
 
     public void setData(List<MediaSessionCompat.QueueItem> mData) {

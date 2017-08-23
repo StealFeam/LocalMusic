@@ -2,13 +2,11 @@ package com.zy.ppmusic.ui
 
 import android.content.ComponentName
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
 import android.os.ResultReceiver
 import android.support.design.widget.BottomSheetDialog
-import android.support.design.widget.Snackbar
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -34,9 +32,9 @@ import com.zy.ppmusic.contract.IMediaActivityContract
 import com.zy.ppmusic.entity.MainMenuEntity
 import com.zy.ppmusic.presenter.MediaPresenterImpl
 import com.zy.ppmusic.service.MediaService
+import com.zy.ppmusic.utils.StringUtils
 import com.zy.ppmusic.view.BorderTextView
 import com.zy.ppmusic.view.EasyTintView
-import kotlinx.android.synthetic.main.activity_media.*
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -44,7 +42,6 @@ import java.util.*
  * 与MediaService两种通信方式：
  *      1.MediaController.transportControls.playFromMediaId(String, Bundle);//只发送消息（最好与播放器状态相关）
  *      2.SessionCompat.sendCommand(String,Bundle,ResultReceiver);//需要获取结果
- *
  */
 class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     private var mMediaBrowser: MediaBrowserCompat? = null
@@ -132,6 +129,15 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                         mProgressSeekBar!!.progress = (percent * 100f).toInt()
                     }
                 }
+                MediaService.COMMAND_UPDATE_QUEUE_CODE -> {
+                    if (mMediaController!!.queue != null && mMediaController!!.queue.size > 0) {
+                        if (mBottomQueueAdapter != null) {
+                            mBottomQueueAdapter!!.setData(mMediaController!!.queue)
+                            showMsg("更新播放列表")
+                        }
+                        mPlayQueueList = mMediaController!!.queue
+                    }
+                }
                 else -> {
                     println("MediaResultReceive other result....$resultCode," + resultData.toString())
                 }
@@ -139,13 +145,14 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         }
     }
 
+    private var mBottomQueueContentView: View? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media)
         if (supportActionBar != null) {
             supportActionBar!!.elevation = 0f
         }
-
         ivNextAction = findViewById(R.id.control_action_next) as AppCompatImageView
         ivPlayAction = findViewById(R.id.control_action_play_pause) as AppCompatImageView
         ivShowQueueAction = findViewById(R.id.control_action_show_queue) as AppCompatImageView
@@ -167,7 +174,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             //view,position
             when (position) {
                 0 -> {//刷新播放列表
-                    showMsg("开始扫描本地文件")
+                    showMsg(getString(R.string.start_scanning_the_local_file))
                     mPresenter!!.refreshQueue(applicationContext)
                 }
                 1 -> {//蓝牙管理
@@ -255,9 +262,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
         mProgressSeekBar = findViewById(R.id.control_display_progress) as SeekBar
         mProgressSeekBar!!.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-            }
-
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {}
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
                 mIsTrackingBar = true
             }
@@ -329,17 +334,18 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             if (mCurrentMediaIdStr != null) {
                 mMediaController!!.transportControls.playFromMediaId(mCurrentMediaIdStr, extra)
             } else {
-                println("播放列表为空")
+                println(getString(R.string.empty_play_queue))
                 mMediaController!!.transportControls.playFromMediaId("-1", extra)
             }
         })
         //播放列表监听
         ivShowQueueAction!!.setOnClickListener({
+            //遗留问题：删除一条item之后再添加进来列表item数量显示错误----------------------------
             mBottomQueueDialog = BottomSheetDialog(this@MediaActivity)
-            val contentView = LayoutInflater.from(this@MediaActivity).inflate(R.layout.play_queue_layout, null)
-            mBottomQueueDialog!!.setContentView(contentView)
-            mQueueRecycler = contentView.findViewById(R.id.control_queue_recycle) as RecyclerView
-            mBottomQueueAdapter = PlayQueueAdapter(mPlayQueueList)
+            mBottomQueueContentView = LayoutInflater.from(this@MediaActivity).inflate(R.layout.play_queue_layout, null)
+
+            mQueueRecycler = mBottomQueueContentView!!.findViewById(R.id.control_queue_recycle) as RecyclerView
+            mBottomQueueAdapter = PlayQueueAdapter()
             mBottomQueueAdapter!!.setOnQueueItemClickListener { obj, _ ->
                 if (obj is MediaSessionCompat.QueueItem) {
                     //点击播放列表直接播放选中的media
@@ -373,11 +379,12 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 }
                 dialog.create().show()
             }
+            mBottomQueueDialog!!.setContentView(mBottomQueueContentView)
             mQueueRecycler!!.adapter = mBottomQueueAdapter
             mQueueRecycler!!.layoutManager = LinearLayoutManager(this)
+            mBottomQueueAdapter!!.setData(mPlayQueueList)
             mBottomQueueDialog!!.show()
         })
-
     }
 
     /**
@@ -386,10 +393,10 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
      */
     override fun refreshQueue(mPathList: java.util.ArrayList<String>?) {
         if (mPathList != null && mPathList.size > 0) {
-            showMsg("扫描到" + mPathList.size + "首曲目")
+            showMsg(String.format(Locale.CHINA, getString(R.string.format_string_search_media_count), mPathList.size))
             mMediaController!!.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, null, mResultReceive)
         } else {
-            showMsg("未扫描到曲目")
+            showMsg(getString(R.string.no_media_searched))
             mMediaController!!.transportControls.playFromMediaId("-1", null)
         }
     }
@@ -453,6 +460,13 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             mLooperHandler = LoopHandler(mMediaController!!, mResultReceive!!)
             MediaControllerCompat.setMediaController(this@MediaActivity, mMediaController)
             mMediaController!!.registerCallback(mControllerCallBack)
+            if (mMediaController!!.queue != null && mMediaController!!.queue.size > 0) {
+                if (mBottomQueueAdapter != null) {
+                    mBottomQueueAdapter!!.setData(mMediaController!!.queue)
+                    showMsg("更新播放列表")
+                }
+                mPlayQueueList = mMediaController!!.queue
+            }
         }
 
         override fun onConnectionSuspended() {
@@ -497,7 +511,12 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                     }
                     handlePlayState(mMediaController!!.playbackState.state)
                 } else {
-                    setMediaInfo(children[0].mediaId as String, children[0].description.subtitle as String)
+                    val subTitle = if (children[0].description.subtitle == null) {
+                        "unknown"
+                    } else {
+                        children[0].description.subtitle as String
+                    }
+                    setMediaInfo(children[0].mediaId as String, subTitle)
                     mCurrentMediaIdStr = children[0].description.mediaId
                     val extra = Bundle()
                     extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_INIT)
@@ -531,7 +550,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 stepPosition = endPosition / 100L
                 startPosition = 0
                 println("endPosition=$endPosition,step=$stepPosition")
-                setMediaInfo(displayTitle, subTitle)
+                setMediaInfo(StringUtils.ifEmpty(displayTitle), StringUtils.ifEmpty(subTitle))
             }
         }
 
@@ -544,6 +563,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             }
             if (mBottomQueueAdapter != null) {
                 mBottomQueueAdapter!!.setData(queue)
+                showMsg("更新播放列表")
             }
             mPlayQueueList = queue
         }
@@ -569,14 +589,14 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             super.onSessionEvent(event, extras)
             when (event) {
                 MediaService.ERROR_PLAY_QUEUE_EVENT -> {
-                    showMsg("播放列表为空，未发现曲目")
+                    showMsg(getString(R.string.empty_play_queue))
                 }
                 MediaService.LOADING_QUEUE_EVENT -> {
-                    showMsg("加载列表中...")
+                    showMsg(getString(R.string.queue_loading))
                     showLoading()
                 }
                 MediaService.LOAD_COMPLETE_EVENT -> {
-                    showMsg("加载完成....")
+                    showMsg(getString(R.string.loading_complete))
                     hideLoading()
                 }
                 MediaService.ACTION_COUNT_DOWN_TIME -> {
@@ -589,10 +609,10 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                     val s = (mis % (60L * 1000L)) / 1000L
                     val formatStr: String
                     if (h > 0) {
-                        formatStr = "%dh:%02dm:%02ds关闭"
+                        formatStr = getString(R.string.format_string_time_count_down_with_hour)
                         mBorderTextView!!.show(ivNextAction, String.format(Locale.CHINA, formatStr, h, m, s))
                     } else {
-                        formatStr = "%02d:%02d关闭"
+                        formatStr = getString(R.string.format_string_time_count_down_no_hour)
                         mBorderTextView!!.show(ivNextAction, String.format(Locale.CHINA, formatStr, m, s))
                     }
 
@@ -650,15 +670,15 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     }
 
     fun showMsg(msg: String) {
-        EasyTintView.makeText(ivNextAction,msg,EasyTintView.TINT_SHORT).show()
+        EasyTintView.makeText(ivNextAction, msg, EasyTintView.TINT_SHORT).show()
     }
 
     /**
      * 更新媒体信息
      */
-    fun setMediaInfo(displayTitle: String, subTitle: String) {
-        tvDisPlayName!!.text = displayTitle
-        tvSubName!!.text = subTitle
+    fun setMediaInfo(displayTitle: CharSequence?, subTitle: CharSequence?) {
+        tvDisPlayName!!.text = StringUtils.ifEmpty(displayTitle)
+        tvSubName!!.text = StringUtils.ifEmpty(subTitle)
     }
 
     /**

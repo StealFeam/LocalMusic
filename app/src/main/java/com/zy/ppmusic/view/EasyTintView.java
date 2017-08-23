@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 
 import com.zy.ppmusic.R;
@@ -23,6 +22,7 @@ public class EasyTintView extends AppCompatTextView {
     private Handler mDelayHandler;
     private int delayDuration;
     private int showGravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+    private boolean isVisible = false;
     private ViewGroup parent;
 
     public EasyTintView(Context context) {
@@ -55,12 +55,26 @@ public class EasyTintView extends AppCompatTextView {
     }
 
     public void show() {
-        showAnim();
+        if(isVisible){
+            mDelayHandler.removeCallbacksAndMessages(null);
+            mDelayHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    hideAnim();
+                }
+            }, delayDuration);
+        }else{
+            showAnim();
+        }
     }
 
     private void showAnim() {
         if (parent == null) {
             Log.e(TAG, "showAnim: parent is null");
+            return;
+        }
+        if (isVisible) {
+            System.out.println("view is already showing in screen");
             return;
         }
         if (this.getParent() == null) {
@@ -80,8 +94,10 @@ public class EasyTintView extends AppCompatTextView {
         showAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {}
+
             @Override
             public void onAnimationEnd(Animation animation) {
+                isVisible = true;
                 mDelayHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -89,32 +105,37 @@ public class EasyTintView extends AppCompatTextView {
                     }
                 }, delayDuration);
             }
+
             @Override
-            public void onAnimationRepeat(Animation animation) {}
+            public void onAnimationRepeat(Animation animation) {
+            }
         });
         showAnim.start();
     }
 
     private void hideAnim() {
-        removeFromParent();
-        Animation hideAnim = AnimationUtils.loadAnimation(getContext(), R.anim.tint_hide_anim);
-        hideAnim.setDuration(200);
-        hideAnim.setFillAfter(true);
-        this.setAnimation(hideAnim);
-        hideAnim.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                mDelayHandler.removeCallbacksAndMessages(null);
-                removeFromParent();
-            }
-            @Override
-            public void onAnimationRepeat(Animation animation) {}
-        });
-        hideAnim.start();
-        Log.e(TAG, "hideAnim: start");
+        if (isVisible) {
+            removeFromParent();
+            Animation hideAnim = AnimationUtils.loadAnimation(getContext(), R.anim.tint_hide_anim);
+            hideAnim.setDuration(200);
+            hideAnim.setFillAfter(true);
+            this.setAnimation(hideAnim);
+            hideAnim.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {}
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    isVisible = false;
+                    mDelayHandler.removeCallbacksAndMessages(null);
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {}
+            });
+            hideAnim.start();
+        }
+
     }
 
     private void removeFromParent() {

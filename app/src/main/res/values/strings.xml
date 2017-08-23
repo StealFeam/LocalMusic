@@ -32,4 +32,12 @@
     <string name="string_custom_time_hint">自定义</string>
     <string name="string_sure">确定</string>
     <string name="itemImgDes">itemImg</string>
+    <string name="format_string_time_count_down_with_hour">%dh:%02dm:%02ds后关闭</string>
+    <string name="format_string_time_count_down_no_hour">%02d:%02d后关闭</string>
+    <string name="empty_play_queue" translatable="false">播放列表为空，未发现曲目</string>
+    <string name="queue_loading" translatable="false">加载列表中...</string>
+    <string name="loading_complete" translatable="false">加载完成</string>
+    <string name="format_string_search_media_count">扫描到%d首曲目</string>
+    <string name="no_media_searched">未扫描到曲目</string>
+    <string name="start_scanning_the_local_file">开始扫描本地文件</string>
 </resources>

@@ -12,7 +12,6 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Log;
-import android.view.TextureView;
 
 import com.zy.ppmusic.entity.MusicInfoEntity;
 
@@ -57,8 +56,7 @@ public class DataTransform {
      */
     public void transFormData(Context context, ArrayList<String> pathList) {
         clearData();
-        queryMedia(context,pathList);
-        System.out.println(toString());
+        queryMedia(context, pathList);
     }
 
     private void clearData() {
@@ -76,7 +74,7 @@ public class DataTransform {
     /**
      * 测试耗时比较长，废弃
      */
-    private void queryMedia(List<String> localList){
+    private void queryMedia(List<String> localList) {
         MediaMetadataCompat.Builder builder;
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         int index = 0;
@@ -87,9 +85,9 @@ public class DataTransform {
             String artistS = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
             String durationS = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
             long d = 0;
-            if(!TextUtils.isEmpty(durationS)){
+            if (!TextUtils.isEmpty(durationS)) {
                 d = Long.parseLong(durationS);
-                if(d < 20 * 1000){
+                if (d < 20 * 1000) {
                     continue;
                 }
             }
@@ -131,25 +129,26 @@ public class DataTransform {
 
     /**
      * 从系统媒体库获取信息
-     * @param context context
+     *
+     * @param context   context
      * @param localList 路径列表
      */
-    private void queryMedia(Context context,List<String> localList) {
+    private void queryMedia(Context context, List<String> localList) {
         ContentResolver contentResolver = context.getContentResolver();
         Uri oldUri = null;
         int index = 0;
         MediaMetadataCompat.Builder builder;
         boolean isNeedRe = false;
         for (String itemPath : localList) {
-            if(mediaIdList.contains(String.valueOf(itemPath.hashCode()))){
+            if (mediaIdList.contains(String.valueOf(itemPath.hashCode()))) {
                 continue;
-            }else{
+            } else {
                 System.out.println(itemPath);
             }
             //根据音频地址获取uri，区分为内部存储和外部存储
             Uri audioUri = MediaStore.Audio.Media.getContentUriForPath(itemPath);
-            Cursor query = contentResolver.query(audioUri, null, null, null,null);
-            if(query != null){
+            Cursor query = contentResolver.query(audioUri, null, null, null, null);
+            if (query != null) {
                 //判断如果是上次扫描的uri则跳过，系统分为内部存储uri的音频和外部存储的uri
                 if (oldUri != null && oldUri.equals(audioUri)) {
                     query.close();
@@ -164,13 +163,13 @@ public class DataTransform {
                         long duration = query.getLong(query.getColumnIndex(MediaStore.Audio.Media.DURATION));
                         String size = query.getString(query.getColumnIndex(MediaStore.Audio.Media.SIZE));
                         String queryPath = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DATA));
-                        Log.w(TAG, "queryMedia: path==="+queryPath);
+                        Log.w(TAG, "queryMedia: path===" + queryPath);
                         //过滤小于20s的文件
-                        if(duration < 20 * 1000){
+                        if (duration < 20 * 1000) {
                             continue;
                         }
 
-                        if(!new File(queryPath).exists()){
+                        if (!new File(queryPath).exists()) {
                             continue;
                         }
 
@@ -209,18 +208,22 @@ public class DataTransform {
                         index++;
                     }
                     //去除媒体库中不存在的
-                    if(!mediaIdList.contains(String.valueOf(itemPath.hashCode()))){
+                    if (!mediaIdList.contains(String.valueOf(itemPath.hashCode()))) {
                         pathList.remove(itemPath);
                         isNeedRe = true;
                     }
                     query.close();
                 }
-            }else{
+            } else {
                 isNeedRe = true;
             }
             oldUri = audioUri;
         }
-        if(isNeedRe){
+
+        if (isNeedRe) {
+            reQueryList(localList);
+            Log.e(TAG, "queryMedia: isNeedRe " + pathList.size());
+        } else if (localList.size() > pathList.size()) {
             reQueryList(localList);
         }
         Log.d(TAG, "queryResolver() called with: context = [" + context + "]");
@@ -228,23 +231,24 @@ public class DataTransform {
 
     /**
      * 重新对数据遍历，筛选出系统ContentProvider中不存在的媒体
-     * @param pathList 扫描到的数据列表
+     *
+     * @param list 扫描到的数据列表
      */
-    private void reQueryList(List<String> pathList){
+    private void reQueryList(List<String> list) {
         MediaMetadataCompat.Builder builder;
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        int index = 0;
-        for (String itemPath : pathList) {
-            if(!pathList.contains(itemPath)){
+        for (int i = 0; i < list.size(); i++) {
+            String itemPath = list.get(i);
+            if (!this.pathList.contains(itemPath)) {
                 retriever.setDataSource(itemPath);
                 //METADATA_KEY_ALBUM 专辑
                 String titleS = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
                 String artistS = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
                 String durationS = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
                 long d = 0;
-                if(!TextUtils.isEmpty(durationS)){
+                if (!TextUtils.isEmpty(durationS)) {
                     d = Long.parseLong(durationS);
-                    if(d < 20 * 1000){
+                    if (d < 20 * 1000) {
                         continue;
                     }
                 }
@@ -252,12 +256,12 @@ public class DataTransform {
                 String musicName = getMusicName(itemPath);
                 builder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, String.valueOf(itemPath.hashCode()));
                 builder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, itemPath);
-                builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, titleS);
+                builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, (String) StringUtils.Companion.ifEmpty(titleS, musicName));
 
                 //作者
-                builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, artistS);
+                builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, (String) StringUtils.Companion.ifEmpty(artistS));
                 //作者
-                builder.putString(MediaMetadataCompat.METADATA_KEY_AUTHOR, artistS);
+                builder.putString(MediaMetadataCompat.METADATA_KEY_AUTHOR, (String) StringUtils.Companion.ifEmpty(artistS));
                 //时长
                 builder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, d);
 
@@ -276,12 +280,11 @@ public class DataTransform {
                 MusicInfoEntity infoEntity = new MusicInfoEntity(String.valueOf(itemPath.hashCode()),
                         musicName, artistS, itemPath, 0, d);
                 musicInfoEntities.add(infoEntity);
-                System.out.println("put else index="+index+",path="+itemPath);
+                System.out.println("put else index=" + i + ",path=" + itemPath);
                 pathList.add(itemPath);
-                indexMediaArray.put(index, String.valueOf(itemPath.hashCode()));
+                indexMediaArray.put(i, String.valueOf(itemPath.hashCode()));
                 mediaIdList.add(String.valueOf(itemPath.hashCode()));
             }
-            index++;
         }
     }
 
@@ -327,15 +330,15 @@ public class DataTransform {
         }
     }
 
-    public void removeItem(Context context,int index){
+    public void removeItem(Context context, int index) {
         String path = pathList.get(index);
         File file = new File(path);
         file.deleteOnExit();
-        if(!file.exists()){
+        if (!file.exists()) {
             ContentResolver contentResolver = context.getContentResolver();
             Uri audioUri = MediaStore.Audio.Media.getContentUriForPath(path);
-            String where = MediaStore.Images.Media.DATA + "='" +  path + "'";
-            contentResolver.delete(audioUri,where,null);
+            String where = MediaStore.Images.Media.DATA + "='" + path + "'";
+            contentResolver.delete(audioUri, where, null);
         }
         this.pathList.remove(index);
         musicInfoEntities.remove(index);
@@ -375,10 +378,10 @@ public class DataTransform {
         return mediaIdList;
     }
 
-    public String getPath(int position){
-        if(position >= 0 && position < pathList.size()){
+    public String getPath(int position) {
+        if (position >= 0 && position < pathList.size()) {
             return pathList.get(position);
-        }else{
+        } else {
             return null;
         }
     }

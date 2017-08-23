@@ -5,8 +5,9 @@
     android:background="?android:attr/selectableItemBackground"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
+
     <ImageView
-        android:src="@mipmap/ic_launcher_round"
+        android:src="@mipmap/ic_music_launcher_round"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_margin="2dp"
