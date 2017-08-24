@@ -75,7 +75,9 @@ public class NotificationUtils {
 
         notification = builder.build();
         notification.flags |= Notification.FLAG_NO_CLEAR;
-        manager.notify(MediaService.NOTIFY_ID, notification);
+        if(manager != null){
+            manager.notify(MediaService.NOTIFY_ID, notification);
+        }
         return notification;
     }
 

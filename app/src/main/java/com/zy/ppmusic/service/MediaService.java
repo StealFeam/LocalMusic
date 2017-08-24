@@ -10,7 +10,6 @@ import android.content.ServiceConnection;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.IBinder;
 import android.os.ResultReceiver;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
@@ -27,13 +26,11 @@ import android.view.KeyEvent;
 
 import com.zy.ppmusic.data.db.DBManager;
 import com.zy.ppmusic.entity.MusicDbEntity;
-import com.zy.ppmusic.entity.MusicInfoEntity;
 import com.zy.ppmusic.ui.MediaActivity;
 import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.FileUtils;
 import com.zy.ppmusic.utils.NotificationUtils;
 import com.zy.ppmusic.utils.PlayBack;
-import com.zy.ppmusic.utils.ScanMusicFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -148,6 +145,8 @@ public class MediaService extends MediaBrowserServiceCompat {
             @Override
             public void onError(int errorCode, String error) {
                 onPlayStateChange(errorCode, error);
+
+                Log.e(TAG, "onError: " + errorCode + "..." + error);
             }
         });
 
@@ -175,42 +174,20 @@ public class MediaService extends MediaBrowserServiceCompat {
     @Override
     public void onLoadChildren(@NonNull String s, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
         Log.d(TAG, "service onLoadChildren() called with: s = [" + s + "], result = [" + result + "]");
-        mMediaSessionCompat.sendSessionEvent(LOADING_QUEUE_EVENT, null);
         if (s.equals(getPackageName())) {
-            //如果当前队列为空时
             if (mMediaItemList.size() == 0) {
                 result.detach();
-                Object localData = FileUtils.readObject(getCacheDir().getAbsolutePath());
-                if (localData != null) {
-                    DataTransform.getInstance().transFormData((List<MusicInfoEntity>) localData);
-                    mMediaItemList = DataTransform.getInstance().getMediaItemList();
-                    mQueueItemList = DataTransform.getInstance().getQueueItemList();
-                    mPlayQueueMediaId = DataTransform.getInstance().getMediaIdList();
-                    mPlayBack.setPlayQueue(mPlayQueueMediaId);
-                    mMediaSessionCompat.setQueue(mQueueItemList);
-                    result.sendResult(mMediaItemList);
-                    mMediaSessionCompat.sendSessionEvent(LOAD_COMPLETE_EVENT, null);
-                } else {
-                    ScanMusicFile.getInstance().scanMusicFile(this).setOnScanComplete(new ScanMusicFile.OnScanComplete() {
-                        @Override
-                        protected void onComplete(ArrayList<String> paths) {
-                            DataTransform.getInstance().transFormData(getApplicationContext(), paths);
-                            mMediaItemList = DataTransform.getInstance().getMediaItemList();
-                            mQueueItemList = DataTransform.getInstance().getQueueItemList();
-                            mPlayQueueMediaId = DataTransform.getInstance().getMediaIdList();
-                            mPlayBack.setPlayQueue(mPlayQueueMediaId);
-                            mMediaSessionCompat.setQueue(mQueueItemList);
-                            result.sendResult(mMediaItemList);
-                            mMediaSessionCompat.sendSessionEvent(LOAD_COMPLETE_EVENT, null);
-                            FileUtils.saveObject(DataTransform.getInstance().getMusicInfoEntities(),
-                                    getCacheDir().getAbsolutePath());
-                        }
-                    });
+                ArrayList<MediaBrowserCompat.MediaItem> list = getBrowserRootHints().getParcelableArrayList("queueList");
+                if (list != null) {
+                    mMediaItemList = list;
+                    System.out.println("load ... " + mMediaItemList.toString());
                 }
-            } else {//不为空直接替换列表
+                result.sendResult(list);
+            } else {
                 result.sendResult(mMediaItemList);
-                mMediaSessionCompat.sendSessionEvent(LOAD_COMPLETE_EVENT, null);
             }
+            updateQueue();
+            //初始化媒体库
         }
     }
 
@@ -221,12 +198,10 @@ public class MediaService extends MediaBrowserServiceCompat {
      */
     private void handleStopRequest(boolean isNeedEnd) {
         Log.d(TAG, "handleStopRequest() called with: isNeedEnd = [" + isNeedEnd + "]");
-        if (isNeedEnd) {
-            savePlayingRecord();
-        }
         if (!isNeedEnd) {
             changeMediaByMode(true, true);
         } else {
+            savePlayingRecord();
             mNotificationManager.cancel(NOTIFY_ID);
             mMediaSessionCompat.setActive(false);
             stopForeground(true);
@@ -344,7 +319,11 @@ public class MediaService extends MediaBrowserServiceCompat {
             if (track != null) {
                 mMediaSessionCompat.setMetadata(track);
             }
-            mCurrentMedia = mQueueItemList.get(DataTransform.getInstance().getMediaIndex(mediaId));
+
+            Log.e(TAG, "onMediaChange:" + DataTransform.getInstance().toString());
+            int index = DataTransform.getInstance().getMediaIndex(mediaId);
+            Log.e(TAG, "onMediaChange: index=" + index);
+            mCurrentMedia = mQueueItemList.get(index);
 
             mPlayBack.preparedWithMediaId(mediaId);
         } else {
@@ -432,7 +411,9 @@ public class MediaService extends MediaBrowserServiceCompat {
         @Override
         public void onPause() {
             super.onPause();
+            Log.d(TAG, "onPause() called");
             mPlayBack.pause();
+            mPlayBack.setIsUserPause(true);
         }
 
         @Override
@@ -491,12 +472,17 @@ public class MediaService extends MediaBrowserServiceCompat {
                         cb.send(COMMAND_POSITION_CODE, resultExtra);
                     }
                     break;
-                case COMMAND_UPDATE_QUEUE:
+                case COMMAND_UPDATE_QUEUE://如果本地有记录，读取记录，没有就初始化第一个媒体
+                    savePlayingRecord();
                     updateQueue();
-                    if (mPlayQueueMediaId.size() > 0) {
+                    List<MusicDbEntity> entity = DBManager.getInstance().initDb(getApplicationContext()).getEntity();
+                    if (entity.size() > 0) {
+                        onMediaChange(entity.get(0).getLastMediaId());
+                        mPlayBack.seekTo(entity.get(0).getLastPlayedPosition(), false);
+                    } else {
                         onMediaChange(mPlayQueueMediaId.get(0));
                     }
-                    cb.send(COMMAND_UPDATE_QUEUE_CODE,resultExtra);
+                    cb.send(COMMAND_UPDATE_QUEUE_CODE, resultExtra);
                     break;
                 default:
                     System.out.println("onCommand no match");
@@ -559,7 +545,7 @@ public class MediaService extends MediaBrowserServiceCompat {
      */
     public void removeQueueItemAt(int index) {
         int state = mPlayBack.getState();
-        if(mPlayBack.isPlaying()){
+        if (mPlayBack.isPlaying()) {
             mPlayBack.pause();
         }
         //如果删除的是当前播放的歌曲，则播放新的曲目
@@ -594,11 +580,6 @@ public class MediaService extends MediaBrowserServiceCompat {
     public void handlePlayOrPauseRequest() {
         if (mCurrentMedia == null) {
             return;
-        }
-        //如果状态不为暂停或者播放，则重置媒体信息
-        if (mPlayBack.getState() != PlaybackStateCompat.ACTION_PAUSE
-                && mPlayBack.getState() != PlaybackStateCompat.STATE_PLAYING) {
-            onMediaChange(String.valueOf(mCurrentMedia.getQueueId()));
         }
         mPlayBack.play();
     }
@@ -637,21 +618,9 @@ public class MediaService extends MediaBrowserServiceCompat {
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        Log.d(TAG, "onBind() called with: intent = [" + intent + "]");
-        return super.onBind(intent);
-    }
-
-    @Override
     public void unbindService(ServiceConnection conn) {
         super.unbindService(conn);
         Log.d(TAG, "unbindService() called with: conn = [" + conn + "]");
-    }
-
-    @Override
-    public void onLoadItem(String itemId, @NonNull Result<MediaBrowserCompat.MediaItem> result) {
-        super.onLoadItem(itemId, result);
-        Log.d(TAG, "onLoadItem() called with: itemId = [" + itemId + "], result = [" + result + "]");
     }
 
     @Override
