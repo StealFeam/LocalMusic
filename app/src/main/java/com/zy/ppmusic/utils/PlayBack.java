@@ -14,9 +14,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
-public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
-        MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener, MediaPlayer.OnPreparedListener,
-        MediaPlayer.OnSeekCompleteListener {
+public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnCompletionListener,
+        MediaPlayer.OnErrorListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnSeekCompleteListener {
     private static final String TAG = "PlayBack";
 
     // we don't have audio focus, and can't duck (play at a low volume)
@@ -37,6 +36,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     private int mAudioFocus = AUDIO_NO_FOCUS_NO_DUCK;
 
     private boolean mIsAutoStart = false;
+    private boolean mIsUserPause = false;//是否是用户点击的暂停
 
     private boolean mPlayOnFocusGain;
     private int mState = PlaybackStateCompat.STATE_NONE;
@@ -62,6 +62,10 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
 
     public void setPlayQueue(List<String> queue) {
         this.mPlayQueue = queue;
+    }
+
+    public void setIsUserPause(boolean flag){
+        this.mIsUserPause = flag;
     }
 
     public void preparedWithMediaId(String mediaId) {
@@ -101,7 +105,6 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
                 }
             }
         }
-
     }
 
     private void configMediaPlayerState() {
@@ -121,7 +124,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
                 }
             }
             //当失去音频的焦点时，如果在播放状态要恢复播放
-            if (mPlayOnFocusGain) {
+            if (mPlayOnFocusGain && !mIsUserPause) {
                 if (mMediaPlayer != null && !mMediaPlayer.isPlaying()) {
                     if (mCurrentPosition == mMediaPlayer.getCurrentPosition()) {
                         mMediaPlayer.start();
@@ -187,8 +190,10 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
             mState = PlaybackStateCompat.STATE_PAUSED;
         } else {
             if (mState == PlaybackStateCompat.STATE_BUFFERING ||
-                    mState == PlaybackStateCompat.STATE_PAUSED) {
+                    mState == PlaybackStateCompat.STATE_PAUSED||
+                    mState == PlaybackStateCompat.STATE_CONNECTING) {
                 mMediaPlayer.start();
+                setIsUserPause(false);
             }
             mState = PlaybackStateCompat.STATE_PLAYING;
         }
@@ -373,7 +378,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener,
     public void onPrepared(MediaPlayer mp) {
         Log.e(TAG, "onPrepared: called " + mMediaPlayer.getCurrentPosition());
         if (mState == PlaybackStateCompat.STATE_BUFFERING) {
-            mState = PlaybackStateCompat.STATE_CONNECTING;
+            mState = PlaybackStateCompat.STATE_CONNECTING;//准备完成
         }
         if (mCallBack != null) {
             mCallBack.onPlayBackStateChange(mState);

@@ -27,7 +27,7 @@ public class DataTransform {
     private static final String TAG = "DataTransform";
     private volatile List<MusicInfoEntity> musicInfoEntities;//可存放本地的数据
     private volatile List<MediaSessionCompat.QueueItem> queueItemList;
-    private volatile List<MediaBrowserCompat.MediaItem> mediaItemList;
+    private volatile ArrayList<MediaBrowserCompat.MediaItem> mediaItemList;
     private volatile ArrayMap<String, MediaMetadataCompat> mapMetadataArray;
     private volatile ArrayMap<Integer, String> indexMediaArray;
     private volatile ArrayList<String> pathList;
@@ -294,6 +294,7 @@ public class DataTransform {
      * @param localList
      */
     public void transFormData(List<MusicInfoEntity> localList) {
+        clearData();
         this.musicInfoEntities = localList;
         MediaMetadataCompat metadataCompatItem;
         for (int i = 0; i < musicInfoEntities.size(); i++) {
@@ -366,11 +367,11 @@ public class DataTransform {
         return queueItemList;
     }
 
-    public List<MediaBrowserCompat.MediaItem> getMediaItemList() {
+    public ArrayList<MediaBrowserCompat.MediaItem> getMediaItemList() {
         return mediaItemList;
     }
 
-    public List<String> getPathList() {
+    public ArrayList<String> getPathList() {
         return pathList;
     }
 

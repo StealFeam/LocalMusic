@@ -1,7 +1,5 @@
 package com.zy.ppmusic.ui
 
-import android.animation.AnimatorSet
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -9,16 +7,14 @@ import android.support.v7.app.AppCompatActivity
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.AnimationSet
-import android.view.animation.TranslateAnimation
 import android.widget.TextView
-import android.widget.Toast
 import com.zy.ppmusic.R
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 
 class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     var REQUEST_CODE = 0x010
-    var PREFERENCE_NAME = "SPLASH"
+    private var PREFERENCE_NAME = "SPLASH"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,14 +22,14 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
 
         val tvSplash = findViewById(R.id.tv_splash_open) as TextView
         val animation = AnimationSet(true)
-        val alphaAnim = AlphaAnimation(0f,1f)
+        val alphaAnim = AlphaAnimation(0f, 1f)
         alphaAnim.fillAfter = true
-        alphaAnim.duration = 2000
+        alphaAnim.duration = 1500
         animation.addAnimation(alphaAnim)
 
         tvSplash.animation = animation
         animation.start()
-        animation.setAnimationListener(object :Animation.AnimationListener{
+        animation.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationRepeat(animation: Animation?) {
             }
 
@@ -53,12 +49,11 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         })
 
 
-
     }
 
 
-    fun actionToMain(){
-        val mediaIntent = Intent(this@SplashActivity,MediaActivity::class.java)
+    fun actionToMain() {
+        val mediaIntent = Intent(this@SplashActivity, MediaActivity::class.java)
         startActivity(mediaIntent)
         finish()
     }
@@ -92,10 +87,10 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == AppSettingsDialog.DEFAULT_SETTINGS_REQ_CODE) {
-            if(resultCode == -1){
+            if (resultCode == -1) {
                 finish()
                 System.exit(-1)
-            }else{
+            } else {
                 if (EasyPermissions.hasPermissions(applicationContext, getString(R.string.string_read_external)
                         , getString(R.string.string_write_external))) {
                     actionToMain()
