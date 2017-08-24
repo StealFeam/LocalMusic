@@ -10,4 +10,4 @@
     3.蓝牙关闭时设备列表应消失，提示开启蓝牙；
     4.点击连接蓝牙设备方式现为反射，寻找更好方式；
     5.支持更多的媒体格式（替换MediaPlayer）.
-    ![image](https://github.com/Sole2016/LocalMusic/home.png)
+    ![image](https://github.com/Sole2016/LocalMusic/master/home.png)
