@@ -553,10 +553,10 @@ public class MediaService extends MediaBrowserServiceCompat {
             DataTransform.getInstance().removeItem(getApplicationContext(), removeIndex);
             updateQueue();
             if (mPlayQueueMediaId.size() > 0) {
-                //删除的是倒数第二个曲目的时候直接播放替代的曲目
+                //删除的是前列表倒数第二个曲目的时候直接播放替代的曲目
                 if (removeIndex <= mPlayQueueMediaId.size() - 1) {
                     onMediaChange(mPlayQueueMediaId.get(removeIndex));
-                } else {//删除的是最后一个曲目播放列表的第一个曲目
+                } else {//删除的是前列表最后一个曲目播放列表的第一个曲目
                     onMediaChange(mPlayQueueMediaId.get(0));
                 }
                 if (state == PlaybackStateCompat.STATE_PLAYING) {

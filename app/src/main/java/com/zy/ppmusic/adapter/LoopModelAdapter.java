@@ -61,6 +61,7 @@ public class LoopModelAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         if(entityList.get(position).isSelected){
             loopModelHolder.itemView.setBackgroundColor(ContextCompat.getColor(
                     loopModelHolder.itemView.getContext(),R.color.colorTheme));
+            loopModelHolder.itemView.getBackground().setAlpha(100);
         }else{
             loopModelHolder.itemView.setBackgroundColor(ContextCompat.getColor(
                     loopModelHolder.itemView.getContext(),R.color.colorWhite));

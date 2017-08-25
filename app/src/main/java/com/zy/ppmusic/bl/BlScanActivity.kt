@@ -24,6 +24,7 @@ import com.zy.ppmusic.entity.ScanResultEntity
 import com.zy.ppmusic.presenter.BLActivityPresenter
 import com.zy.ppmusic.receiver.DeviceFoundReceiver
 import com.zy.ppmusic.receiver.StatusChangeReceiver
+import com.zy.ppmusic.view.EasyTintView
 import java.util.*
 
 class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
@@ -42,7 +43,6 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bl_scan)
         mToolBar = findViewById(R.id.toolbar_bl) as Toolbar
-
         setSupportActionBar(mToolBar)
         mPresenter = BLActivityPresenter(this)
         if(mPresenter!!.isSupportBl().not()){
@@ -122,7 +122,7 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
         mPresenter!!.startDiscovery()
     }
 
-    fun clearData(){
+    private fun clearData(){
         adapterShowResult!!.clearData()
     }
 
@@ -188,7 +188,7 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
     }
     var anim :RotateAnimation?= null
 
-    fun startDiscovery(){
+    private fun startDiscovery(){
         val v = findViewById(R.id.action_refresh)
         anim = RotateAnimation(0f,360f,RotateAnimation.RELATIVE_TO_SELF,0.5f,RotateAnimation.RELATIVE_TO_SELF,0.5f)
         anim!!.repeatCount = -1
@@ -200,7 +200,7 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
         anim!!.start()
     }
 
-    fun stopDiscovery(){
+    private fun stopDiscovery(){
         if(anim != null){
             anim!!.cancel()
         }
@@ -274,7 +274,7 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
     /**
      * 判断新发现的设备是否已经存在列表中
      */
-    fun isInList(device: BluetoothDevice): Boolean {
+    private fun isInList(device: BluetoothDevice): Boolean {
         mScanDeviceList!!.forEachIndexed { _, scanEntity ->
             if (scanEntity.device == device) {
                 return true
@@ -315,7 +315,7 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
     }
 
     fun showToast(msg: String) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        EasyTintView.makeText(sw_bl,msg,EasyTintView.TINT_SHORT).show()
     }
 
     override fun onDestroy() {
