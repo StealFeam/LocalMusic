@@ -238,7 +238,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                         onMediaChange(mPlayBack.onSkipToNext());
                         handlePlayOrPauseRequest();
                     } else {
-                        onMediaChange(null);
+                        onMediaChange(mPlayQueueMediaId.get(mPlayQueueMediaId.size() - 1));
                         Log.e(TAG, "handleStopRequest: 已播放到最后一首曲目");
                     }
                 } else {
@@ -319,12 +319,10 @@ public class MediaService extends MediaBrowserServiceCompat {
             if (track != null) {
                 mMediaSessionCompat.setMetadata(track);
             }
-
             Log.e(TAG, "onMediaChange:" + DataTransform.getInstance().toString());
             int index = DataTransform.getInstance().getMediaIndex(mediaId);
             Log.e(TAG, "onMediaChange: index=" + index);
             mCurrentMedia = mQueueItemList.get(index);
-
             mPlayBack.preparedWithMediaId(mediaId);
         } else {
             mPlayBack.stopPlayer();
@@ -463,7 +461,7 @@ public class MediaService extends MediaBrowserServiceCompat {
         }
 
         @Override
-        public void onCommand(String command, final Bundle reqExtra, final ResultReceiver cb) {
+        public void onCommand(String command, Bundle reqExtra, ResultReceiver cb) {
             final Bundle resultExtra = new Bundle();
             switch (command) {
                 case COMMAND_POSITION:
@@ -482,7 +480,9 @@ public class MediaService extends MediaBrowserServiceCompat {
                     } else {
                         onMediaChange(mPlayQueueMediaId.get(0));
                     }
-                    cb.send(COMMAND_UPDATE_QUEUE_CODE, resultExtra);
+                    if (cb != null) {
+                        cb.send(COMMAND_UPDATE_QUEUE_CODE, resultExtra);
+                    }
                     break;
                 default:
                     System.out.println("onCommand no match");
@@ -541,19 +541,24 @@ public class MediaService extends MediaBrowserServiceCompat {
     /**
      * 移除列表中的item
      *
-     * @param index 要移除item的位置
+     * @param removeIndex 要移除item的位置
      */
-    public void removeQueueItemAt(int index) {
+    public void removeQueueItemAt(int removeIndex) {
         int state = mPlayBack.getState();
         if (mPlayBack.isPlaying()) {
             mPlayBack.pause();
         }
         //如果删除的是当前播放的歌曲，则播放新的曲目
-        if (mPlayBack.getCurrentIndex() == index) {
-            DataTransform.getInstance().removeItem(getApplicationContext(), index);
+        if (mPlayBack.getCurrentIndex() == removeIndex) {
+            DataTransform.getInstance().removeItem(getApplicationContext(), removeIndex);
             updateQueue();
-            if (mPlayQueueMediaId.size() > 0 && index < mPlayQueueMediaId.size()) {
-                onMediaChange(mPlayQueueMediaId.get(index));
+            if (mPlayQueueMediaId.size() > 0) {
+                //删除的是倒数第二个曲目的时候直接播放替代的曲目
+                if (removeIndex <= mPlayQueueMediaId.size() - 1) {
+                    onMediaChange(mPlayQueueMediaId.get(removeIndex));
+                } else {//删除的是最后一个曲目播放列表的第一个曲目
+                    onMediaChange(mPlayQueueMediaId.get(0));
+                }
                 if (state == PlaybackStateCompat.STATE_PLAYING) {
                     handlePlayOrPauseRequest();
                 }
@@ -563,9 +568,9 @@ public class MediaService extends MediaBrowserServiceCompat {
         } else {//如果不是当前曲目，不能影响当前播放,记录下播放进度，更新列表后继续播放
             int currentIndex = mPlayBack.getCurrentIndex();
             int position = mPlayBack.getCurrentStreamPosition();
-            DataTransform.getInstance().removeItem(getApplicationContext(), index);
+            DataTransform.getInstance().removeItem(getApplicationContext(), removeIndex);
             updateQueue();
-            if (currentIndex < index) {
+            if (currentIndex < removeIndex) {
                 onMediaChange(mPlayQueueMediaId.get(currentIndex));
             } else {
                 onMediaChange(mPlayQueueMediaId.get(currentIndex - 1));

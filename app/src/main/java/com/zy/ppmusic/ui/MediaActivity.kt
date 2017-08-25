@@ -2,10 +2,7 @@ package com.zy.ppmusic.ui
 
 import android.content.ComponentName
 import android.content.Intent
-import android.os.Bundle
-import android.os.Handler
-import android.os.Message
-import android.os.ResultReceiver
+import android.os.*
 import android.support.design.widget.BottomSheetDialog
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -96,15 +93,17 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
      * kotlin静态内部类
      */
     class LoopHandler(controllerCompat: MediaControllerCompat, receiver: ResultReceiver) : Handler() {
-        val mMediaController: WeakReference<MediaControllerCompat> = WeakReference<MediaControllerCompat>(controllerCompat)
+        private val mMediaController: WeakReference<MediaControllerCompat> = WeakReference<MediaControllerCompat>(controllerCompat)
 
-        val mReceiver: WeakReference<ResultReceiver> = WeakReference<ResultReceiver>(receiver)
+        private val mReceiver: WeakReference<ResultReceiver> = WeakReference<ResultReceiver>(receiver)
 
         override fun handleMessage(msg: Message?) {
             super.handleMessage(msg)
             when (msg!!.what) {
                 0 -> { //开始循环
                     if (mMediaController.get() != null) {
+                        this.removeCallbacksAndMessages(null)
+                        this.removeMessages(0)
                         mMediaController.get()!!.sendCommand(MediaService.COMMAND_POSITION, null, mReceiver.get()!!)
                         this.sendEmptyMessageDelayed(0, 1000)
                     }
@@ -121,16 +120,15 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
      * kotlin普通内部类
      */
     inner class MediaResultReceive(handler: Handler) : ResultReceiver(handler) {
-
         override fun onReceiveResult(resultCode: Int, resultData: Bundle) {
             super.onReceiveResult(resultCode, resultData)
             when (resultCode) {
                 MediaService.COMMAND_POSITION_CODE -> {
                     val position = resultData.getInt("position").toLong()
                     startPosition = position
-                    percent = ((startPosition * 1.0f) / endPosition * 1.0f)
+                    percent = ((startPosition * 100f) / endPosition * 1.0f)
                     if (mIsTrackingBar!!.not()) {
-                        mProgressSeekBar!!.progress = (percent * 100f).toInt()
+                        mProgressSeekBar!!.progress = percent.toInt()
                     }
                 }
                 MediaService.COMMAND_UPDATE_QUEUE_CODE -> {
