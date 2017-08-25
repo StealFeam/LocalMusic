@@ -1,6 +1,5 @@
 package com.zy.ppmusic.adapter;
 
-import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v7.widget.RecyclerView;
@@ -14,7 +13,6 @@ import com.zy.ppmusic.R;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.jar.Attributes;
 
 public class PlayQueueAdapter extends RecyclerView.Adapter {
     private List<MediaSessionCompat.QueueItem> mData;

@@ -473,7 +473,8 @@ public class MediaService extends MediaBrowserServiceCompat {
                 case COMMAND_UPDATE_QUEUE://如果本地有记录，读取记录，没有就初始化第一个媒体
                     savePlayingRecord();
                     updateQueue();
-                    List<MusicDbEntity> entity = DBManager.getInstance().initDb(getApplicationContext()).getEntity();
+                    List<MusicDbEntity> entity = DBManager.getInstance()
+                            .initDb(getApplicationContext()).getEntity();
                     if (entity.size() > 0) {
                         onMediaChange(entity.get(0).getLastMediaId());
                         mPlayBack.seekTo(entity.get(0).getLastPlayedPosition(), false);
