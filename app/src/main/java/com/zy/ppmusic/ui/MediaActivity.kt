@@ -400,7 +400,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
                 override fun clearView(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) {
                     super.clearView(recyclerView, viewHolder)
-                    println("clearView..................................")
                     if (isMove) {
                         mMediaController!!.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, null, mResultReceive)
                         if (mCurrentMediaIdStr != null && mBottomQueueAdapter != null) {
