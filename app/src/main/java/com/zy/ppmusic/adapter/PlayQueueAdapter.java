@@ -11,10 +11,11 @@ import android.widget.TextView;
 
 import com.zy.ppmusic.R;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-public class PlayQueueAdapter extends RecyclerView.Adapter {
+public class PlayQueueAdapter extends RecyclerView.Adapter{
     private List<MediaSessionCompat.QueueItem> mData;
     private OnQueueItemClickListener onQueueItemClickListener;
     private OnDelQueueItemListener onDelListener;
@@ -28,12 +29,16 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
         this.selectIndex = selectIndex;
     }
 
-    public PlayQueueAdapter() {
-    }
+    public PlayQueueAdapter() {}
 
     public void setData(List<MediaSessionCompat.QueueItem> mData) {
         this.mData = mData;
         notifyDataSetChanged();
+    }
+
+    public void childMoveTo(int fromPosition,int toPosition){
+        Collections.swap(mData,fromPosition,toPosition);
+        notifyItemMoved(fromPosition, toPosition);
     }
 
     public void setOnDelListener(OnDelQueueItemListener onDelListener) {

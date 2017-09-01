@@ -1,7 +1,10 @@
 package com.zy.ppmusic.bl
 
 import android.app.Activity
-import android.bluetooth.*
+import android.bluetooth.BluetoothA2dp
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothClass
+import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -15,8 +18,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
-import android.widget.TextView
-import android.widget.Toast
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.ScanResultAdapter
 import com.zy.ppmusic.contract.IBLActivityContract
@@ -27,7 +28,7 @@ import com.zy.ppmusic.receiver.StatusChangeReceiver
 import com.zy.ppmusic.view.EasyTintView
 import java.util.*
 
-class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
+class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView {
     private val TAG = "BlScanActivity"
     private val REQUEST_ENABLE_BL = 0x001
     private var sw_bl: SwitchCompat? = null
@@ -36,8 +37,8 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
     private var recyclerShowResult: RecyclerView? = null
     private var adapterShowResult: ScanResultAdapter? = null
     private var mDeviceFoundReceiver: DeviceFoundReceiver? = null
-    var mPresenter : BLActivityPresenter?=null
-    private var mToolBar: Toolbar ?= null
+    var mPresenter: BLActivityPresenter? = null
+    private var mToolBar: Toolbar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,7 +46,7 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
         mToolBar = findViewById(R.id.toolbar_bl) as Toolbar
         setSupportActionBar(mToolBar)
         mPresenter = BLActivityPresenter(this)
-        if(mPresenter!!.isSupportBl().not()){
+        if (mPresenter!!.isSupportBl().not()) {
             showToast("设备不支持蓝牙")
             finish()
             return
@@ -89,8 +90,8 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
         if (exitList.size > 0) {
             mScanDeviceList!!.add(ScanResultEntity(R.layout.item_scan_title, "已配对的设备"))
         }
-        mScanDeviceList!!.addAll(mScanDeviceList!!.size,exitList)
-        mScanDeviceList!!.add(ScanResultEntity(R.layout.item_scan_title, "可用设备"))
+        mScanDeviceList!!.addAll(mScanDeviceList!!.size, exitList)
+        mScanDeviceList!!.add(ScanResultEntity(R.layout.item_scan_title, "扫描到的设备"))
 
         if (adapterShowResult == null) {
             adapterShowResult = ScanResultAdapter(mScanDeviceList!!)
@@ -98,17 +99,17 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
                 override fun onItemClick(device: BluetoothDevice, position: Int) {
                     val deviceClass = device.bluetoothClass
                     //如果是音频类型的设备才能进行连接
-                    if(deviceClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_WEARABLE_HEADSET||
-                            deviceClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_HEADPHONES){
+                    if (deviceClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_WEARABLE_HEADSET ||
+                            deviceClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_HEADPHONES) {
                         println("click called   name=" + device.name + ",position=$position")
                         if (!device.createBond()) {//如果返回值为false，说明设备已经配对过了直接连接设备
-                            if(mPresenter!!.isConnected(device)){
+                            if (mPresenter!!.isConnected(device)) {
                                 mPresenter!!.disconnectDevice(device)
-                            }else{
+                            } else {
                                 mPresenter!!.connectDevice(device)
                             }
                         }
-                    }else{
+                    } else {
                         showToast("此设备不可作为蓝牙耳机")
                     }
                 }
@@ -122,7 +123,7 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
         mPresenter!!.startDiscovery()
     }
 
-    private fun clearData(){
+    private fun clearData() {
         adapterShowResult!!.clearData()
     }
 
@@ -142,7 +143,7 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
                 mPresenter!!.cancelDiscovery()
                 mPresenter!!.startDiscovery()
             }
-            android.R.id.home->{
+            android.R.id.home -> {
                 finish()
             }
         }
@@ -176,38 +177,39 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
     }
 
 
-    fun discoveryStateChange(state: String){
-        when(state){
-            BluetoothAdapter.ACTION_DISCOVERY_FINISHED->{
+    fun discoveryStateChange(state: String) {
+        when (state) {
+            BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
                 stopDiscovery()
             }
-            BluetoothAdapter.ACTION_DISCOVERY_STARTED->{
+            BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
                 startDiscovery()
             }
         }
     }
-    var anim :RotateAnimation?= null
 
-    private fun startDiscovery(){
+    var anim: RotateAnimation? = null
+
+    private fun startDiscovery() {
         val v = findViewById(R.id.action_refresh)
-        anim = RotateAnimation(0f,360f,RotateAnimation.RELATIVE_TO_SELF,0.5f,RotateAnimation.RELATIVE_TO_SELF,0.5f)
+        anim = RotateAnimation(0f, 360f, RotateAnimation.RELATIVE_TO_SELF, 0.5f, RotateAnimation.RELATIVE_TO_SELF, 0.5f)
         anim!!.repeatCount = -1
         anim!!.interpolator = LinearInterpolator()
         anim!!.duration = 800
-        if(v!=null){
+        if (v != null) {
             v.animation = anim
         }
         anim!!.start()
     }
 
-    private fun stopDiscovery(){
-        if(anim != null){
+    private fun stopDiscovery() {
+        if (anim != null) {
             anim!!.cancel()
         }
     }
 
     fun connectStateChanged(state: Int, device: BluetoothDevice) {
-        var stateStr: String = ""
+        var stateStr = ""
         println("state=$state")
         when (state) {
             BluetoothA2dp.STATE_CONNECTING -> {
@@ -315,7 +317,7 @@ class BlScanActivity : AppCompatActivity() ,IBLActivityContract.IView{
     }
 
     fun showToast(msg: String) {
-        EasyTintView.makeText(sw_bl,msg,EasyTintView.TINT_SHORT).show()
+        EasyTintView.makeText(recyclerShowResult, msg, EasyTintView.TINT_SHORT).show()
     }
 
     override fun onDestroy() {

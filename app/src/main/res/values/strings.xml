@@ -41,4 +41,5 @@
     <string name="no_media_searched">未扫描到曲目</string>
     <string name="start_scanning_the_local_file">开始扫描本地文件</string>
     <string name="string_large_text">android.permission.READ_EXTERNAL_STORAGE|android.permission.READ_EXTERNAL_STORAGE</string>
+    <string name="string_close">关闭</string>
 </resources>

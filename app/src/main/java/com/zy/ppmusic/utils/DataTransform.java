@@ -17,6 +17,7 @@ import com.zy.ppmusic.entity.MusicInfoEntity;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +58,30 @@ public class DataTransform {
     public void transFormData(Context context, ArrayList<String> pathList) {
         clearData();
         queryMedia(context, pathList);
+    }
+
+    public void moveTo(int from, int to) {
+        swap(pathList.get(from), pathList.get(to));
+        swap(from, to);
+        Collections.swap(pathList, from, to);
+        Collections.swap(musicInfoEntities, from, to);
+        Collections.swap(queueItemList, from, to);
+        Collections.swap(mediaItemList, from, to);
+        Collections.swap(mediaIdList, from, to);
+    }
+
+    private void swap(String fromMedia, String toMedia) {
+        MediaMetadataCompat fromMeta = mapMetadataArray.get(fromMedia);
+        MediaMetadataCompat toMeta = mapMetadataArray.get(toMedia);
+        mapMetadataArray.put(fromMedia, toMeta);
+        mapMetadataArray.put(toMedia, fromMeta);
+    }
+
+    private void swap(int from, int to) {
+        String fromMedia = indexMediaArray.get(from);
+        String toMedia = indexMediaArray.get(to);
+        indexMediaArray.put(from, toMedia);
+        indexMediaArray.put(to, fromMedia);
     }
 
     private void clearData() {

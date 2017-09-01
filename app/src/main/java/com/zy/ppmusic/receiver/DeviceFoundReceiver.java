@@ -11,6 +11,7 @@ import android.util.Log;
 import com.zy.ppmusic.bl.BlScanActivity;
 
 import java.lang.ref.WeakReference;
+import java.util.Objects;
 
 public class DeviceFoundReceiver extends BroadcastReceiver{
     private static final String TAG = "DeviceFoundReceiver";
@@ -23,8 +24,7 @@ public class DeviceFoundReceiver extends BroadcastReceiver{
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(TAG, "onReceive() called with: context = [" + context + "], intent = [" + intent + "]");
-        if(intent.getAction().equals(BluetoothDevice.ACTION_FOUND)){
-            Bundle extras = intent.getExtras();
+        if(Objects.equals(intent.getAction(), BluetoothDevice.ACTION_FOUND)){
             if(weakReference.get() != null){
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 weakReference.get().foundNewDevice(device);

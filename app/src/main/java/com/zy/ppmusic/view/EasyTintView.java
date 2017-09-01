@@ -2,6 +2,8 @@ package com.zy.ppmusic.view;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.support.v7.widget.AppCompatTextView;
 import android.util.Log;
@@ -9,6 +11,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
@@ -37,7 +40,10 @@ public class EasyTintView extends AppCompatTextView {
 
     public static EasyTintView makeText(View anchorView, String msg, int duration) {
         ViewGroup parent = findSuitableParent(anchorView);
-        View tagView = parent.findViewWithTag(TAG);
+        View tagView = null;
+        if (parent != null) {
+            tagView = parent.findViewWithTag(TAG);
+        }
         EasyTintView tintView;
         if (tagView != null) {
             tintView = (EasyTintView) tagView;
@@ -55,7 +61,7 @@ public class EasyTintView extends AppCompatTextView {
     }
 
     public void show() {
-        if(isVisible){
+        if (isVisible) {
             mDelayHandler.removeCallbacksAndMessages(null);
             mDelayHandler.postDelayed(new Runnable() {
                 @Override
@@ -63,7 +69,7 @@ public class EasyTintView extends AppCompatTextView {
                     hideAnim();
                 }
             }, delayDuration);
-        }else{
+        } else {
             showAnim();
         }
     }
@@ -77,23 +83,29 @@ public class EasyTintView extends AppCompatTextView {
             System.out.println("view is already showing in screen");
             return;
         }
+
+
         if (this.getParent() == null) {
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT);
             params.gravity = showGravity;
+            params.topMargin = 5;
             parent.addView(this, params);
         } else {
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
             params.gravity = showGravity;
+            params.topMargin = 5;
             this.setLayoutParams(params);
         }
+
         Animation showAnim = AnimationUtils.loadAnimation(getContext(), R.anim.tint_show_anim);
         showAnim.setDuration(200);
         showAnim.setFillAfter(true);
         this.setAnimation(showAnim);
         showAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) {}
+            public void onAnimationStart(Animation animation) {
+            }
 
             @Override
             public void onAnimationEnd(Animation animation) {
@@ -122,7 +134,8 @@ public class EasyTintView extends AppCompatTextView {
             this.setAnimation(hideAnim);
             hideAnim.setAnimationListener(new Animation.AnimationListener() {
                 @Override
-                public void onAnimationStart(Animation animation) {}
+                public void onAnimationStart(Animation animation) {
+                }
 
                 @Override
                 public void onAnimationEnd(Animation animation) {
@@ -131,7 +144,8 @@ public class EasyTintView extends AppCompatTextView {
                 }
 
                 @Override
-                public void onAnimationRepeat(Animation animation) {}
+                public void onAnimationRepeat(Animation animation) {
+                }
             });
             hideAnim.start();
         }
@@ -145,13 +159,11 @@ public class EasyTintView extends AppCompatTextView {
     }
 
     private static ViewGroup findSuitableParent(View view) {
-        ViewGroup fallback = null;
         do {
             if (view instanceof FrameLayout) {
                 if (view.getId() == android.R.id.content) {
                     return (ViewGroup) view;
                 }
-                fallback = (ViewGroup) view;
             }
             if (view != null) {
                 ViewParent parent = view.getParent();
@@ -159,7 +171,7 @@ public class EasyTintView extends AppCompatTextView {
             }
         } while (view != null);
 
-        return fallback;
+        return null;
     }
 
     @Override

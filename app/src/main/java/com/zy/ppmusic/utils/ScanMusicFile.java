@@ -20,7 +20,7 @@ public class ScanMusicFile {
     private static final int COUNT_CHANGE = 0X001;//扫描的数量发生了变化
     private static final int SCAN_COMPLETE = 0X000;//扫描完成
 
-    private String[] mSupportMedia = {".mp3", ".wav", ".wma",".MP3"};//所支持的音乐格式
+    private String[] mSupportMedia = {".mp3",".MP3",".wav",".flac"};//所支持的音乐格式
     private static ExecutorService executor = Executors.newSingleThreadExecutor();//单一线程池
     private ArrayList<OnScanComplete> callBackList = new ArrayList<>();
     private volatile ArrayList<String> mPathList = new ArrayList<>();//扫描到的音乐路径集合

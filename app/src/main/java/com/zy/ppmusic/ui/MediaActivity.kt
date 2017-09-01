@@ -2,7 +2,10 @@ package com.zy.ppmusic.ui
 
 import android.content.ComponentName
 import android.content.Intent
-import android.os.*
+import android.os.Bundle
+import android.os.Handler
+import android.os.Message
+import android.os.ResultReceiver
 import android.support.design.widget.BottomSheetDialog
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -13,6 +16,7 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.AppCompatDialog
 import android.support.v7.widget.*
+import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -42,8 +46,6 @@ import java.util.*
  *      2.SessionCompat.sendCommand(String,Bundle,ResultReceiver);//需要获取结果
  */
 class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
-
-
     private var mMediaBrowser: MediaBrowserCompat? = null
     private var mMainMenuRecycler: RecyclerView? = null
     private var mMainMenuAdapter: MainMenuAdapter? = null
@@ -382,6 +384,33 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             mBottomQueueDialog!!.setContentView(mBottomQueueContentView)
             mQueueRecycler!!.adapter = mBottomQueueAdapter
             mQueueRecycler!!.layoutManager = LinearLayoutManager(this)
+            val helper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+                private var isMove = false
+                override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?): Boolean {
+                    val from = viewHolder!!.adapterPosition
+                    val to = target!!.adapterPosition
+                    mBottomQueueAdapter!!.childMoveTo(from, to)
+                    DataTransform.getInstance().moveTo(from, to)
+                    isMove = true
+                    return isMove
+                }
+
+                override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
+                }
+
+                override fun clearView(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) {
+                    super.clearView(recyclerView, viewHolder)
+                    println("clearView..................................")
+                    if (isMove) {
+                        mMediaController!!.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, null, mResultReceive)
+                        if (mCurrentMediaIdStr != null && mBottomQueueAdapter != null) {
+                            mBottomQueueAdapter!!.selectIndex = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
+                        }
+                        isMove = false
+                    }
+                }
+            })
+            helper.attachToRecyclerView(mQueueRecycler!!)
             mBottomQueueAdapter!!.setData(mPlayQueueList)
             mBottomQueueDialog!!.show()
         })
