@@ -373,7 +373,6 @@ public class DataTransform {
         queueItemList.remove(index);
         mediaIdList.remove(index);
         mediaItemList.remove(index);
-
     }
 
     private String getMusicName(String path) {
