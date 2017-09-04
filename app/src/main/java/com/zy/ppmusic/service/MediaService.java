@@ -112,7 +112,8 @@ public class MediaService extends MediaBrowserServiceCompat {
         mMediaSessionCompat.setPlaybackState(mPlayBackStateBuilder.build());
         mMediaSessionCompat.setCallback(new MediaSessionCallBack());
         mMediaSessionCompat.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
-                MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS | MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS);
+                MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS |
+                MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS);
 
         mMediaSessionCompat.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE);
 
@@ -145,7 +146,6 @@ public class MediaService extends MediaBrowserServiceCompat {
             @Override
             public void onError(int errorCode, String error) {
                 onPlayStateChange(errorCode, error);
-
                 Log.e(TAG, "onError: " + errorCode + "..." + error);
             }
         });

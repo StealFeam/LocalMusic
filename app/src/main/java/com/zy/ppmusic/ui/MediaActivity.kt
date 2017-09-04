@@ -342,7 +342,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             //遗留问题：删除一条item之后再添加进来列表item数量显示错误----------------------------
             mBottomQueueDialog = BottomSheetDialog(this@MediaActivity)
             mBottomQueueContentView = LayoutInflater.from(this@MediaActivity).inflate(R.layout.play_queue_layout, null)
-
             mQueueRecycler = mBottomQueueContentView!!.findViewById(R.id.control_queue_recycle) as RecyclerView
             mBottomQueueAdapter = PlayQueueAdapter()
             mBottomQueueAdapter!!.setOnQueueItemClickListener { obj, _ ->
