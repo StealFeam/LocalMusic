@@ -24,7 +24,7 @@ public class BLActivityModel implements IBLActivityContract.IModel{
 
     @NotNull
     @Override
-    public List<ScanResultEntity> getExitDevices(@NotNull BluetoothAdapter mBlueAdapter,@NotNull BluetoothA2dp mBlueA2dp) {
+    public List<ScanResultEntity> getExitsDevices(@NotNull BluetoothAdapter mBlueAdapter,@NotNull BluetoothA2dp mBlueA2dp) {
         List<ScanResultEntity> list = new ArrayList<>();
         Set<BluetoothDevice> bondedDevices = mBlueAdapter.getBondedDevices();
         for (BluetoothDevice bondedDevice : bondedDevices) {

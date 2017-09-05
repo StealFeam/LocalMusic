@@ -310,7 +310,6 @@ public class AppSettingsDialog implements Parcelable, DialogInterface.OnClickLis
          * Activity#onActivityResult(int, int, Intent)}. If you still don't have the right
          * permissions, then the request was cancelled.
          */
-        @Deprecated
         public Builder setNegativeButton(String negativeButton,
                                          DialogInterface.OnClickListener negativeListener) {
             mNegativeButton = negativeButton;

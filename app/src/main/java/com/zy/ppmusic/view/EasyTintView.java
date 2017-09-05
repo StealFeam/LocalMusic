@@ -2,9 +2,11 @@ package com.zy.ppmusic.view;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Point;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.AppCompatTextView;
 import android.util.Log;
 import android.view.Gravity;
@@ -27,22 +29,38 @@ public class EasyTintView extends AppCompatTextView {
     private int showGravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
     private boolean isVisible = false;
     private ViewGroup parent;
+    private int topMargin;
 
     public EasyTintView(Context context) {
         super(context);
         mDelayHandler = new Handler();
-        setPadding(20, 10, 20, 10);
-        setBackgroundResource(R.drawable.normal_tint_shape);
-        getBackground().setAlpha(130);
+        setPadding(20, 20, 20, 20);
+        setBackgroundColor(ContextCompat.getColor(context, R.color.colorTheme));
         setTextColor(Color.WHITE);
+        setGravity(Gravity.CENTER);
         setTag(TAG);
     }
 
-    public static EasyTintView makeText(View anchorView, String msg, int duration) {
+    public static EasyTintView makeText(@NonNull View anchorView, String msg, int duration) {
         ViewGroup parent = findSuitableParent(anchorView);
         View tagView = null;
+        int topMargin = 0;
         if (parent != null) {
             tagView = parent.findViewWithTag(TAG);
+            Rect rect = new Rect();
+            //获取android.R.id.content根布局的内容区域
+            parent.getGlobalVisibleRect(rect);
+            //有Toolbar和状态栏高度
+            int topWithToolBar = rect.top;
+
+            anchorView.getWindowVisibleDisplayFrame(rect);
+            //只有状态栏高度
+            int topWithTranslateBar = rect.top;
+            if(topWithToolBar > 0){
+                topMargin = 0;
+            }else{
+                topMargin = topWithTranslateBar;
+            }
         }
         EasyTintView tintView;
         if (tagView != null) {
@@ -50,7 +68,8 @@ public class EasyTintView extends AppCompatTextView {
         } else {
             tintView = new EasyTintView(anchorView.getContext());
         }
-        tintView.setText(msg);
+        tintView.setText(String.valueOf(msg));
+        tintView.topMargin = topMargin;
         tintView.parent = parent;
         tintView.delayDuration = duration;
         return tintView;
@@ -84,24 +103,52 @@ public class EasyTintView extends AppCompatTextView {
             return;
         }
 
-
         if (this.getParent() == null) {
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                    getResources().getDimensionPixelOffset(R.dimen.dp45));
+            params.topMargin = this.topMargin;
             params.gravity = showGravity;
-            params.topMargin = 5;
             parent.addView(this, params);
         } else {
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
             params.gravity = showGravity;
-            params.topMargin = 5;
             this.setLayoutParams(params);
         }
 
+        if (this.getVisibility() != View.VISIBLE) {
+            this.setVisibility(View.VISIBLE);
+        }
+
+//        TranslateAnimation animation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0f,
+//                Animation.RELATIVE_TO_SELF, 0f, Animation.RELATIVE_TO_SELF, -1f,
+//                Animation.RELATIVE_TO_SELF, 0f);
+//        animation.setDuration(500);
+//        animation.setFillAfter(true);
+//        this.startAnimation(animation);
+//        animation.setAnimationListener(new Animation.AnimationListener() {
+//            @Override
+//            public void onAnimationStart(Animation animation) {
+//            }
+//
+//            @Override
+//            public void onAnimationEnd(Animation animation) {
+//                isVisible = true;
+//                mDelayHandler.postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        hideAnim();
+//                    }
+//                }, delayDuration);
+//            }
+//
+//            @Override
+//            public void onAnimationRepeat(Animation animation) {
+//            }
+//        });
         Animation showAnim = AnimationUtils.loadAnimation(getContext(), R.anim.tint_show_anim);
-        showAnim.setDuration(200);
+        showAnim.setDuration(300);
         showAnim.setFillAfter(true);
-        this.setAnimation(showAnim);
+        this.startAnimation(showAnim);
         showAnim.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
@@ -122,16 +169,15 @@ public class EasyTintView extends AppCompatTextView {
             public void onAnimationRepeat(Animation animation) {
             }
         });
-        showAnim.start();
     }
 
     private void hideAnim() {
         if (isVisible) {
             removeFromParent();
             Animation hideAnim = AnimationUtils.loadAnimation(getContext(), R.anim.tint_hide_anim);
-            hideAnim.setDuration(200);
+            hideAnim.setDuration(300);
             hideAnim.setFillAfter(true);
-            this.setAnimation(hideAnim);
+            this.startAnimation(hideAnim);
             hideAnim.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) {
@@ -139,6 +185,7 @@ public class EasyTintView extends AppCompatTextView {
 
                 @Override
                 public void onAnimationEnd(Animation animation) {
+                    setVisibility(View.GONE);
                     isVisible = false;
                     mDelayHandler.removeCallbacksAndMessages(null);
                 }
@@ -147,7 +194,6 @@ public class EasyTintView extends AppCompatTextView {
                 public void onAnimationRepeat(Animation animation) {
                 }
             });
-            hideAnim.start();
         }
 
     }
@@ -170,7 +216,6 @@ public class EasyTintView extends AppCompatTextView {
                 view = parent instanceof View ? (View) parent : null;
             }
         } while (view != null);
-
         return null;
     }
 

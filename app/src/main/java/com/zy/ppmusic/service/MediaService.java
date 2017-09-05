@@ -146,7 +146,7 @@ public class MediaService extends MediaBrowserServiceCompat {
             @Override
             public void onError(int errorCode, String error) {
                 onPlayStateChange(errorCode, error);
-                Log.e(TAG, "onError: " + errorCode + "..." + error);
+                mMediaSessionCompat.setQueueTitle("播放器发生错误");
             }
         });
 

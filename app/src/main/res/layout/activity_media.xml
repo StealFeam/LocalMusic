@@ -17,7 +17,6 @@
         app:layoutManager="GridLayoutManager"
         app:layout_constraintBottom_toTopOf="@+id/control_display_title"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -132,5 +131,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/control_action_previous"
         app:layout_constraintVertical_bias="1.0" />
+
+    <TextView
+        android:id="@+id/control_display_duration_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/dp10"
+        android:text="@string/string_time_init"
+        android:textSize="@dimen/sp12"
+        app:layout_constraintBottom_toTopOf="@+id/control_action_show_queue"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/horizontal_guideline" />
+
+    <TextView
+        android:id="@+id/control_display_time_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp10"
+        android:text="@string/string_time_init"
+        android:textSize="@dimen/sp12"
+        app:layout_constraintBottom_toTopOf="@+id/control_action_loop_model"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/control_display_progress" />
 
 </android.support.constraint.ConstraintLayout>

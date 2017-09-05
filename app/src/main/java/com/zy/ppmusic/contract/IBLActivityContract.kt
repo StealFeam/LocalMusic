@@ -11,12 +11,12 @@ import com.zy.ppmusic.entity.ScanResultEntity
 
 interface IBLActivityContract{
     interface IView : IBaseView{
-        fun setExitDevices(exitList: MutableList<ScanResultEntity>)
+        fun setExitsDevices(exitList: MutableList<ScanResultEntity>)
         fun getContext() : Context
     }
 
     interface IPresenter : IBasePresenter{
-        fun getExitDevices()
+        fun getExitsDevices()
         fun isSupportBl() : Boolean
         fun connectDevice(device: BluetoothDevice) :Boolean
         fun disconnectDevice(device: BluetoothDevice) : Boolean
@@ -30,7 +30,7 @@ interface IBLActivityContract{
     }
 
     interface IModel : IBaseModel{
-        fun getExitDevices(adapter: BluetoothAdapter,a2dp: BluetoothA2dp) : MutableList<ScanResultEntity>
+        fun getExitsDevices(adapter: BluetoothAdapter,a2dp: BluetoothA2dp) : MutableList<ScanResultEntity>
         fun connectDevice(device: BluetoothDevice,adapter: BluetoothAdapter,a2dp: BluetoothA2dp) :Boolean
         fun disconnectDevice(device: BluetoothDevice,adapter: BluetoothAdapter,a2dp: BluetoothA2dp) : Boolean
     }

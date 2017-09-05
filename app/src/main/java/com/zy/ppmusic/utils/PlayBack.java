@@ -3,6 +3,8 @@ package com.zy.ppmusic.utils;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.MediaRecorder;
+import android.media.PlaybackParams;
 import android.os.PowerManager;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;

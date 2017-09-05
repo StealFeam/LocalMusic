@@ -17,7 +17,7 @@
             android:id="@+id/toolbar_bl"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:navigationIcon="@drawable/ic_close"
+            app:navigationIcon="@mipmap/ic_action_close"
             app:navigationContentDescription="@string/string_close"
             app:contentInsetStartWithNavigation="0dp"
             app:popupTheme="@style/AppTheme.PopupOverlay">
@@ -25,8 +25,12 @@
             <android.support.v7.widget.SwitchCompat
                 android:id="@+id/switch_bl"
                 android:layout_width="wrap_content"
+                android:theme="@style/MySwitch"
+                app:track="@drawable/switch_track"
+                android:minWidth="@dimen/dp40"
+                android:checked="true"
+                android:layout_marginEnd="@dimen/dp5"
                 android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
                 android:layout_gravity="end" />
         </android.support.v7.widget.Toolbar>
 

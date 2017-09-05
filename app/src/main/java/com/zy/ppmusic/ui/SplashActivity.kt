@@ -64,6 +64,12 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
     }
 
     override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>?) {
+        if (EasyPermissions.hasPermissions(applicationContext, getString(R.string.string_read_external)
+                , getString(R.string.string_write_external))) {
+            actionToMain()
+            return
+        }
+
         if (EasyPermissions.somePermissionPermanentlyDenied(this, perms!!)) {
             val dialog = AppSettingsDialog.Builder(this)
             dialog.setNegativeButton(R.string.exit)

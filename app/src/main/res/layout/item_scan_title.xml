@@ -1,15 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
 
     <TextView
         android:id="@+id/tv_scan_result_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:padding="@dimen/dp10"
-        android:textSize="@dimen/sp16"
-        android:textColor="@color/colorAccent"
         android:text="@string/normal_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:textColor="@color/colorAccent"
+        android:textSize="@dimen/sp16" />
 
+    <View
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_marginEnd="@dimen/dp10"
+        android:layout_gravity="center_vertical"
+        android:layout_height="@dimen/dp1"
+        android:background="@color/colorAccent" />
 </LinearLayout>

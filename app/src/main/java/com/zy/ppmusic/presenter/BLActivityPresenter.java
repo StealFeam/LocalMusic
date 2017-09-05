@@ -25,7 +25,7 @@ public class BLActivityPresenter implements IBLActivityContract.IPresenter {
     private Context context;
 
     public BLActivityPresenter(IBLActivityContract.IView mView) {
-        this.mView = new WeakReference<IBLActivityContract.IView>(mView);
+        this.mView = new WeakReference<>(mView);
         context = mView.getContext();
         mModel = new BLActivityModel();
         mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -37,10 +37,10 @@ public class BLActivityPresenter implements IBLActivityContract.IPresenter {
             public void onServiceConnected(int profile, BluetoothProfile proxy) {
                 if (profile == BluetoothA2dp.A2DP) {
                     mBlueA2dp = (BluetoothA2dp) proxy;
-                    if(isNeedRe){
-                        List<ScanResultEntity> exitDevices = mModel.getExitDevices(mBlueAdapter, mBlueA2dp);
-                        if(mView.get() != null){
-                            mView.get().setExitDevices(exitDevices);
+                    if (isNeedRe) {
+                        List<ScanResultEntity> exitDevices = mModel.getExitsDevices(mBlueAdapter, mBlueA2dp);
+                        if (mView.get() != null) {
+                            mView.get().setExitsDevices(exitDevices);
                         }
                     }
                 }
@@ -54,13 +54,13 @@ public class BLActivityPresenter implements IBLActivityContract.IPresenter {
     }
 
     @Override
-    public void getExitDevices() {
-        if(mBlueA2dp != null){
-            List<ScanResultEntity> exitDevices = mModel.getExitDevices(mBlueAdapter, mBlueA2dp);
-            if(mView.get() != null){
-                mView.get().setExitDevices(exitDevices);
+    public void getExitsDevices() {
+        if (mBlueA2dp != null) {
+            List<ScanResultEntity> exitDevices = mModel.getExitsDevices(mBlueAdapter, mBlueA2dp);
+            if (mView.get() != null) {
+                mView.get().setExitsDevices(exitDevices);
             }
-        }else{
+        } else {
             isNeedRe = true;
             initBlueA2dp();
         }
@@ -68,25 +68,23 @@ public class BLActivityPresenter implements IBLActivityContract.IPresenter {
 
     @Override
     public boolean startDiscovery() {
-        if(mBlueAdapter != null && mBlueAdapter.isDiscovering()){
-            mBlueAdapter.cancelDiscovery();
-        }
+        cancelDiscovery();
         return mBlueAdapter != null && mBlueAdapter.startDiscovery();
     }
 
     @Override
     public boolean cancelDiscovery() {
-        return mBlueAdapter != null && mBlueAdapter.cancelDiscovery();
+        return mBlueAdapter != null && mBlueAdapter.isDiscovering() && mBlueAdapter.cancelDiscovery();
     }
 
     @Override
     public boolean connectDevice(@NotNull BluetoothDevice device) {
-        return mModel.connectDevice(device,mBlueAdapter,mBlueA2dp);
+        return mModel.connectDevice(device, mBlueAdapter, mBlueA2dp);
     }
 
     @Override
     public boolean disconnectDevice(@NotNull BluetoothDevice device) {
-        return mModel.disconnectDevice(device,mBlueAdapter,mBlueA2dp);
+        return mModel.disconnectDevice(device, mBlueAdapter, mBlueA2dp);
     }
 
     @Override
@@ -129,7 +127,7 @@ public class BLActivityPresenter implements IBLActivityContract.IPresenter {
 
     @Override
     public boolean isConnected(@NotNull BluetoothDevice device) {
-        return mBlueA2dp !=null && mBlueA2dp.getConnectedDevices().contains(device);
+        return mBlueA2dp != null && mBlueA2dp.getConnectedDevices().contains(device);
     }
 
     @NotNull

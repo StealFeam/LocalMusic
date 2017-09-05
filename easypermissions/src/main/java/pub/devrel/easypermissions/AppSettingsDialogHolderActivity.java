@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.annotation.RestrictTo;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AppSettingsDialogHolderActivity extends AppCompatActivity implements DialogInterface.OnClickListener {

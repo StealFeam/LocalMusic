@@ -46,7 +46,7 @@
         android:id="@+id/notify_action_close"
         android:layout_width="@dimen/dp30"
         android:layout_height="@dimen/dp30"
-        android:src="@drawable/ic_close"
+        android:src="@mipmap/ic_black_close"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
         android:tint="@color/colorBlack"

@@ -18,6 +18,7 @@
     <string name="string_add_all">全部加入播放队列</string>
     <string name="string_read_external">android.permission.READ_EXTERNAL_STORAGE</string>
     <string name="string_write_external">android.permission.WRITE_EXTERNAL_STORAGE</string>
+
     <string name="string_permission_read">只有得到本地存储权限才能获取到本地媒体文件</string>
     <string name="exit">退出</string>
     <string name="string_loop_mode">播放模式</string>
@@ -32,6 +33,7 @@
     <string name="string_custom_time_hint">自定义</string>
     <string name="string_sure">确定</string>
     <string name="itemImgDes">itemImg</string>
+    <string name="string_time_init">00:00</string>
     <string name="format_string_time_count_down_with_hour">%dh:%02dm:%02ds后关闭</string>
     <string name="format_string_time_count_down_no_hour">%02d:%02d后关闭</string>
     <string name="empty_play_queue" translatable="false">播放列表为空，未发现曲目</string>

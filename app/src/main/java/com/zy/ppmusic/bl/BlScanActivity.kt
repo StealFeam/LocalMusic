@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothClass
 import android.bluetooth.BluetoothDevice
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
@@ -16,8 +17,10 @@ import android.support.v7.widget.SwitchCompat
 import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
+import android.widget.Toast
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.ScanResultAdapter
 import com.zy.ppmusic.contract.IBLActivityContract
@@ -26,46 +29,51 @@ import com.zy.ppmusic.presenter.BLActivityPresenter
 import com.zy.ppmusic.receiver.DeviceFoundReceiver
 import com.zy.ppmusic.receiver.StatusChangeReceiver
 import com.zy.ppmusic.view.EasyTintView
+import pub.devrel.easypermissions.AppSettingsDialog
+import pub.devrel.easypermissions.EasyPermissions
 import java.util.*
 
-class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView {
-    private val TAG = "BlScanActivity"
+class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermissions.PermissionCallbacks {
+
+
     private val REQUEST_ENABLE_BL = 0x001
-    private var sw_bl: SwitchCompat? = null
+    private var mBlueToothOpenSwitch: SwitchCompat? = null//蓝牙开关
     private var blStateChangeReceiver: StatusChangeReceiver? = null
     private var mScanDeviceList: ArrayList<ScanResultEntity>? = null
     private var recyclerShowResult: RecyclerView? = null
     private var adapterShowResult: ScanResultAdapter? = null
     private var mDeviceFoundReceiver: DeviceFoundReceiver? = null
     var mPresenter: BLActivityPresenter? = null
+    private var mLoadingAnim: RotateAnimation? = null
     private var mToolBar: Toolbar? = null
+    private var mRefreshScanMenu: View? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bl_scan)
         mToolBar = findViewById(R.id.toolbar_bl) as Toolbar
-        setSupportActionBar(mToolBar)
+
         mPresenter = BLActivityPresenter(this)
+        recyclerShowResult = findViewById(R.id.show_device_recycler) as RecyclerView
         if (mPresenter!!.isSupportBl().not()) {
-            showToast("设备不支持蓝牙")
+            Toast.makeText(this, "您的设备不支持蓝牙", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
-
         mScanDeviceList = ArrayList()
-        recyclerShowResult = findViewById(R.id.show_device_recycler) as RecyclerView
-        sw_bl = findViewById(R.id.switch_bl) as SwitchCompat
+        mBlueToothOpenSwitch = findViewById(R.id.switch_bl) as SwitchCompat
         mToolBar!!.title = if (mPresenter!!.isEnable()) {
-            sw_bl!!.isChecked = true
-            mPresenter!!.getExitDevices()
+            mBlueToothOpenSwitch!!.isChecked = true
+            mPresenter!!.getExitsDevices()
             mPresenter!!.startDiscovery()
             "蓝牙已开启"
         } else {
-            sw_bl!!.isChecked = false
+            mBlueToothOpenSwitch!!.isChecked = false
             "蓝牙已关闭"
         }
-
-        sw_bl!!.setOnCheckedChangeListener({ _, isChecked ->
+        setSupportActionBar(mToolBar)
+        checkLocationPermission()
+        mBlueToothOpenSwitch!!.setOnCheckedChangeListener({ _, isChecked ->
             if (isChecked) {
                 // 打开蓝牙
                 if (mPresenter!!.isEnable().not()) {
@@ -73,6 +81,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView {
                     // 设置蓝牙可见性，最多300秒
                     intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
                     startActivityForResult(intent, REQUEST_ENABLE_BL)
+
                 }
             } else {
                 mPresenter!!.disable()
@@ -80,12 +89,60 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView {
         })
     }
 
+    private fun checkLocationPermission(){
+        if (!EasyPermissions.hasPermissions(applicationContext, "android.permission.ACCESS_COARSE_LOCATION")) {
+            println("没有权限")
+            if(!EasyPermissions.permissionPermanentlyDenied(this,"android.permission.ACCESS_COARSE_LOCATION")){
+                EasyPermissions.requestPermissions(this@BlScanActivity,"获取粗略位置用来加快扫描" ,
+                        1, "android.permission.ACCESS_COARSE_LOCATION")
+            }else{
+                val dialog = AppSettingsDialog.Builder(this)
+                dialog.setRationale("没有位置信息将无法获取新设备，这是安卓6.0之后的系统要求，请允许权限")
+                dialog.setNegativeButton("试一试",null)
+                dialog.build().show()
+                println("被关到小黑屋了")
+            }
+        }else{
+            println("已经有权限了")
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        EasyPermissions.onRequestPermissionsResult(requestCode,permissions,grantResults)
+    }
+
+    override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>?) {
+        println("权限通过了")
+        if(requestCode == 1){
+            if (mPresenter!!.isEnable()) {
+                mPresenter!!.startDiscovery()
+            }
+        }
+    }
+
+    override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>?) {
+        if (requestCode == 1){
+            if (EasyPermissions.somePermissionPermanentlyDenied(this, perms!!)) {
+                println("权限新特性")
+                val dialog = AppSettingsDialog.Builder(this)
+                dialog.setRationale("没有位置信息将无法获取新设备，这是安卓6.0之后的系统要求，请允许权限")
+                dialog.build().show()
+            }else{
+                println("重新申请")
+                EasyPermissions.requestPermissions(this@BlScanActivity,"获取粗略位置用来加快扫描,否则无法发现新设备" ,
+                        1, "android.permission.ACCESS_COARSE_LOCATION")
+            }
+        }
+    }
+
+
     override fun onBackPressed() {
         super.onBackPressed()
         finish()
     }
 
-    override fun setExitDevices(exitList: MutableList<ScanResultEntity>) {
+    override fun setExitsDevices(exitList: MutableList<ScanResultEntity>) {
         mScanDeviceList!!.clear()
         if (exitList.size > 0) {
             mScanDeviceList!!.add(ScanResultEntity(R.layout.item_scan_title, "已配对的设备"))
@@ -124,7 +181,9 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView {
     }
 
     private fun clearData() {
-        adapterShowResult!!.clearData()
+        if(adapterShowResult != null){
+            adapterShowResult!!.clearData()
+        }
     }
 
     override fun getContext(): Context {
@@ -139,8 +198,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView {
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item!!.itemId) {
             R.id.action_refresh -> {
-                mPresenter!!.getExitDevices()
-                mPresenter!!.cancelDiscovery()
+                mPresenter!!.getExitsDevices()
                 mPresenter!!.startDiscovery()
             }
             android.R.id.home -> {
@@ -160,14 +218,15 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView {
             }
             BluetoothAdapter.STATE_ON -> {
                 mToolBar!!.title = "蓝牙已开启"
-                sw_bl!!.isChecked = true
+                mBlueToothOpenSwitch!!.isChecked = true
+                checkLocationPermission()
             }
             BluetoothAdapter.STATE_TURNING_OFF -> {
                 mToolBar!!.title = "蓝牙正在关闭"
             }
             BluetoothAdapter.STATE_OFF -> {
                 mToolBar!!.title = "蓝牙已关闭"
-                sw_bl!!.isChecked = false
+                mBlueToothOpenSwitch!!.isChecked = false
                 clearData()
             }
             else -> {
@@ -176,35 +235,44 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView {
         }
     }
 
-
     fun discoveryStateChange(state: String) {
         when (state) {
             BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
+                println("停止扫描")
                 stopDiscovery()
             }
             BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
+                println("开始扫描")
                 startDiscovery()
+                if (mDeviceFoundReceiver == null) {
+                    mDeviceFoundReceiver = DeviceFoundReceiver(this)
+                }
+                val foundFilter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+                registerReceiver(mDeviceFoundReceiver, foundFilter)
             }
         }
     }
 
-    var anim: RotateAnimation? = null
-
     private fun startDiscovery() {
-        val v = findViewById(R.id.action_refresh)
-        anim = RotateAnimation(0f, 360f, RotateAnimation.RELATIVE_TO_SELF, 0.5f, RotateAnimation.RELATIVE_TO_SELF, 0.5f)
-        anim!!.repeatCount = -1
-        anim!!.interpolator = LinearInterpolator()
-        anim!!.duration = 800
-        if (v != null) {
-            v.animation = anim
+        if (mRefreshScanMenu == null) {
+            mRefreshScanMenu = findViewById(R.id.action_refresh)
         }
-        anim!!.start()
+        mLoadingAnim = RotateAnimation(0f, 360f, RotateAnimation.RELATIVE_TO_SELF, 0.5f,
+                RotateAnimation.RELATIVE_TO_SELF, 0.5f)
+        mLoadingAnim!!.repeatCount = -1
+        mLoadingAnim!!.interpolator = LinearInterpolator()
+        mLoadingAnim!!.duration = 800
+        if(mRefreshScanMenu != null){
+            mRefreshScanMenu!!.animation = mLoadingAnim
+        }
+        mLoadingAnim!!.start()
     }
 
     private fun stopDiscovery() {
-        if (anim != null) {
-            anim!!.cancel()
+        if (mLoadingAnim != null) {
+            mLoadingAnim!!.reset()
+            mLoadingAnim!!.cancel()
+            mLoadingAnim = null
         }
     }
 
@@ -230,7 +298,6 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView {
             val scanResultEntity = mScanDeviceList!![(1 + position)]
             scanResultEntity.state = stateStr
             adapterShowResult!!.updateData(mScanDeviceList!!)
-            adapterShowResult!!.updateChildData(position)
         }
     }
 
@@ -239,13 +306,6 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView {
         if (blStateChangeReceiver == null) {
             blStateChangeReceiver = StatusChangeReceiver(this)
         }
-        if (mDeviceFoundReceiver == null) {
-            mDeviceFoundReceiver = DeviceFoundReceiver(this)
-        }
-
-        val foundFilter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-
-        registerReceiver(mDeviceFoundReceiver, foundFilter)
 
         val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         filter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED)
@@ -298,26 +358,30 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView {
 
     override fun onPause() {
         super.onPause()
-        unregisterReceiver(mDeviceFoundReceiver)
+        if (mDeviceFoundReceiver != null) {
+            mDeviceFoundReceiver!!.debugUnregister
+            unregisterReceiver(mDeviceFoundReceiver)
+        }
         unregisterReceiver(blStateChangeReceiver)
         mPresenter!!.cancelDiscovery()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == this.REQUEST_ENABLE_BL && resultCode == Activity.RESULT_OK) {
-            showToast("蓝牙开启成功")
-            mPresenter!!.getExitDevices()
+            mPresenter!!.getExitsDevices()
             mPresenter!!.startDiscovery()
             onBLStateChange(BluetoothAdapter.STATE_ON)
-        } else {
-            showToast("蓝牙开启失败")
-            onBLStateChange(BluetoothAdapter.STATE_OFF)
         }
+//        else if(requestCode != 1){
+//            println("$requestCode...$resultCode....$data")
+//            showToast("蓝牙开启失败")
+//            onBLStateChange(BluetoothAdapter.STATE_OFF)
+//        }
         super.onActivityResult(requestCode, resultCode, data)
     }
 
     fun showToast(msg: String) {
-        EasyTintView.makeText(recyclerShowResult, msg, EasyTintView.TINT_SHORT).show()
+        EasyTintView.makeText(recyclerShowResult!!, msg, EasyTintView.TINT_SHORT).show()
     }
 
     override fun onDestroy() {

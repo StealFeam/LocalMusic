@@ -11,7 +11,6 @@ import com.zy.ppmusic.R
 import com.zy.ppmusic.entity.ScanResultEntity
 import android.text.TextUtils
 
-
 class ScanResultAdapter(mData:ArrayList<ScanResultEntity>): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var mData:ArrayList<ScanResultEntity>? = null
     private var listener:OnItemClickListener ?= null
@@ -36,13 +35,10 @@ class ScanResultAdapter(mData:ArrayList<ScanResultEntity>): RecyclerView.Adapter
 
     fun updateData(mData: ArrayList<ScanResultEntity>){
         this.mData = mData
+        notifyDataSetChanged()
     }
 
-    fun updateChildData(position: Int){
-        notifyItemChanged((position + 1))
-    }
-
-    override fun onCreateViewHolder(p0: ViewGroup?, p1: Int): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(p0: ViewGroup?, p1: Int): RecyclerView.ViewHolder? {
         when(p1){
             R.layout.item_scan_title->{
                 return TitleHolder(LayoutInflater.from(p0!!.context).inflate(R.layout.item_scan_title,p0,false))
@@ -52,7 +48,7 @@ class ScanResultAdapter(mData:ArrayList<ScanResultEntity>): RecyclerView.Adapter
                         inflate(R.layout.item_scan_child,p0,false),listener!!)
             }
         }
-        TODO()
+        return null
     }
 
     override fun onBindViewHolder(p0: RecyclerView.ViewHolder?, p1: Int) {

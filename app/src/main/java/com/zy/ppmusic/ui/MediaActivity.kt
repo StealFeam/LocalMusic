@@ -34,9 +34,11 @@ import com.zy.ppmusic.entity.MainMenuEntity
 import com.zy.ppmusic.presenter.MediaPresenterImpl
 import com.zy.ppmusic.service.MediaService
 import com.zy.ppmusic.utils.DataTransform
+import com.zy.ppmusic.utils.DateUtil
 import com.zy.ppmusic.utils.StringUtils
 import com.zy.ppmusic.view.BorderTextView
 import com.zy.ppmusic.view.EasyTintView
+import kotlinx.android.synthetic.main.activity_media.*
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -95,9 +97,9 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
      * kotlin静态内部类
      */
     class LoopHandler(controllerCompat: MediaControllerCompat, receiver: ResultReceiver) : Handler() {
-        private val mMediaController: WeakReference<MediaControllerCompat> = WeakReference<MediaControllerCompat>(controllerCompat)
+        private val mMediaController: WeakReference<MediaControllerCompat> = WeakReference(controllerCompat)
 
-        private val mReceiver: WeakReference<ResultReceiver> = WeakReference<ResultReceiver>(receiver)
+        private val mReceiver: WeakReference<ResultReceiver> = WeakReference(receiver)
 
         override fun handleMessage(msg: Message?) {
             super.handleMessage(msg)
@@ -107,7 +109,9 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                         this.removeCallbacksAndMessages(null)
                         this.removeMessages(0)
                         mMediaController.get()!!.sendCommand(MediaService.COMMAND_POSITION, null, mReceiver.get()!!)
-                        this.sendEmptyMessageDelayed(0, 1000)
+                        if(mMediaController.get()!!.playbackState.state == PlaybackStateCompat.STATE_PLAYING){
+                            this.sendEmptyMessageDelayed(0, 1000)
+                        }
                     }
                 }
                 else -> {//结束循环
@@ -132,6 +136,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                     if (mIsTrackingBar!!.not()) {
                         mProgressSeekBar!!.progress = percent.toInt()
                     }
+                    control_display_time_tv.text = DateUtil.getInstance().getTime(position)
                 }
                 MediaService.COMMAND_UPDATE_QUEUE_CODE -> {
                     if (mMediaController!!.queue != null && mMediaController!!.queue.size > 0) {
@@ -155,6 +160,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         if (supportActionBar != null) {
             supportActionBar!!.elevation = 0f
         }
+
         ivNextAction = findViewById(R.id.control_action_next) as AppCompatImageView
         ivPlayAction = findViewById(R.id.control_action_play_pause) as AppCompatImageView
         ivShowQueueAction = findViewById(R.id.control_action_show_queue) as AppCompatImageView
@@ -163,7 +169,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
         mMainMenuRecycler = findViewById(R.id.more_function_recycle) as RecyclerView
         mPresenter = MediaPresenterImpl(this)
-
 
         val dataList = ArrayList<MainMenuEntity>()
         dataList.add(MainMenuEntity("扫描音乐", R.drawable.ic_search_music))
@@ -265,7 +270,11 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
         mProgressSeekBar = findViewById(R.id.control_display_progress) as SeekBar
         mProgressSeekBar!!.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {}
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if(fromUser){
+                    control_display_time_tv.text = DateUtil.getInstance().getTime(progress * stepPosition)
+                }
+            }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
                 mIsTrackingBar = true
             }
@@ -543,6 +552,8 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                     mMediaController!!.transportControls.playFromMediaId(mCurrentMediaIdStr, extra)
                 }
             } else {
+                control_display_time_tv.text = getString(R.string.string_time_init)
+                control_display_duration_tv.text = getString(R.string.string_time_init)
                 setMediaInfo(getString(R.string.app_name), getString(R.string.app_name))
             }
             hideLoading()
@@ -569,6 +580,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 endPosition = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
                 stepPosition = endPosition / 100L
                 startPosition = 0
+                control_display_duration_tv.text = DateUtil.getInstance().getTime(endPosition)
                 println("endPosition=$endPosition,step=$stepPosition")
                 setMediaInfo(StringUtils.ifEmpty(displayTitle), StringUtils.ifEmpty(subTitle))
             }
@@ -601,6 +613,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 startPosition = state.position
                 percent = ((startPosition * 1.0f) / endPosition * 1.0f)
                 mProgressSeekBar!!.progress = (percent * 100f).toInt()
+                control_display_time_tv.text = DateUtil.getInstance().getTime(startPosition)
                 handlePlayState(state.state)
             })
         }
@@ -649,6 +662,14 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 }
             }
         }
+        //目前仅当播放器发生错误时调用
+        override fun onQueueTitleChanged(title: CharSequence?) {
+            super.onQueueTitleChanged(title)
+            println("onQueueTitleChanged .... $title")
+            showMsg((title as String?)!!)
+            //播放下一首
+            mMediaController!!.transportControls.skipToNext()
+        }
 
         override fun onExtrasChanged(extras: Bundle?) {
             super.onExtrasChanged(extras)
@@ -691,7 +712,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     }
 
     fun showMsg(msg: String) {
-        EasyTintView.makeText(ivNextAction, msg, EasyTintView.TINT_SHORT).show()
+        EasyTintView.makeText(ivNextAction!!, msg, EasyTintView.TINT_SHORT).show()
     }
 
     /**
