@@ -1,6 +1,5 @@
 package com.zy.ppmusic.adapter;
 
-import android.content.res.ColorStateList;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -14,9 +13,10 @@ import com.zy.ppmusic.R;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LoopModelAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
+public class LoopModelAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<LoopModelEntity> entityList;
     private MainMenuAdapter.OnRecycleItemClickListener listener;
+
     public LoopModelAdapter() {
         createList();
     }
@@ -25,8 +25,8 @@ public class LoopModelAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         this.listener = listener;
     }
 
-    public LoopModelEntity getItem(int pos){
-        if(entityList != null && pos >= 0 && pos < entityList.size()){
+    public LoopModelEntity getItem(int pos) {
+        if (entityList != null && pos >= 0 && pos < entityList.size()) {
             for (LoopModelEntity loopModelEntity : entityList) {
                 loopModelEntity.isSelected = false;
             }
@@ -35,22 +35,22 @@ public class LoopModelAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         return null;
     }
 
-    public void changeItem(){
+    public void changeItem() {
         notifyDataSetChanged();
     }
 
-    private void createList(){
+    private void createList() {
         entityList = new ArrayList<>();
-        entityList.add(new LoopModelEntity(R.drawable.ic_loop_model_normal,"列表播放",true));
-        entityList.add(new LoopModelEntity(R.drawable.ic_loop_model_only,"单曲循环",false));
-        entityList.add(new LoopModelEntity(R.drawable.ic_loop_model_random,"随机播放",false));
+        entityList.add(new LoopModelEntity(R.drawable.ic_loop_model_normal, "列表播放", true));
+        entityList.add(new LoopModelEntity(R.drawable.ic_loop_model_only, "单曲循环", false));
+        entityList.add(new LoopModelEntity(R.drawable.ic_loop_model_random, "随机播放", false));
     }
 
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         return new LoopModelHolder(LayoutInflater.from(parent.getContext()).inflate(
-                R.layout.item_loop_model,parent,false),listener);
+                R.layout.item_loop_model, parent, false), listener);
     }
 
     @Override
@@ -58,19 +58,19 @@ public class LoopModelAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         LoopModelHolder loopModelHolder = (LoopModelHolder) holder;
         loopModelHolder.iconIvBg.setBackgroundResource(entityList.get(position).icon);
         loopModelHolder.contentTv.setText(entityList.get(position).content);
-        if(entityList.get(position).isSelected){
+        if (entityList.get(position).isSelected) {
             loopModelHolder.itemView.setBackgroundColor(ContextCompat.getColor(
-                    loopModelHolder.itemView.getContext(),R.color.colorTheme));
+                    loopModelHolder.itemView.getContext(), R.color.colorTheme));
             loopModelHolder.itemView.getBackground().setAlpha(100);
-        }else{
+        } else {
             loopModelHolder.itemView.setBackgroundColor(ContextCompat.getColor(
-                    loopModelHolder.itemView.getContext(),R.color.colorWhite));
+                    loopModelHolder.itemView.getContext(), R.color.colorWhite));
         }
     }
 
     @Override
     public int getItemCount() {
-        if(entityList != null){
+        if (entityList != null) {
             return entityList.size();
         }
         return 0;
@@ -80,7 +80,8 @@ public class LoopModelAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         private TextView contentTv;
         private ImageView iconIvBg;
         private MainMenuAdapter.OnRecycleItemClickListener listener;
-        private LoopModelHolder(View itemView,MainMenuAdapter.OnRecycleItemClickListener listener) {
+
+        private LoopModelHolder(View itemView, MainMenuAdapter.OnRecycleItemClickListener listener) {
             super(itemView);
             this.listener = listener;
             contentTv = (TextView) itemView.findViewById(R.id.item_icon_model_content);
@@ -90,8 +91,8 @@ public class LoopModelAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
 
         @Override
         public void onClick(View v) {
-            if(listener != null){
-                listener.onItemClick(v,getAdapterPosition());
+            if (listener != null) {
+                listener.onItemClick(v, getAdapterPosition());
             }
         }
     }

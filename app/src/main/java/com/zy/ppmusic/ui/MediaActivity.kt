@@ -109,7 +109,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                         this.removeCallbacksAndMessages(null)
                         this.removeMessages(0)
                         mMediaController.get()!!.sendCommand(MediaService.COMMAND_POSITION, null, mReceiver.get()!!)
-                        if(mMediaController.get()!!.playbackState.state == PlaybackStateCompat.STATE_PLAYING){
+                        if (mMediaController.get()!!.playbackState.state == PlaybackStateCompat.STATE_PLAYING) {
                             this.sendEmptyMessageDelayed(0, 1000)
                         }
                     }
@@ -271,10 +271,11 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         mProgressSeekBar = findViewById(R.id.control_display_progress) as SeekBar
         mProgressSeekBar!!.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if(fromUser){
+                if (fromUser) {
                     control_display_time_tv.text = DateUtil.getInstance().getTime(progress * stepPosition)
                 }
             }
+
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
                 mIsTrackingBar = true
             }
@@ -392,7 +393,8 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             mBottomQueueDialog!!.setContentView(mBottomQueueContentView)
             mQueueRecycler!!.adapter = mBottomQueueAdapter
             mQueueRecycler!!.layoutManager = LinearLayoutManager(this)
-            val helper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+            val helper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+                    ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
                 private var isMove = false
                 override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?): Boolean {
                     val from = viewHolder!!.adapterPosition
@@ -404,11 +406,29 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 }
 
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
+                    val dialog = AlertDialog.Builder(this@MediaActivity)
+                    dialog.setTitle(getString(R.string.string_sure_del))
+                    dialog.setMessage(getString(R.string.string_del_desc))
+                    dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
+                        mMediaController!!.removeQueueItemAt(viewHolder!!.adapterPosition)
+                        mPlayQueueList!!.removeAt(viewHolder.adapterPosition)
+                        mBottomQueueAdapter!!.setData(mPlayQueueList)
+                        mBottomQueueAdapter!!.notifyItemRemoved(viewHolder.adapterPosition)
+                    }
+                    dialog.setNegativeButton(getString(R.string.string_cancel)) { d, _ ->
+                        d.cancel()
+                        d.dismiss()
+                        mBottomQueueAdapter!!.notifyItemChanged(viewHolder!!.adapterPosition)
+                    }
+                    dialog.create().show()
                 }
 
                 override fun clearView(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) {
                     super.clearView(recyclerView, viewHolder)
                     if (isMove) {
+                        if (viewHolder!!.itemView.background != null) {
+                            viewHolder.itemView.background.alpha = 0
+                        }
                         mMediaController!!.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, null, mResultReceive)
                         if (mCurrentMediaIdStr != null && mBottomQueueAdapter != null) {
                             mBottomQueueAdapter!!.selectIndex = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
@@ -447,7 +467,9 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             val serviceComponentName = ComponentName(this, MediaService::class.java)
             mMediaBrowser = MediaBrowserCompat(this, serviceComponentName, mConnectionCallBack, extra)
         }
-        mMediaBrowser!!.connect()
+        if (!mMediaBrowser!!.isConnected) {
+            mMediaBrowser!!.connect()
+        }
     }
 
     override fun onStart() {
@@ -458,7 +480,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
     override fun onRestart() {
         super.onRestart()
-        if (mMediaBrowser != null) {
+        if (mMediaBrowser != null && !mMediaBrowser!!.isConnected) {
             mMediaBrowser!!.connect()
         }
         startLoop()
@@ -662,6 +684,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 }
             }
         }
+
         //目前仅当播放器发生错误时调用
         override fun onQueueTitleChanged(title: CharSequence?) {
             super.onQueueTitleChanged(title)
@@ -700,8 +723,10 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             mLooperHandler!!.removeCallbacksAndMessages(null)
             mLooperHandler = null
         }
-        mLooperHandler = LoopHandler(mMediaController!!, mResultReceive!!)
-        mLooperHandler!!.sendEmptyMessage(0)
+        if(mMediaController!=null && mResultReceive!=null){
+            mLooperHandler = LoopHandler(mMediaController!!, mResultReceive!!)
+            mLooperHandler!!.sendEmptyMessage(0)
+        }
     }
 
     private fun stopLoop() {
@@ -736,11 +761,16 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         //停止进度更新
         stopLoop()
         //取消播放状态监听
-        mMediaBrowser!!.unsubscribe(mMediaId!!, subscriptionCallBack)
-        //断开与媒体服务的链接
-        mMediaBrowser!!.disconnect()
-        mMediaBrowser = null
+        if (mMediaBrowser != null) {
+            if (mMediaId != null) {
+                mMediaBrowser!!.unsubscribe(mMediaId!!, subscriptionCallBack)
+            }
+            //断开与媒体服务的链接
+            mMediaBrowser!!.disconnect()
+            mMediaBrowser = null
+        }
     }
+
 
     override fun onStop() {
         super.onStop()

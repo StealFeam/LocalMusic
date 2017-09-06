@@ -101,7 +101,8 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
             } else {
                 val dialog = AppSettingsDialog.Builder(this)
                 dialog.setRationale("没有位置信息将无法获取新设备，这是安卓6.0之后的系统要求，请允许权限")
-                dialog.setNegativeButton("试一试", null)
+                dialog.setNegativeButton("任性不给")
+                dialog.setPositiveButton("赏给你")
                 dialog.build().show()
                 println("被关到小黑屋了")
             }
