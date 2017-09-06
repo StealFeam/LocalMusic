@@ -94,14 +94,14 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
 
     private fun checkLocationPermission() {
         if (!EasyPermissions.hasPermissions(applicationContext, "android.permission.ACCESS_COARSE_LOCATION")) {
-            println("没有权限")
             if (!EasyPermissions.permissionPermanentlyDenied(this, "android.permission.ACCESS_COARSE_LOCATION")) {
                 EasyPermissions.requestPermissions(this@BlScanActivity, "获取粗略位置用来加快扫描",
                         1, "android.permission.ACCESS_COARSE_LOCATION")
             } else {
                 val dialog = AppSettingsDialog.Builder(this)
                 dialog.setRationale("没有位置信息将无法获取新设备，这是安卓6.0之后的系统要求，请允许权限")
-                dialog.setNegativeButton("试一试", null)
+                dialog.setNegativeButton("任性不给")
+                dialog.setPositiveButton("赏给你")
                 dialog.build().show()
                 println("被关到小黑屋了")
             }
@@ -125,6 +125,9 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
     }
 
     override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>?) {
+        if(EasyPermissions.hasPermissions(applicationContext, "android.permission.ACCESS_COARSE_LOCATION")){
+            return
+        }
         if (requestCode == 1) {
             if (EasyPermissions.somePermissionPermanentlyDenied(this, perms!!)) {
                 println("权限新特性")
@@ -273,7 +276,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
             BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
                 println("开始扫描")
                 startDiscovery()
-
+                checkLocationPermission()
             }
         }
     }
