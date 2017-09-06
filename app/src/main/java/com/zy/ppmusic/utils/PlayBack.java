@@ -3,8 +3,6 @@ package com.zy.ppmusic.utils;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.MediaRecorder;
-import android.media.PlaybackParams;
 import android.os.PowerManager;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
@@ -39,6 +37,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
 
     private boolean mIsAutoStart = false;
     private boolean mIsUserPause = false;//是否是用户点击的暂停
+    private boolean mIsPauseCauseAudio = false;//是否是因为焦点占用被暂停了
 
     private boolean mPlayOnFocusGain;
     private int mState = PlaybackStateCompat.STATE_NONE;
@@ -66,7 +65,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
         this.mPlayQueue = queue;
     }
 
-    public void setIsUserPause(boolean flag){
+    public void setIsUserPause(boolean flag) {
         this.mIsUserPause = flag;
     }
 
@@ -89,10 +88,10 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             try {
                 String path = DataTransform.getInstance().getPath(index);
-                if(TextUtils.isEmpty(path)){
+                if (TextUtils.isEmpty(path)) {
                     Log.e(TAG, "preparedWithMediaId error: path is null");
-                }else{
-                    Log.e(TAG, "preparedWithMediaId: path="+path );
+                } else {
+                    Log.e(TAG, "preparedWithMediaId: path=" + path);
                     mMediaPlayer.setDataSource(path);
                     mMediaPlayer.prepare();
                     if (mCallBack != null) {
@@ -116,6 +115,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
             if (mState == PlaybackStateCompat.STATE_PLAYING) {
                 Log.e(TAG, "config:paused");
                 pause();
+                mIsPauseCauseAudio = true;
             }
         } else {
             if (mAudioFocus == AUDIO_NO_FOCUS_CAN_DUCK) {
@@ -126,7 +126,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
                 }
             }
             //当失去音频的焦点时，如果在播放状态要恢复播放
-            if (mPlayOnFocusGain && !mIsUserPause) {
+            if (mPlayOnFocusGain && !mIsUserPause && mIsPauseCauseAudio) {
                 if (mMediaPlayer != null && !mMediaPlayer.isPlaying()) {
                     if (mCurrentPosition == mMediaPlayer.getCurrentPosition()) {
                         mMediaPlayer.start();
@@ -135,6 +135,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
                         mMediaPlayer.seekTo(mCurrentPosition);
                         mState = PlaybackStateCompat.STATE_BUFFERING;
                     }
+                    mIsPauseCauseAudio = false;
                 }
                 mPlayOnFocusGain = false;
             }
@@ -192,7 +193,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
             mState = PlaybackStateCompat.STATE_PAUSED;
         } else {
             if (mState == PlaybackStateCompat.STATE_BUFFERING ||
-                    mState == PlaybackStateCompat.STATE_PAUSED||
+                    mState == PlaybackStateCompat.STATE_PAUSED ||
                     mState == PlaybackStateCompat.STATE_CONNECTING) {
                 mMediaPlayer.start();
                 setIsUserPause(false);
@@ -213,7 +214,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
         if (mAudioFocus != AUDIO_FOCUSED) {
             getAudioFocus();
         }
-        if(mMediaPlayer.isPlaying()){
+        if (mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
         }
         System.out.println("seek to " + position + "," + isAutoStart);
@@ -265,9 +266,9 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
         }
         mCurrentIndex = mPlayQueue.indexOf(mCurrentMediaId);
         int index;
-        while(true){
+        while (true) {
             index = mRandom.nextInt(mPlayQueue.size());
-            if(index >= 0 && index < mPlayQueue.size() && index != mCurrentIndex){
+            if (index >= 0 && index < mPlayQueue.size() && index != mCurrentIndex) {
                 break;
             }
         }

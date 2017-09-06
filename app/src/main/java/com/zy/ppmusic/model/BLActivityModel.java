@@ -29,9 +29,6 @@ public class BLActivityModel implements IBLActivityContract.IModel{
         Set<BluetoothDevice> bondedDevices = mBlueAdapter.getBondedDevices();
         for (BluetoothDevice bondedDevice : bondedDevices) {
             ScanResultEntity entity = new ScanResultEntity(R.layout.item_scan_child, bondedDevice);
-            if(mBlueA2dp.getConnectedDevices().contains(bondedDevice)){
-                entity.setState("已连接");
-            }
             list.add(entity);
         }
         return list;

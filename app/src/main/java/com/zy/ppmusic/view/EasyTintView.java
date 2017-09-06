@@ -119,32 +119,6 @@ public class EasyTintView extends AppCompatTextView {
             this.setVisibility(View.VISIBLE);
         }
 
-//        TranslateAnimation animation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0f,
-//                Animation.RELATIVE_TO_SELF, 0f, Animation.RELATIVE_TO_SELF, -1f,
-//                Animation.RELATIVE_TO_SELF, 0f);
-//        animation.setDuration(500);
-//        animation.setFillAfter(true);
-//        this.startAnimation(animation);
-//        animation.setAnimationListener(new Animation.AnimationListener() {
-//            @Override
-//            public void onAnimationStart(Animation animation) {
-//            }
-//
-//            @Override
-//            public void onAnimationEnd(Animation animation) {
-//                isVisible = true;
-//                mDelayHandler.postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        hideAnim();
-//                    }
-//                }, delayDuration);
-//            }
-//
-//            @Override
-//            public void onAnimationRepeat(Animation animation) {
-//            }
-//        });
         Animation showAnim = AnimationUtils.loadAnimation(getContext(), R.anim.tint_show_anim);
         showAnim.setDuration(300);
         showAnim.setFillAfter(true);
@@ -173,7 +147,6 @@ public class EasyTintView extends AppCompatTextView {
 
     private void hideAnim() {
         if (isVisible) {
-            removeFromParent();
             Animation hideAnim = AnimationUtils.loadAnimation(getContext(), R.anim.tint_hide_anim);
             hideAnim.setDuration(300);
             hideAnim.setFillAfter(true);
@@ -185,6 +158,7 @@ public class EasyTintView extends AppCompatTextView {
 
                 @Override
                 public void onAnimationEnd(Animation animation) {
+                    removeFromParent();
                     setVisibility(View.GONE);
                     isVisible = false;
                     mDelayHandler.removeCallbacksAndMessages(null);
