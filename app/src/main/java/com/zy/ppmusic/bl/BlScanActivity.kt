@@ -79,7 +79,6 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
                     // 设置蓝牙可见性，最多300秒
                     intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
                     startActivityForResult(intent, REQUEST_ENABLE_BL)
-
                 }
             } else {
                 mPresenter!!.disable()
@@ -154,34 +153,28 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
 
     override fun setExitsDevices(exitList: MutableList<ScanResultEntity>) {
         mScanDeviceList!!.clear()
-        if (exitList.size > 0) {
-            mScanDeviceList!!.add(ScanResultEntity(R.layout.item_scan_title, "已配对的设备"))
-        }
+        mScanDeviceList!!.add(ScanResultEntity(R.layout.item_scan_title, "已配对的设备"))
         mScanDeviceList!!.addAll(exitList)
         mScanDeviceList!!.add(ScanResultEntity(R.layout.item_scan_title, "扫描到的设备"))
 
-        if (mPresenter!!.getConnectDevice() != null) {
-            mScanDeviceList!!.forEachIndexed { _, scanResultEntity ->
-                if(scanResultEntity.device != null){
-                    val state = mPresenter!!.getConnectState(scanResultEntity.device)
-                    when (state) {
-                        BluetoothA2dp.STATE_CONNECTING -> {
-                            scanResultEntity.state = "正在连接"
-                        }
-                        BluetoothA2dp.STATE_DISCONNECTED -> {
-                            scanResultEntity.state = ""
-                        }
-                        BluetoothA2dp.STATE_CONNECTED -> {
-                            scanResultEntity.state = "已连接"
-                        }
-                    }
-                }
-            }
-        }
+        checkConnectDevice()
 
         if (mScanResultAdapter == null) {
             mScanResultAdapter = ScanResultAdapter(mScanDeviceList!!)
             mScanResultAdapter!!.setListener(object : ScanResultAdapter.OnItemClickListener() {
+                override fun onItemOtherClick(view: View?, position: Int) {
+                    if (position >= 0 && position < mScanDeviceList!!.size) {
+                        val state = mScanDeviceList!![position].device.bondState
+                        if (state == BluetoothDevice.BOND_BONDED) {
+                            if (mPresenter!!.removeBondDevice(mScanDeviceList!![position].device)) {
+                                mScanDeviceList!!.removeAt(position)
+                                println("移除配对")
+                                mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
+                            }
+                        }
+                    }
+                }
+
                 override fun onItemClick(device: BluetoothDevice, position: Int) {
                     val deviceClass = device.bluetoothClass
                     //如果是音频类型的设备才能进行连接
@@ -352,10 +345,10 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
     /**
      * 连接状态变化时回调
      */
-    fun connectStateChanged(state: Int, device: BluetoothDevice) {
+    fun connectStateChanged() {
         //未知原因：连接上设备之后总是会最后调用一次断开连接，会导致状态显示错误，所以遍历整个设备列表查询一次
         mScanDeviceList!!.forEachIndexed { _, entity ->
-            if(entity.device != null){
+            if (entity.device != null) {
                 val connectState = mPresenter!!.getConnectState(entity.device)
                 when (connectState) {
                     BluetoothA2dp.STATE_CONNECTING -> {
@@ -389,8 +382,8 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
 
         val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         filter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED)
-        filter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED)
         filter.addAction(BluetoothA2dp.ACTION_PLAYING_STATE_CHANGED)
+        filter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED)
         filter.addAction(BluetoothDevice.ACTION_FOUND)
         filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
@@ -398,6 +391,31 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
         registerReceiver(mBlStateChangeReceiver, filter)
+        checkConnectDevice()
+    }
+
+    private fun checkConnectDevice(){
+        if (mPresenter!!.getConnectDevice() != null) {
+            mScanDeviceList!!.forEachIndexed { _, scanResultEntity ->
+                if (scanResultEntity.device != null) {
+                    val state = mPresenter!!.getConnectState(scanResultEntity.device)
+                    when (state) {
+                        BluetoothA2dp.STATE_CONNECTING -> {
+                            scanResultEntity.state = "正在连接"
+                        }
+                        BluetoothA2dp.STATE_DISCONNECTED -> {
+                            scanResultEntity.state = ""
+                        }
+                        BluetoothA2dp.STATE_CONNECTED -> {
+                            scanResultEntity.state = "已连接"
+                        }
+                    }
+                }
+            }
+        }
+        if(mScanResultAdapter!=null){
+            mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
+        }
     }
 
     /**

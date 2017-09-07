@@ -58,7 +58,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
             }
         }
         mBondDevices.forEachIndexed { _, scanResultEntity ->
-            if(scanResultEntity.device == device){
+            if (scanResultEntity.device == device) {
                 return true
             }
         }
@@ -94,23 +94,29 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
         return null
     }
 
-    override fun onBindViewHolder(p0: RecyclerView.ViewHolder?, p1: Int) {
-        if (p0 is TitleHolder) {
-            p0.title!!.text = mBondDevices[p1].title
-        } else if (p0 is ScanResultHolder) {
-            val entity:ScanResultEntity? = if(p1 < mBondDevices.size){
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder?, p1: Int) {
+        if (holder is TitleHolder) {
+            holder.title!!.text = mBondDevices[p1].title
+        } else if (holder is ScanResultHolder) {
+            val entity: ScanResultEntity? = if (p1 < mBondDevices.size) {
                 mBondDevices[p1]
-            }else{
+            } else {
                 mScanDevices[p1 - mBondDevices.size]
             }
-            p0.name!!.text = entity!!.device.name
-            p0.name!!.tag = entity.device
+            holder.name!!.text = entity!!.device.name
+            holder.name!!.tag = entity.device
             println("position=" + p1 + "," + entity.state)
-            if (!TextUtils.isEmpty(entity.state)) {
-                p0.showState(entity.state)
+            if (mBondDevices.contains(entity)) {
+                if (!TextUtils.isEmpty(entity.state)) {
+                    holder.showState(entity.state)
+                } else {
+                    holder.hideState()
+                }
+                holder.delBond!!.visibility = View.VISIBLE
             } else {
-                p0.hideState()
+                holder.delBond!!.visibility = View.GONE
             }
+
         }
     }
 
@@ -136,7 +142,11 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
     class ScanResultHolder(itemView: View, l: OnItemClickListener) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
         override fun onClick(v: View?) {
             if (listener != null) {
-                listener!!.onItemClick(name!!.tag as BluetoothDevice, adapterPosition)
+                if (v!!.id == R.id.bl_del_bond_iv) {
+                    listener!!.onItemOtherClick(v,adapterPosition)
+                } else {
+                    listener!!.onItemClick(name!!.tag as BluetoothDevice, adapterPosition)
+                }
             }
         }
 
@@ -144,6 +154,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
         var tvState: TextView? = null
         var icon: ImageView? = null
         var listener: OnItemClickListener? = null
+        var delBond: ImageView? = null
 
         init {
             this.listener = l
@@ -151,6 +162,8 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
             icon = itemView.findViewById(R.id.iv_scan_result_icon) as ImageView
             name = itemView.findViewById(R.id.tv_scan_result_name) as TextView
             tvState = itemView.findViewById(R.id.tv_connect_state) as TextView
+            delBond = itemView.findViewById(R.id.bl_del_bond_iv) as ImageView
+            delBond!!.setOnClickListener(this)
         }
 
         fun showState(state: String) {
@@ -170,6 +183,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
 
     abstract class OnItemClickListener {
         abstract fun onItemClick(device: BluetoothDevice, position: Int)
+        open fun onItemOtherClick(view: View?, position: Int) {}
     }
 
 }

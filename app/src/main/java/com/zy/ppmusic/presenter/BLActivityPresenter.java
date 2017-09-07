@@ -173,5 +173,8 @@ public class BLActivityPresenter implements IBLActivityContract.IPresenter {
     }
 
 
-
+    @Override
+    public boolean removeBondDevice(@NotNull BluetoothDevice device) {
+        return mModel.removeBond(device);
+    }
 }

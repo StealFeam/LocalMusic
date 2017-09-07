@@ -24,6 +24,7 @@ interface IBLActivityContract {
         fun getBondDevice(): Set<BluetoothDevice>?
         fun getConnectDevice(): List<BluetoothDevice>?
         fun getConnectState(device: BluetoothDevice):Int
+        fun removeBondDevice(device: BluetoothDevice):Boolean
         fun startDiscovery(): Boolean
         fun cancelDiscovery(): Boolean
         fun isEnable(): Boolean
@@ -36,5 +37,6 @@ interface IBLActivityContract {
         fun getExitsDevices(adapter: BluetoothAdapter, a2dp: BluetoothA2dp): MutableList<ScanResultEntity>
         fun connectDevice(device: BluetoothDevice, adapter: BluetoothAdapter, a2dp: BluetoothA2dp): Boolean
         fun disconnectDevice(device: BluetoothDevice, adapter: BluetoothAdapter, a2dp: BluetoothA2dp): Boolean
+        fun removeBond(device: BluetoothDevice):Boolean
     }
 }

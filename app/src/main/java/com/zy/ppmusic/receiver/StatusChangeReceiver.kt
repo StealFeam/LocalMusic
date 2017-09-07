@@ -6,7 +6,6 @@ import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import com.zy.ppmusic.bl.BlScanActivity
 import java.lang.ref.WeakReference
 
@@ -39,10 +38,10 @@ class StatusChangeReceiver(ref: BlScanActivity) : BroadcastReceiver() {
                 }
                 //连接状态广播
                 BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED, BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED -> {
-                    val state = intent.extras.getInt(BluetoothA2dp.EXTRA_STATE)
-                    val device = intent.extras.getParcelable<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+//                    val state = intent.extras.getInt(BluetoothA2dp.EXTRA_STATE)
+//                    val device = intent.extras.getParcelable<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                     if (reference!!.get() != null) {
-                        reference!!.get()?.connectStateChanged(state,device)
+                        reference!!.get()?.connectStateChanged()
                     }
                 }
                 //扫描开始广播

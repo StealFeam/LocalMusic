@@ -1,1 +1,1 @@
-![image](https://raw.githubusercontent.com/Sole2016/LocalMusic/master/home.png)
+![image](https://raw.githubusercontent.com/Sole2016/LocalMusic/master/screenshots/home.png)

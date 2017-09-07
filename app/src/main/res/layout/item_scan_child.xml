@@ -30,20 +30,20 @@
         app:layout_constraintBottom_toTopOf="@+id/tv_connect_state" />
 
     <ImageView
-        android:id="@+id/bl_setting"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:id="@+id/bl_del_bond_iv"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
+        android:padding="@dimen/dp5"
         android:visibility="gone"
-        app:srcCompat="@android:drawable/ic_menu_preferences"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@mipmap/ic_del_media" />
 
     <TextView
         android:id="@+id/tv_connect_state"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TextView"
         android:textStyle="italic"
         android:visibility="gone"
         android:textSize="@dimen/sp12"

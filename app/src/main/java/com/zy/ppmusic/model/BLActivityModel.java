@@ -46,7 +46,7 @@ public class BLActivityModel implements IBLActivityContract.IModel{
             method.invoke(mBlueA2dp, device);
             return true;
         } catch (Exception e) {
-            System.out.println("connect device error..." + e.getMessage());
+            System.err.println("connect device error..." + e.getMessage());
             return false;
         }
     }
@@ -55,13 +55,23 @@ public class BLActivityModel implements IBLActivityContract.IModel{
     public boolean disconnectDevice(@NotNull BluetoothDevice device,@NotNull BluetoothAdapter mBlueAdapter,@NotNull BluetoothA2dp mBlueA2dp) {
         try {
             Method method = mBlueA2dp.getClass().getMethod("disconnect", BluetoothDevice.class);
-            method.setAccessible(true);
             method.invoke(mBlueA2dp, device);
             return true;
         } catch (Exception e) {
-            System.out.println("connect device error..." + e.getMessage());
+            System.err.println("disconnect device error..." + e.getMessage());
             return false;
         }
     }
 
+    @Override
+    public boolean removeBond(@NotNull BluetoothDevice device) {
+        try {
+            Method cancelBondProcess = device.getClass().getMethod("cancelBondProcess",(Class[]) null);
+            cancelBondProcess.invoke(device, (Object[]) null);
+            return true;
+        } catch (Exception e) {
+            System.err.println("removeBond device error..." + e.getMessage());
+            return false;
+        }
+    }
 }
