@@ -75,7 +75,6 @@ public class BLActivityPresenter implements IBLActivityContract.IPresenter {
     }
 
 
-
     @Override
     public boolean startDiscovery() {
         cancelDiscovery();
@@ -98,6 +97,14 @@ public class BLActivityPresenter implements IBLActivityContract.IPresenter {
     }
 
     @Override
+    public int getConnectState(@NotNull BluetoothDevice device) {
+        if (mBlueA2dp != null) {
+            return mBlueA2dp.getConnectionState(device);
+        }
+        return 0;
+    }
+
+    @Override
     public boolean isSupportBl() {
         return mBlueAdapter != null;
     }
@@ -114,6 +121,8 @@ public class BLActivityPresenter implements IBLActivityContract.IPresenter {
             initBlueA2dp();
         }
     }
+
+
 
     @Override
     public void disable() {
@@ -162,6 +171,7 @@ public class BLActivityPresenter implements IBLActivityContract.IPresenter {
     public boolean isDiscovering() {
         return mBlueAdapter!=null && mBlueAdapter.isDiscovering();
     }
+
 
 
 }

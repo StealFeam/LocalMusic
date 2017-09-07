@@ -33,20 +33,15 @@ import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import java.util.*
 
-/**
- * 1.点击配对未出现在已配对列表中
- * 2.状态没更新
- * 3.进入页面如果已经开启没有显示状态
- */
 class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermissions.PermissionCallbacks {
     private val REQUEST_ENABLE_BL = 0x001
     private var mBlueToothOpenSwitch: SwitchCompat? = null//蓝牙开关
-    private var blStateChangeReceiver: StatusChangeReceiver? = null
+    private var mBlStateChangeReceiver: StatusChangeReceiver? = null
     private var mScanDeviceList: ArrayList<ScanResultEntity>? = null
-    private var recyclerShowResult: RecyclerView? = null
-    private var adapterShowResult: ScanResultAdapter? = null
+    private var mScanResultRecycler: RecyclerView? = null
+    private var mScanResultAdapter: ScanResultAdapter? = null
     private var mDeviceFoundReceiver: DeviceFoundReceiver? = null
-    var mPresenter: BLActivityPresenter? = null
+    private var mPresenter: BLActivityPresenter? = null
     private var mLoadingAnim: RotateAnimation? = null
     private var mToolBar: Toolbar? = null
     private var mRefreshScanMenu: View? = null
@@ -57,7 +52,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         mToolBar = findViewById(R.id.toolbar_bl) as Toolbar
 
         mPresenter = BLActivityPresenter(this)
-        recyclerShowResult = findViewById(R.id.show_device_recycler) as RecyclerView
+        mScanResultRecycler = findViewById(R.id.show_device_recycler) as RecyclerView
         if (mPresenter!!.isSupportBl().not()) {
             Toast.makeText(this, "您的设备不支持蓝牙", Toast.LENGTH_SHORT).show()
             finish()
@@ -92,6 +87,9 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         })
     }
 
+    /**
+     * 检查权限，6.0之后需要权限才能接收到新设备
+     */
     private fun checkLocationPermission() {
         if (!EasyPermissions.hasPermissions(applicationContext, "android.permission.ACCESS_COARSE_LOCATION")) {
             println("没有权限")
@@ -111,11 +109,17 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         }
     }
 
+    /**
+     * 权限申请回调
+     */
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
+    /**
+     * 权限申请通过
+     */
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>?) {
         println("权限通过了")
         if (requestCode == 1) {
@@ -125,6 +129,9 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         }
     }
 
+    /**
+     * 权限申请不通过
+     */
     override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>?) {
         if (requestCode == 1) {
             if (EasyPermissions.somePermissionPermanentlyDenied(this, perms!!)) {
@@ -140,7 +147,6 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         }
     }
 
-
     override fun onBackPressed() {
         super.onBackPressed()
         finish()
@@ -155,19 +161,27 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         mScanDeviceList!!.add(ScanResultEntity(R.layout.item_scan_title, "扫描到的设备"))
 
         if (mPresenter!!.getConnectDevice() != null) {
-            mPresenter!!.getConnectDevice()!!.forEachIndexed { _, bluetoothDevice ->
-                mScanDeviceList!!.forEachIndexed { _, scanResultEntity ->
-                    if (scanResultEntity.device != null &&
-                            Objects.equals(bluetoothDevice.address, scanResultEntity.device.address)) {
-                        scanResultEntity.state = "已连接"
+            mScanDeviceList!!.forEachIndexed { _, scanResultEntity ->
+                if(scanResultEntity.device != null){
+                    val state = mPresenter!!.getConnectState(scanResultEntity.device)
+                    when (state) {
+                        BluetoothA2dp.STATE_CONNECTING -> {
+                            scanResultEntity.state = "正在连接"
+                        }
+                        BluetoothA2dp.STATE_DISCONNECTED -> {
+                            scanResultEntity.state = ""
+                        }
+                        BluetoothA2dp.STATE_CONNECTED -> {
+                            scanResultEntity.state = "已连接"
+                        }
                     }
                 }
             }
         }
 
-        if (adapterShowResult == null) {
-            adapterShowResult = ScanResultAdapter(mScanDeviceList!!)
-            adapterShowResult!!.setListener(object : ScanResultAdapter.OnItemClickListener() {
+        if (mScanResultAdapter == null) {
+            mScanResultAdapter = ScanResultAdapter(mScanDeviceList!!)
+            mScanResultAdapter!!.setListener(object : ScanResultAdapter.OnItemClickListener() {
                 override fun onItemClick(device: BluetoothDevice, position: Int) {
                     val deviceClass = device.bluetoothClass
                     //如果是音频类型的设备才能进行连接
@@ -191,7 +205,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
                             }
                             BluetoothDevice.BOND_NONE -> {//未配对
                                 mScanDeviceList!!.add(ScanResultEntity(R.layout.item_scan_child, device))
-                                adapterShowResult!!.updateBondedDevices(mScanDeviceList!!)
+                                mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
                                 //开始配对
                                 device.createBond()
                                 mPresenter!!.getExitsDevices()
@@ -202,18 +216,18 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
                     }
                 }
             })
-            recyclerShowResult!!.adapter = adapterShowResult
-            recyclerShowResult!!.layoutManager = LinearLayoutManager(this)
+            mScanResultRecycler!!.adapter = mScanResultAdapter
+            mScanResultRecycler!!.layoutManager = LinearLayoutManager(this)
         } else {
-            adapterShowResult!!.updateBondedDevices(mScanDeviceList!!)
-            adapterShowResult!!.notifyDataSetChanged()
+            mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
+            mScanResultAdapter!!.notifyDataSetChanged()
         }
         mPresenter!!.startDiscovery()
     }
 
     private fun clearData() {
-        if (adapterShowResult != null) {
-            adapterShowResult!!.clearData()
+        if (mScanResultAdapter != null) {
+            mScanResultAdapter!!.clearData()
         }
     }
 
@@ -265,21 +279,26 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         }
     }
 
+    /**
+     * 扫描状态更新
+     */
     fun discoveryStateChange(state: String) {
         when (state) {
             BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
                 println("停止扫描")
-                stopDiscovery()
+                stopDiscoveryAnim()
             }
             BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
                 println("开始扫描")
-                startDiscovery()
-
+                startDiscoveryAnim()
             }
         }
     }
 
-    private fun startDiscovery() {
+    /**
+     * 开始扫描动画
+     */
+    private fun startDiscoveryAnim() {
         if (mRefreshScanMenu == null) {
             mRefreshScanMenu = findViewById(R.id.action_refresh)
         }
@@ -293,7 +312,10 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         }
     }
 
-    private fun stopDiscovery() {
+    /**
+     * 停止扫描动画
+     */
+    private fun stopDiscoveryAnim() {
         if (mRefreshScanMenu != null) {
             mRefreshScanMenu!!.clearAnimation()
         }
@@ -304,6 +326,9 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         }
     }
 
+    /**
+     * 当设备配对状态变化时回调
+     */
     fun onDeviceBondStateChanged(state: Int, device: BluetoothDevice) {
         when (state) {
             BluetoothDevice.BOND_BONDED -> {
@@ -324,41 +349,29 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         }
     }
 
+    /**
+     * 连接状态变化时回调
+     */
     fun connectStateChanged(state: Int, device: BluetoothDevice) {
-        var stateStr = ""
-        println("state=$state")
-        when (state) {
-            BluetoothA2dp.STATE_CONNECTING -> {
-                println("正在连接")
-                stateStr = "正在连接"
-            }
-            BluetoothA2dp.STATE_DISCONNECTED -> {
-                println("断开连接")
-                stateStr = "断开连接"
-            }
-            BluetoothA2dp.STATE_CONNECTED -> {
-                println("已连接..." + device.name + ",address=" + device.address)
-                stateStr = "已连接"
-            }
-        }
-        //未知原因：连接上设备之后总是会最后调用一次断开连接，会导致状态显示错误，所以从连接设备列表中再次查询一次
-        if (mPresenter!!.getBondDevice() != null && mPresenter!!.getBondDevice()!!.contains(device)) {
-            val position = mPresenter!!.getBondDevice()!!.indexOf(device)
-            val scanResultEntity = mScanDeviceList!![(1 + position)]
-            scanResultEntity.state = stateStr
-        }
-
-        if(mPresenter!!.getConnectDevice() != null){
-            mPresenter!!.getConnectDevice()!!.forEachIndexed { _, bluetoothDevice ->
-                mScanDeviceList!!.forEachIndexed { _, scanResultEntity ->
-                    if (scanResultEntity.device != null &&
-                            Objects.equals(bluetoothDevice.address, scanResultEntity.device.address)) {
-                        scanResultEntity.state = "已连接"
+        //未知原因：连接上设备之后总是会最后调用一次断开连接，会导致状态显示错误，所以遍历整个设备列表查询一次
+        mScanDeviceList!!.forEachIndexed { _, entity ->
+            if(entity.device != null){
+                val connectState = mPresenter!!.getConnectState(entity.device)
+                when (connectState) {
+                    BluetoothA2dp.STATE_CONNECTING -> {
+                        entity.state = "正在连接"
+                    }
+                    BluetoothA2dp.STATE_DISCONNECTED -> {
+                        entity.state = ""
+                    }
+                    BluetoothA2dp.STATE_CONNECTED -> {
+                        entity.state = "已连接"
                     }
                 }
             }
         }
-        adapterShowResult!!.updateBondedDevices(mScanDeviceList!!)
+
+        mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
     }
 
     override fun onResume() {
@@ -370,8 +383,8 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         foundFilter.addAction("android.bluetooth.device.action.DISAPPEARED")
         registerReceiver(mDeviceFoundReceiver, foundFilter)
 
-        if (blStateChangeReceiver == null) {
-            blStateChangeReceiver = StatusChangeReceiver(this)
+        if (mBlStateChangeReceiver == null) {
+            mBlStateChangeReceiver = StatusChangeReceiver(this)
         }
 
         val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
@@ -384,7 +397,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
-        registerReceiver(blStateChangeReceiver, filter)
+        registerReceiver(mBlStateChangeReceiver, filter)
     }
 
     /**
@@ -392,7 +405,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
      */
     fun foundNewDevice(device: BluetoothDevice) {
         println("新发现的设备。。。" + device.toString())
-        adapterShowResult!!.foundNewDevice(ScanResultEntity(R.layout.item_scan_child, device))
+        mScanResultAdapter!!.foundNewDevice(ScanResultEntity(R.layout.item_scan_child, device))
     }
 
     override fun onPause() {
@@ -400,7 +413,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         if (mDeviceFoundReceiver != null) {
             unregisterReceiver(mDeviceFoundReceiver)
         }
-        unregisterReceiver(blStateChangeReceiver)
+        unregisterReceiver(mBlStateChangeReceiver)
         mPresenter!!.cancelDiscovery()
     }
 
@@ -419,7 +432,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
     }
 
     fun showToast(msg: String) {
-        EasyTintView.makeText(recyclerShowResult!!, msg, EasyTintView.TINT_SHORT).show()
+        EasyTintView.makeText(mScanResultRecycler!!, msg, EasyTintView.TINT_SHORT).show()
     }
 
     override fun onDestroy() {

@@ -39,6 +39,7 @@ public class BLActivityModel implements IBLActivityContract.IModel{
         if (mBlueAdapter.isDiscovering()) {
             mBlueAdapter.cancelDiscovery();
         }
+
         try {
             Method method = mBlueA2dp.getClass().getMethod("connect", BluetoothDevice.class);
             method.setAccessible(true);

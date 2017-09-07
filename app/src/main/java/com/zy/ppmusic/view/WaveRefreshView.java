@@ -28,7 +28,7 @@ public class WaveRefreshView extends View {
     private float whiteWidth;
     private int maxChange;
     private ArrayList<Animator> mAnimatorList = new ArrayList<>();
-    private long[] delayArray = {100, 200, 300, 400, 500};
+    private long[] delayArray = {80, 200, 300, 400, 500};
     private RectF[] lineRectF = new RectF[5];
     private boolean isPaused = false;
 

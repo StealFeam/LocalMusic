@@ -23,6 +23,7 @@ interface IBLActivityContract {
         fun isConnected(device: BluetoothDevice): Boolean
         fun getBondDevice(): Set<BluetoothDevice>?
         fun getConnectDevice(): List<BluetoothDevice>?
+        fun getConnectState(device: BluetoothDevice):Int
         fun startDiscovery(): Boolean
         fun cancelDiscovery(): Boolean
         fun isEnable(): Boolean
