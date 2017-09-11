@@ -557,6 +557,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                         endPosition = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
                         stepPosition = endPosition / 100L
                         startPosition = 0
+                        control_display_duration_tv.text = DateUtil.getInstance().getTime(endPosition)
                         mLooperHandler!!.sendEmptyMessage(0)
                         setMediaInfo(displayTitle, subTitle)
                     }
