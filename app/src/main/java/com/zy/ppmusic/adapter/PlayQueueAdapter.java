@@ -18,6 +18,7 @@ import java.util.Locale;
 public class PlayQueueAdapter extends RecyclerView.Adapter {
     private List<MediaSessionCompat.QueueItem> mData;
     private OnQueueItemClickListener onQueueItemClickListener;
+    private OnQueueItemLongClickListener longClickListener;
     private OnDelQueueItemListener onDelListener;
     private int selectIndex;
 
@@ -46,15 +47,22 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
         this.onDelListener = onDelListener;
     }
 
+
+    public void setLongClickListener(OnQueueItemLongClickListener l){
+        this.longClickListener = l;
+    }
+
     public void setOnQueueItemClickListener(OnQueueItemClickListener onQueueItemClickListener) {
         this.onQueueItemClickListener = onQueueItemClickListener;
     }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        return new PlayQueueHolder(LayoutInflater.
+        PlayQueueHolder queueHolder = new PlayQueueHolder(LayoutInflater.
                 from(viewGroup.getContext()).inflate(R.layout.item_play_queue, viewGroup
                 , false), onQueueItemClickListener, onDelListener);
+        queueHolder.setLongClickListener(longClickListener);
+        return queueHolder;
     }
 
     @Override
@@ -84,13 +92,14 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
         return mData.size();
     }
 
-    private class PlayQueueHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    private class PlayQueueHolder extends RecyclerView.ViewHolder implements View.OnClickListener,View.OnLongClickListener {
         private TextView tvTitle;
         private TextView tvSubTitle;
         private TextView tvPosition;
         private ImageView ivDel;
         private ImageView ivPlayingFlag;
         private OnQueueItemClickListener onQueueItemClickListener;
+        private OnQueueItemLongClickListener longClickListener;
         private OnDelQueueItemListener delL;
 
         private PlayQueueHolder(View itemView, OnQueueItemClickListener l, OnDelQueueItemListener dl) {
@@ -98,12 +107,17 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
             this.onQueueItemClickListener = l;
             this.delL = dl;
             itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
             tvSubTitle = (TextView) itemView.findViewById(R.id.queue_item_display_sub_title);
             tvTitle = (TextView) itemView.findViewById(R.id.queue_item_display_title);
             tvPosition = (TextView) itemView.findViewById(R.id.queue_item_position);
             ivDel = (ImageView) itemView.findViewById(R.id.queue_item_del);
             ivPlayingFlag = (ImageView) itemView.findViewById(R.id.queue_item_playing_flag_iv);
             ivDel.setOnClickListener(this);
+        }
+
+        private void setLongClickListener(OnQueueItemLongClickListener l){
+            this.longClickListener = l;
         }
 
         @Override
@@ -118,10 +132,19 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
                 }
             }
         }
+
+        @Override
+        public boolean onLongClick(View v) {
+            return longClickListener != null && longClickListener.onLongClick(getAdapterPosition());
+        }
     }
 
     public interface OnQueueItemClickListener {
         void onItemClick(Object obj, int position);
+    }
+
+    public interface OnQueueItemLongClickListener{
+        boolean onLongClick(int position);
     }
 
     public interface OnDelQueueItemListener {

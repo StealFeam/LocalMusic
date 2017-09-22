@@ -2,11 +2,13 @@ package com.zy.ppmusic.ui
 
 import android.content.ComponentName
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
 import android.os.ResultReceiver
 import android.support.design.widget.BottomSheetDialog
+import android.support.v4.app.DialogFragment
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -387,57 +389,68 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 }
                 dialog.create().show()
             }
+
+            mBottomQueueAdapter!!.setLongClickListener {position->
+                val item = mPlayQueueList!![position].description
+                val dialog = AlertDialog.Builder(this@MediaActivity)
+                dialog.setTitle(String.format(Locale.CHINA,"%s-%s",item.title,item.subtitle))
+                dialog.setMessage(item.mediaUri.toString())
+                dialog.create().show()
+                true
+            }
+
             if (mCurrentMediaIdStr != null) {
                 mBottomQueueAdapter!!.selectIndex = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
             }
             mBottomQueueDialog!!.setContentView(mBottomQueueContentView)
             mQueueRecycler!!.adapter = mBottomQueueAdapter
             mQueueRecycler!!.layoutManager = LinearLayoutManager(this)
-            val helper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-                    ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-                private var isMove = false
-                override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?): Boolean {
-                    val from = viewHolder!!.adapterPosition
-                    val to = target!!.adapterPosition
-                    mBottomQueueAdapter!!.childMoveTo(from, to)
-                    DataTransform.getInstance().moveTo(from, to)
-                    isMove = true
-                    return isMove
-                }
-
-                override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
-                    val dialog = AlertDialog.Builder(this@MediaActivity)
-                    dialog.setTitle(getString(R.string.string_sure_del))
-                    dialog.setMessage(getString(R.string.string_del_desc))
-                    dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
-                        mMediaController!!.removeQueueItemAt(viewHolder!!.adapterPosition)
-                        mPlayQueueList!!.removeAt(viewHolder.adapterPosition)
-                        mBottomQueueAdapter!!.setData(mPlayQueueList)
-                        mBottomQueueAdapter!!.notifyItemRemoved(viewHolder.adapterPosition)
-                    }
-                    dialog.setNegativeButton(getString(R.string.string_cancel)) { d, _ ->
-                        d.cancel()
-                        d.dismiss()
-                        mBottomQueueAdapter!!.notifyItemChanged(viewHolder!!.adapterPosition)
-                    }
-                    dialog.create().show()
-                }
-
-                override fun clearView(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) {
-                    super.clearView(recyclerView, viewHolder)
-                    if (isMove) {
-                        if (viewHolder!!.itemView.background != null) {
-                            viewHolder.itemView.background.alpha = 0
-                        }
-                        mMediaController!!.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, null, mResultReceive)
-                        if (mCurrentMediaIdStr != null && mBottomQueueAdapter != null) {
-                            mBottomQueueAdapter!!.selectIndex = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
-                        }
-                        isMove = false
-                    }
-                }
-            })
-            helper.attachToRecyclerView(mQueueRecycler!!)
+//            val helper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+//                    ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+//                private var isMove = false
+//                override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?,
+//                                    target: RecyclerView.ViewHolder?): Boolean {
+//                    val from = viewHolder!!.adapterPosition
+//                    val to = target!!.adapterPosition
+//                    mBottomQueueAdapter!!.childMoveTo(from, to)
+//                    DataTransform.getInstance().moveTo(from, to)
+//                    isMove = true
+//                    return isMove
+//                }
+//
+//                override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
+//                    val dialog = AlertDialog.Builder(this@MediaActivity)
+//                    dialog.setTitle(getString(R.string.string_sure_del))
+//                    dialog.setMessage(getString(R.string.string_del_desc))
+//                    dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
+//                        mMediaController!!.removeQueueItemAt(viewHolder!!.adapterPosition)
+//                        mPlayQueueList!!.removeAt(viewHolder.adapterPosition)
+//                        mBottomQueueAdapter!!.setData(mPlayQueueList)
+//                        mBottomQueueAdapter!!.notifyItemRemoved(viewHolder.adapterPosition)
+//                    }
+//                    dialog.setNegativeButton(getString(R.string.string_cancel)) { d, _ ->
+//                        d.cancel()
+//                        d.dismiss()
+//                        mBottomQueueAdapter!!.notifyItemChanged(viewHolder!!.adapterPosition)
+//                    }
+//                    dialog.create().show()
+//                }
+//
+//                override fun clearView(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) {
+//                    super.clearView(recyclerView, viewHolder)
+//                    if (isMove) {
+//                        if (viewHolder!!.itemView.background != null) {
+//                            viewHolder.itemView.background.alpha = 0
+//                        }
+//                        mMediaController!!.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, null, mResultReceive)
+//                        if (mCurrentMediaIdStr != null && mBottomQueueAdapter != null) {
+//                            mBottomQueueAdapter!!.selectIndex = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
+//                        }
+//                        isMove = false
+//                    }
+//                }
+//            })
+//            helper.attachToRecyclerView(mQueueRecycler!!)
             mBottomQueueAdapter!!.setData(mPlayQueueList)
             mBottomQueueDialog!!.show()
         })

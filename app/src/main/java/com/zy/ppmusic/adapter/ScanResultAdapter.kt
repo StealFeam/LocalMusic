@@ -36,6 +36,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
 
     fun clearData() {
         this.mBondDevices.clear()
+        this.mScanDevices.clear()
         notifyDataSetChanged()
     }
 
@@ -133,7 +134,6 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
 
     class TitleHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var title: TextView? = null
-
         init {
             title = itemView.findViewById(R.id.tv_scan_result_title) as TextView
         }

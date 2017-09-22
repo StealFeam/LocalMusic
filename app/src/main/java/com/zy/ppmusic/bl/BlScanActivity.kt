@@ -17,6 +17,7 @@ import android.support.v7.widget.SwitchCompat
 import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
@@ -29,6 +30,7 @@ import com.zy.ppmusic.presenter.BLActivityPresenter
 import com.zy.ppmusic.receiver.DeviceFoundReceiver
 import com.zy.ppmusic.receiver.StatusChangeReceiver
 import com.zy.ppmusic.view.EasyTintView
+import kotlinx.android.synthetic.main.activity_bl_scan.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import java.util.*
@@ -84,7 +86,78 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
                 mPresenter!!.disable()
             }
         })
+
+        mScanResultRecycler!!.addOnItemTouchListener(object : RecyclerView.OnItemTouchListener {
+
+            override fun onTouchEvent(rv: RecyclerView?, event: MotionEvent?) {
+
+            }
+
+            override fun onInterceptTouchEvent(rv: RecyclerView?, event: MotionEvent?): Boolean {
+                when (event!!.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        lastX = event.rawX.toInt()
+                        lastY = event.rawY.toInt()
+                        return false
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        val deltaX = event.rawX - lastX
+                        val deltaY = event.rawY - lastY
+                        //横向移动的数值大于纵向距离，并且向右滑动
+                        if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 0) {
+                            window.decorView.translationX = deltaX
+                        }
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        if (window.decorView.translationX < window.decorView.measuredWidth / 3) {
+                            window.decorView.translationX = 0f
+                            println("小于1/3")
+                        } else {
+                            finish()
+                            return true
+                        }
+                    }
+                }
+                return false
+            }
+
+            override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+
+            }
+
+        })
+
+        root_bl_content.setOnTouchListener(View.OnTouchListener { v, event ->
+            when (event!!.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    lastX = event.rawX.toInt()
+                    lastY = event.rawY.toInt()
+                    return@OnTouchListener true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val deltaX = event.rawX - lastX
+                    val deltaY = event.rawY - lastY
+                    //横向移动的数值大于纵向距离，并且向右滑动
+                    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 0) {
+                        window.decorView.translationX = deltaX
+                    }
+                }
+                MotionEvent.ACTION_UP -> {
+                    if (window.decorView.translationX < window.decorView.measuredWidth / 3) {
+                        window.decorView.translationX = 0f
+                        println("小于1/3")
+                    } else {
+                        finish()
+                        return@OnTouchListener true
+                    }
+                }
+            }
+            false
+        })
     }
+
+    private var lastX: Int = 0
+    private var lastY: Int = 0
 
     /**
      * 检查权限，6.0之后需要权限才能接收到新设备
@@ -394,7 +467,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         checkConnectDevice()
     }
 
-    private fun checkConnectDevice(){
+    private fun checkConnectDevice() {
         if (mPresenter!!.getConnectDevice() != null) {
             mScanDeviceList!!.forEachIndexed { _, scanResultEntity ->
                 if (scanResultEntity.device != null) {
@@ -413,7 +486,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
                 }
             }
         }
-        if(mScanResultAdapter!=null){
+        if (mScanResultAdapter != null) {
             mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
         }
     }

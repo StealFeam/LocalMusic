@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorTheme</item>
         <item name="colorPrimaryDark">@color/colorThemeDark</item>
@@ -17,6 +17,13 @@
         <item name="colorControlActivated">@color/colorTheme</item>
     </style>
 
+    <style name="AppTheme.NoActionBar.Translate" parent="AppTheme.NoActionBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+    <style name="AppTheeee" parent="@android:style/Theme.Translucent.NoTitleBar">
+
+    </style>
     <style name="BLTheme" parent="ThemeOverlay.AppCompat.Dialog">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
