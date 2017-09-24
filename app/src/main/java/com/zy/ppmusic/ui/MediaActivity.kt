@@ -212,19 +212,21 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                             if (p == 0) {//发送停止倒计时，隐藏倒计时文本
                                 mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_STOP_COUNT_DOWN, null)
                                 mBorderTextView!!.hide()
-                                return@setListener
+                                0
                             } else {
                                 mTimeClockAdapter!!.getItem(p - 1)
                             }
                         } else {
                             mTimeClockAdapter!!.getItem(p)
                         }
-                        //如果正在倒计时判断是否需要停止倒计时
-                        length *= 1000 * 60
-                        val bundle = Bundle()
-                        bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME, length.toLong())
-                        mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME, bundle)
-                        mTimeClockDialog = null
+                        if (length != 0) {
+                            //如果正在倒计时判断是否需要停止倒计时
+                            length *= 1000 * 60
+                            val bundle = Bundle()
+                            bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME, length.toLong())
+                            mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME, bundle)
+                            mTimeClockDialog = null
+                        }
                     }
                     val lengthSeekBar = mTimeContentView!!.findViewById(R.id.time_selector_seek_bar) as AppCompatSeekBar
                     val progressHintTv = mTimeContentView!!.findViewById(R.id.time_selector_progress_hint_tv) as TextView
@@ -390,10 +392,10 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 dialog.create().show()
             }
 
-            mBottomQueueAdapter!!.setLongClickListener {position->
+            mBottomQueueAdapter!!.setLongClickListener { position ->
                 val item = mPlayQueueList!![position].description
                 val dialog = AlertDialog.Builder(this@MediaActivity)
-                dialog.setTitle(String.format(Locale.CHINA,"%s-%s",item.title,item.subtitle))
+                dialog.setTitle(String.format(Locale.CHINA, "%s-%s", item.title, item.subtitle))
                 dialog.setMessage(item.mediaUri.toString())
                 dialog.create().show()
                 true
@@ -461,6 +463,8 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
      * 刷新列表的回调
      */
     override fun refreshQueue(mPathList: java.util.ArrayList<String>?, isRefresh: Boolean) {
+        if (mMediaController == null)
+            return
         if (mPathList != null && mPathList.size > 0) {
             showMsg(String.format(Locale.CHINA, getString(R.string.format_string_search_media_count), mPathList.size))
             mMediaController!!.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, null, mResultReceive)
@@ -480,9 +484,10 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             val serviceComponentName = ComponentName(this, MediaService::class.java)
             mMediaBrowser = MediaBrowserCompat(this, serviceComponentName, mConnectionCallBack, extra)
         }
-        if (!mMediaBrowser!!.isConnected) {
-            mMediaBrowser!!.connect()
+        if (mMediaBrowser!!.isConnected) {
+            mMediaBrowser!!.disconnect()
         }
+        mMediaBrowser!!.connect()
     }
 
     override fun onStart() {
@@ -493,9 +498,13 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
     override fun onRestart() {
         super.onRestart()
-        if (mMediaBrowser != null && !mMediaBrowser!!.isConnected) {
+        if(mMediaBrowser != null){
+            if (mMediaBrowser!!.isConnected) {
+                mMediaBrowser!!.disconnect()
+            }
             mMediaBrowser!!.connect()
         }
+
         startLoop()
     }
 
@@ -737,7 +746,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             mLooperHandler!!.removeCallbacksAndMessages(null)
             mLooperHandler = null
         }
-        if(mMediaController!=null && mResultReceive!=null){
+        if (mMediaController != null && mResultReceive != null) {
             mLooperHandler = LoopHandler(mMediaController!!, mResultReceive!!)
             mLooperHandler!!.sendEmptyMessage(0)
         }

@@ -6,6 +6,7 @@
     android:layout_height="wrap_content">
 
     <com.zy.ppmusic.view.WaveRefreshView
+        android:layout_gravity="center"
         android:layout_width="@dimen/dp40"
         android:layout_height="@dimen/dp40" />
 

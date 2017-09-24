@@ -10,9 +10,12 @@ import android.graphics.RectF;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.Display;
 import android.view.View;
+import android.view.WindowManager;
 
 import com.zy.ppmusic.R;
 
@@ -22,8 +25,9 @@ public class WaveRefreshView extends View {
     private static final String TAG = "WaveRefreshView";
     private final float LINE_AREA = 3f / 5f;
     private final float OTHER_AREA = 2f / 5f;
+    private final float MIN_WIDTH_PERCENT = 1F/6F;//最小宽度占屏幕的比例
     private Paint mCirclePaint;
-    private int minWidth = 100;
+    private int minWidth = 20;
     private float lineWidth;
     private float whiteWidth;
     private int maxChange;
@@ -31,6 +35,7 @@ public class WaveRefreshView extends View {
     private long[] delayArray = {80, 200, 300, 400, 500};
     private RectF[] lineRectF = new RectF[5];
     private boolean isPaused = false;
+    private float[] screenParams;
 
     public WaveRefreshView(Context context) {
         this(context, null);
@@ -60,6 +65,9 @@ public class WaveRefreshView extends View {
         lineWidth /= lineRectF.length;
         whiteWidth /= lineRectF.length;
 
+        minWidth = (int) ((getScreenParams(0) * MIN_WIDTH_PERCENT) / getScreenParams(2));
+        System.out.println("最小宽度计算值："+minWidth);
+
         for (int i = 0; i < lineRectF.length; i++) {
             lineRectF[i] = new RectF((lineWidth + whiteWidth) * i, maxChange,
                     (lineWidth + whiteWidth) * i + lineWidth, getMeasuredHeight() - maxChange);
@@ -72,6 +80,7 @@ public class WaveRefreshView extends View {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int width = MeasureSpec.getSize(widthMeasureSpec);
         int height = MeasureSpec.getSize(heightMeasureSpec);
+        minWidth = (int) ((getScreenParams(0) * MIN_WIDTH_PERCENT) / getScreenParams(2));
         int lastWidthAndHeight = Math.max(Math.max(width, height), minWidth);
         setMeasuredDimension(lastWidthAndHeight, lastWidthAndHeight);
     }
@@ -81,6 +90,27 @@ public class WaveRefreshView extends View {
         for (RectF aLineRectF : lineRectF) {
             canvas.drawRoundRect(aLineRectF, 20, 20, mCirclePaint);
         }
+    }
+
+    private float getScreenParams(int posi){
+        if(posi < 0 || posi > 2){
+            return 0;
+        }
+        if (screenParams == null) {
+            screenParams = new float[3];
+            WindowManager manager = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+            if (manager != null) {
+                DisplayMetrics metrics = new DisplayMetrics();
+                Display defaultDisplay = manager.getDefaultDisplay();
+                defaultDisplay.getMetrics(metrics);
+                screenParams[0] = metrics.widthPixels;
+                screenParams[1] = metrics.heightPixels;
+                screenParams[2] = metrics.scaledDensity;
+            }else {
+                return 0;
+            }
+        }
+        return screenParams[posi];
     }
 
     public void startAnim() {
@@ -109,7 +139,8 @@ public class WaveRefreshView extends View {
         isPaused = true;
         for (Animator animator : mAnimatorList) {
             if (animator != null && animator.isRunning()) {
-                animator.pause();
+                animator.end();
+                animator.cancel();
             }
         }
     }

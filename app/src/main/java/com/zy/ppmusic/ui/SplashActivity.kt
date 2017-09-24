@@ -30,13 +30,13 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         tvSplash.animation = animation
         animation.start()
         animation.setAnimationListener(object : Animation.AnimationListener {
-            override fun onAnimationRepeat(animation: Animation?) {
+            override fun onAnimationRepeat(a: Animation?) {
             }
 
-            override fun onAnimationStart(animation: Animation?) {
+            override fun onAnimationStart(a: Animation?) {
             }
 
-            override fun onAnimationEnd(animation: Animation?) {
+            override fun onAnimationEnd(a: Animation?) {
                 if (EasyPermissions.hasPermissions(applicationContext, getString(R.string.string_read_external)
                         , getString(R.string.string_write_external))) {
                     actionToMain()

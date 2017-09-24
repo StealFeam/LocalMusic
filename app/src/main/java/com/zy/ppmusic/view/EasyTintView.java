@@ -8,7 +8,9 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.AppCompatTextView;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +22,8 @@ import android.widget.FrameLayout;
 
 import com.zy.ppmusic.R;
 
+import java.util.Locale;
+
 public class EasyTintView extends AppCompatTextView {
     private static final String TAG = "EasyTintView";
     public static final int TINT_LONG = 3000;
@@ -30,11 +34,11 @@ public class EasyTintView extends AppCompatTextView {
     private boolean isVisible = false;
     private ViewGroup parent;
     private int topMargin;
+    private float[] screenParams;
 
     public EasyTintView(Context context) {
         super(context);
         mDelayHandler = new Handler();
-        setPadding(20, 20, 20, 20);
         setBackgroundColor(ContextCompat.getColor(context, R.color.colorTheme));
         setTextColor(Color.WHITE);
         setGravity(Gravity.CENTER);
@@ -56,9 +60,9 @@ public class EasyTintView extends AppCompatTextView {
             anchorView.getWindowVisibleDisplayFrame(rect);
             //只有状态栏高度
             int topWithTranslateBar = rect.top;
-            if(topWithToolBar > 0){
+            if (topWithToolBar > 0) {
                 topMargin = 0;
-            }else{
+            } else {
                 topMargin = topWithTranslateBar;
             }
         }
@@ -73,6 +77,44 @@ public class EasyTintView extends AppCompatTextView {
         tintView.parent = parent;
         tintView.delayDuration = duration;
         return tintView;
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        int width = getDefaultSize((int) getScreenParams(0), widthMeasureSpec);
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) getLayoutParams();
+        int defaultHeight = (int) (params.height + 10f * getScreenParams(2));
+        int height = getDefaultSize(defaultHeight, heightMeasureSpec);
+        height = height > defaultHeight ? height : defaultHeight;
+        setMeasuredDimension(width, height);
+    }
+
+    private float getScreenParams(int posi) {
+        if (posi < 0 || posi > 2) {
+            return 0;
+        }
+        if (screenParams == null) {
+            screenParams = new float[3];
+            WindowManager manager = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+            if (manager != null) {
+                DisplayMetrics metrics = new DisplayMetrics();
+                Display defaultDisplay = manager.getDefaultDisplay();
+                defaultDisplay.getMetrics(metrics);
+                System.out.println(String.format(Locale.CHINA, "%f,%d,%f", metrics.density, metrics.densityDpi, metrics.scaledDensity));
+                screenParams[0] = metrics.widthPixels;
+                screenParams[1] = metrics.heightPixels;
+                screenParams[2] = metrics.scaledDensity;
+            } else {
+                return 0;
+            }
+        }
+        return screenParams[posi];
     }
 
     private void setShowGravity(int gravity) {

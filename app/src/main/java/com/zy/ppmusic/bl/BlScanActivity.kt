@@ -127,7 +127,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
 
         })
 
-        root_bl_content.setOnTouchListener(View.OnTouchListener { v, event ->
+        root_bl_content.setOnTouchListener(View.OnTouchListener { _, event ->
             when (event!!.action) {
                 MotionEvent.ACTION_DOWN -> {
                     lastX = event.rawX.toInt()

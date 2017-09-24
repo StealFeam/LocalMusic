@@ -57,19 +57,6 @@
             </intent-filter>
         </activity>
 
-        <meta-data
-            android:name="TA_APPKEY"
-            android:value="ATN61E1MV6UI" />
-
-        <meta-data
-            android:name="InstallChannel"
-            android:value="内部测试" />
-
-        <provider
-            android:name="com.tencent.mid.api.MidProvider"
-            android:authorities="com.zy.ppmusic.TENCENT.MID.V3"
-            android:exported="true" />
-
     </application>
 
 </manifest>
