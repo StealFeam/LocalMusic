@@ -2,13 +2,11 @@ package com.zy.ppmusic.ui
 
 import android.content.ComponentName
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
 import android.os.ResultReceiver
 import android.support.design.widget.BottomSheetDialog
-import android.support.v4.app.DialogFragment
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -18,7 +16,6 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.AppCompatDialog
 import android.support.v7.widget.*
-import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -240,7 +237,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                         }
 
                         override fun onStartTrackingTouch(s: SeekBar?) {
-                            val transXRound = (s!!.measuredWidth - s.paddingLeft - s.paddingEnd
+                            val transXRound = (s!!.measuredWidth - s.paddingLeft - s.paddingRight
                                     + progressHintTv.measuredWidth / 2).toFloat()
                             val mMaxProgress = s.max.toFloat()
                             percent = transXRound / mMaxProgress
@@ -498,7 +495,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
     override fun onRestart() {
         super.onRestart()
-        if(mMediaBrowser != null){
+        if (mMediaBrowser != null) {
             if (mMediaBrowser!!.isConnected) {
                 mMediaBrowser!!.disconnect()
             }
