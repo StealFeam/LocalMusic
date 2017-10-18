@@ -26,7 +26,6 @@ public class MusicDbEntity {
         this.lastPlayAuthor = lastPlayAuthor;
         this.lastMediaPath = lastMediaPath;
     }
-    @Generated(hash = 649840638)
     public MusicDbEntity() {
     }
     public String getLastMediaId() {

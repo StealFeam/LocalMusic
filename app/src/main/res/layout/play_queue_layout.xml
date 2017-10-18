@@ -4,6 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <TextView
+        android:id="@+id/control_queue_count"
+        android:text="@string/string_queue_playing_position"
+        android:layout_margin="@dimen/dp5"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/control_queue_recycle"
         android:scrollbars="vertical"

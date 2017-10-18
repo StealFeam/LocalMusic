@@ -4,7 +4,10 @@ import android.content.Context;
 
 import com.zy.ppmusic.data.db.dao.DaoMaster;
 import com.zy.ppmusic.data.db.dao.DaoSession;
+import com.zy.ppmusic.data.db.dao.MusicDbEntityDao;
 import com.zy.ppmusic.entity.MusicDbEntity;
+
+import org.greenrobot.greendao.identityscope.IdentityScopeType;
 
 import java.util.List;
 
@@ -16,7 +19,7 @@ public class DBManager {
 
     private static volatile DBManager manager = new DBManager();
 
-    public static DBManager getInstance(){
+    public static DBManager getInstance() {
         return manager;
     }
 
@@ -24,38 +27,35 @@ public class DBManager {
 
     }
 
-    public DBManager initDb(Context context){
-        mOpenHelper = new DaoMaster.DevOpenHelper(context,TABLE_NAME);
+    public DBManager initDb(Context context) {
+        mOpenHelper = new DaoMaster.DevOpenHelper(context, TABLE_NAME);
         mMaster = new DaoMaster(mOpenHelper.getWritableDb());
         mSession = mMaster.newSession();
         return this;
     }
 
-    public void insetEntity(MusicDbEntity entity){
-        if (mSession == null) {
-            System.err.println("please call initDb first...");
-            return;
-        }
-        mSession = mMaster.newSession();
-        mSession.insert(entity);
-        mSession.clear();
+    public void insetEntity(MusicDbEntity entity) {
+        checkSession();
+        MusicDbEntityDao musicDbEntityDao = mSession.getMusicDbEntityDao();
+        musicDbEntityDao.insertOrReplace(entity);
     }
 
-    public List<MusicDbEntity> getEntity(){
-        if (mSession == null) {
-            System.err.println("please call initDb first...");
-            return null;
-        }
+    public List<MusicDbEntity> getEntity() {
+        checkSession();
         return mSession.loadAll(MusicDbEntity.class);
     }
 
-    public void deleteAll(){
+    public void deleteAll() {
+        checkSession();
+        MusicDbEntityDao musicDbEntityDao = mSession.getMusicDbEntityDao();
+        musicDbEntityDao.deleteAll();
+    }
+
+    private void checkSession(){
         if (mSession == null) {
             System.err.println("please call initDb first...");
-            return;
+            throw new NullPointerException("please call initDb first...");
         }
-        mSession = mMaster.newSession();
-        mSession.deleteAll(MusicDbEntity.class);
     }
 
 

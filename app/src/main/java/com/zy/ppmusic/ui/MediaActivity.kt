@@ -1,11 +1,9 @@
 package com.zy.ppmusic.ui
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
-import android.os.Bundle
-import android.os.Handler
-import android.os.Message
-import android.os.ResultReceiver
+import android.os.*
 import android.support.design.widget.BottomSheetDialog
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -87,6 +85,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     private var mDelayHandler: Handler? = null
     private var mBorderTextView: BorderTextView? = null
     private var mBottomQueueContentView: View? = null
+    private var mQueueCountTv: TextView? = null
 
     /*
      * 实现自循环1s后请求播放器播放的位置
@@ -124,7 +123,9 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
      * 接收媒体服务回传的信息，这里处理的是当前播放的位置和进度
      * kotlin普通内部类
      */
+    @SuppressLint("ParcelCreator")
     inner class MediaResultReceive(handler: Handler) : ResultReceiver(handler) {
+
         override fun onReceiveResult(resultCode: Int, resultData: Bundle) {
             super.onReceiveResult(resultCode, resultData)
             when (resultCode) {
@@ -151,6 +152,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 }
             }
         }
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -316,17 +318,23 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                     if (item != null) {
                         item.isSelected = true
                     }
+                    var mode = 0
                     when (item.icon) {
                         R.drawable.ic_loop_model_normal -> {
-                            mMediaController!!.transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE)
+                            mode = PlaybackStateCompat.REPEAT_MODE_NONE
                         }
                         R.drawable.ic_loop_model_only -> {
-                            mMediaController!!.transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ONE)
+                            mode = PlaybackStateCompat.REPEAT_MODE_ONE
                         }
-                        R.drawable.ic_loop_model_random -> {
-                            mMediaController!!.transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL)
+//                        R.drawable.ic_loop_model_random -> {
+//                            mMediaController!!.transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL)
+//                        }
+                        R.drawable.ic_loop_mode_list->{
+                            mode = PlaybackStateCompat.REPEAT_MODE_ALL
                         }
                     }
+                    mMediaController!!.transportControls.setRepeatMode(mode)
+                    mPresenter!!.changeMode(applicationContext,mode)
                     ivModelAction!!.setImageResource(item.icon)
                     mLoopModelAdapter!!.changeItem()
                     mBottomLoopModeDialog!!.dismiss()
@@ -352,58 +360,73 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         ivShowQueueAction!!.setOnClickListener({
             //遗留问题：删除一条item之后再添加进来列表item数量显示错误----------------------------
             mBottomQueueDialog = BottomSheetDialog(this@MediaActivity)
-            mBottomQueueContentView = LayoutInflater.from(this@MediaActivity).inflate(R.layout.play_queue_layout, null)
-            mQueueRecycler = mBottomQueueContentView!!.findViewById(R.id.control_queue_recycle) as RecyclerView
-            mBottomQueueAdapter = PlayQueueAdapter()
-            mBottomQueueAdapter!!.setOnQueueItemClickListener { obj, _ ->
-                if (obj is MediaSessionCompat.QueueItem) {
-                    //点击播放列表直接播放选中的media
-                    val extra = Bundle()
-                    extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_WITH_ID)
-                    mMediaController!!.transportControls.playFromMediaId(obj.description.mediaId, extra)
+            if (mBottomQueueAdapter == null) {
+                mBottomQueueAdapter = PlayQueueAdapter()
+                mBottomQueueAdapter!!.setOnQueueItemClickListener { obj, _ ->
+                    if (obj is MediaSessionCompat.QueueItem) {
+                        //点击播放列表直接播放选中的media
+                        val extra = Bundle()
+                        extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_WITH_ID)
+                        mMediaController!!.transportControls.playFromMediaId(obj.description.mediaId, extra)
+                    }
+                    mBottomQueueAdapter!!.setOnQueueItemClickListener(null)
+                    mBottomQueueAdapter!!.setOnDelListener(null)
+                    if (mBottomQueueDialog!!.isShowing) {
+                        mBottomQueueDialog!!.cancel()
+                        mBottomQueueDialog!!.dismiss()
+                        mBottomQueueDialog = null
+                        mBottomQueueAdapter = null
+                    }
                 }
-                mBottomQueueAdapter!!.setOnQueueItemClickListener(null)
-                mBottomQueueAdapter!!.setOnDelListener(null)
-                if (mBottomQueueDialog!!.isShowing) {
-                    mBottomQueueDialog!!.cancel()
-                    mBottomQueueDialog!!.dismiss()
-                    mBottomQueueDialog = null
-                    mBottomQueueAdapter = null
+
+                mBottomQueueAdapter!!.setOnDelListener { position ->
+                    val dialog = AlertDialog.Builder(this@MediaActivity)
+                    dialog.setTitle(getString(R.string.string_sure_del))
+                    dialog.setMessage(getString(R.string.string_del_desc))
+                    dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
+                        mMediaController!!.removeQueueItemAt(position)
+                        mPlayQueueList!!.removeAt(position)
+                        mBottomQueueAdapter!!.setData(mPlayQueueList)
+                        mBottomQueueAdapter!!.notifyItemRemoved(position)
+                        mQueueCountTv!!.text = String.format(Locale.CHINA,
+                                getString(R.string.string_queue_playing_position),
+                                (mBottomQueueAdapter!!.selectIndex + 1), mPlayQueueList!!.size)
+                    }
+                    dialog.setNegativeButton(getString(R.string.string_cancel)) { d, _ ->
+                        d.cancel()
+                        d.dismiss()
+                    }
+                    dialog.create().show()
+                }
+
+                mBottomQueueAdapter!!.setLongClickListener { position ->
+                    val item = mPlayQueueList!![position].description
+                    val dialog = AlertDialog.Builder(this@MediaActivity)
+                    dialog.setTitle(String.format(Locale.CHINA, "%s-%s", item.title, item.subtitle))
+                    dialog.setMessage(item.mediaUri.toString())
+                    dialog.create().show()
+                    true
                 }
             }
-
-            mBottomQueueAdapter!!.setOnDelListener { position ->
-                val dialog = AlertDialog.Builder(this@MediaActivity)
-                dialog.setTitle(getString(R.string.string_sure_del))
-                dialog.setMessage(getString(R.string.string_del_desc))
-                dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
-                    mMediaController!!.removeQueueItemAt(position)
-                    mPlayQueueList!!.removeAt(position)
-                    mBottomQueueAdapter!!.setData(mPlayQueueList)
-                    mBottomQueueAdapter!!.notifyItemRemoved(position)
-                }
-                dialog.setNegativeButton(getString(R.string.string_cancel)) { d, _ ->
-                    d.cancel()
-                    d.dismiss()
-                }
-                dialog.create().show()
+            if (mBottomQueueContentView == null) {
+                mBottomQueueContentView = LayoutInflater.from(this@MediaActivity).inflate(R.layout.play_queue_layout, null)
+                mQueueRecycler = mBottomQueueContentView!!.findViewById(R.id.control_queue_recycle) as RecyclerView
+                mQueueCountTv = mBottomQueueContentView!!.findViewById(R.id.control_queue_count) as TextView?
+            } else {
+                val parent = mBottomQueueContentView!!.parent as ViewGroup
+                parent.removeView(mBottomQueueContentView)
             }
 
-            mBottomQueueAdapter!!.setLongClickListener { position ->
-                val item = mPlayQueueList!![position].description
-                val dialog = AlertDialog.Builder(this@MediaActivity)
-                dialog.setTitle(String.format(Locale.CHINA, "%s-%s", item.title, item.subtitle))
-                dialog.setMessage(item.mediaUri.toString())
-                dialog.create().show()
-                true
-            }
-
-            if (mCurrentMediaIdStr != null) {
+            if (mCurrentMediaIdStr != null && mBottomQueueAdapter != null) {
                 mBottomQueueAdapter!!.selectIndex = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
             }
+            mQueueCountTv!!.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
+                    (mBottomQueueAdapter!!.selectIndex + 1), if (mPlayQueueList == null) 0 else mPlayQueueList!!.size)
             mBottomQueueDialog!!.setContentView(mBottomQueueContentView)
             mQueueRecycler!!.adapter = mBottomQueueAdapter
             mQueueRecycler!!.layoutManager = LinearLayoutManager(this)
+            mBottomQueueAdapter!!.setData(mPlayQueueList)
+            mBottomQueueDialog!!.show()
 //            val helper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN,
 //                    ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 //                private var isMove = false
@@ -450,8 +473,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 //                }
 //            })
 //            helper.attachToRecyclerView(mQueueRecycler!!)
-            mBottomQueueAdapter!!.setData(mPlayQueueList)
-            mBottomQueueDialog!!.show()
+
         })
     }
 
@@ -510,6 +532,10 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         if (mLoadingDialog == null) {
             mLoadingDialog = AppCompatDialog(this, R.style.TransDialog)
             mLoadingDialog!!.setContentView(LayoutInflater.from(this).inflate(R.layout.loading_layout, null))
+            mLoadingDialog!!.setCanceledOnTouchOutside(false)
+        }
+        if (mLoadingDialog!!.isShowing) {
+            return
         }
         mLoadingDialog!!.show()
     }
@@ -535,6 +561,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             mLooperHandler = LoopHandler(mMediaController!!, mResultReceive!!)
             MediaControllerCompat.setMediaController(this@MediaActivity, mMediaController)
             mMediaController!!.registerCallback(mControllerCallBack)
+            loadMode()
         }
 
         override fun onConnectionSuspended() {
@@ -552,6 +579,24 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             super.onConnectionFailed()
             println("onConnectionFailed.....")
             mMediaBrowser!!.connect()
+        }
+    }
+
+    private fun loadMode() {
+        if(mPresenter != null && mMediaController != null){
+            val mode = mPresenter!!.getLocalMode(applicationContext)
+            when(mode){
+                PlaybackStateCompat.REPEAT_MODE_ALL->{
+                    ivModelAction!!.setImageResource(R.drawable.ic_loop_mode_list)
+                }
+                PlaybackStateCompat.REPEAT_MODE_NONE->{
+                    ivModelAction!!.setImageResource(R.drawable.ic_loop_model_normal)
+                }
+                PlaybackStateCompat.REPEAT_MODE_ONE->{
+                    ivModelAction!!.setImageResource(R.drawable.ic_loop_model_only)
+                }
+            }
+            mMediaController!!.transportControls.setRepeatMode(mode)
         }
     }
 

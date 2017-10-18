@@ -30,6 +30,7 @@
                 android:minWidth="@dimen/dp40"
                 android:checked="true"
                 android:layout_marginEnd="@dimen/dp5"
+                android:layout_marginRight="@dimen/dp5"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end" />
         </android.support.v7.widget.Toolbar>

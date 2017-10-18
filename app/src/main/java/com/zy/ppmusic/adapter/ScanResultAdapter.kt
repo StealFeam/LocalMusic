@@ -1,6 +1,7 @@
 package com.zy.ppmusic.adapter
 
 import android.bluetooth.BluetoothDevice
+import android.os.Build
 import android.support.v7.widget.RecyclerView
 import android.text.TextUtils
 import android.view.LayoutInflater
@@ -68,7 +69,11 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
 
     fun deviceDisappeared(device: BluetoothDevice) {
         mScanDevices.forEachIndexed { index, scanResultEntity ->
-            if (Objects.equals(scanResultEntity.device.address, device.address)) {
+            if (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                Objects.equals(scanResultEntity.device.address, device.address)
+            } else {
+                device.address == scanResultEntity.device.address
+            }) {
                 mScanDevices.removeAt(index)
                 return
             }
@@ -104,7 +109,11 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
             } else {
                 mScanDevices[p1 - mBondDevices.size]
             }
-            holder.name!!.text = entity!!.device.name
+            holder.name!!.text = if(entity!!.device.name == null){
+                "unknown"
+            }else{
+                entity.device.name
+            }
             holder.name!!.tag = entity.device
             println("position=" + p1 + "," + entity.state)
             if (mBondDevices.contains(entity)) {

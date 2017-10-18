@@ -47,7 +47,6 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
         this.onDelListener = onDelListener;
     }
 
-
     public void setLongClickListener(OnQueueItemLongClickListener l){
         this.longClickListener = l;
     }
@@ -73,11 +72,10 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
             holder.tvSubTitle.setText(description.getSubtitle());
             holder.tvTitle.setText(description.getTitle());
             if (selectIndex == i) {
-                holder.ivPlayingFlag.setVisibility(View.VISIBLE);
-                holder.tvPosition.setVisibility(View.GONE);
+                holder.vLine.setVisibility(View.VISIBLE);
+                holder.tvPosition.setText(String.format(Locale.CHINA, "%2d", (i + 1)));
             } else {
-                holder.ivPlayingFlag.setVisibility(View.GONE);
-                holder.tvPosition.setVisibility(View.VISIBLE);
+                holder.vLine.setVisibility(View.GONE);
                 holder.tvPosition.setText(String.format(Locale.CHINA, "%2d", (i + 1)));
             }
             holder.tvSubTitle.setTag(mData.get(i));
@@ -97,7 +95,8 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
         private TextView tvSubTitle;
         private TextView tvPosition;
         private ImageView ivDel;
-        private ImageView ivPlayingFlag;
+//        private ImageView ivPlayingFlag;
+        private View vLine;
         private OnQueueItemClickListener onQueueItemClickListener;
         private OnQueueItemLongClickListener longClickListener;
         private OnDelQueueItemListener delL;
@@ -112,7 +111,8 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
             tvTitle = (TextView) itemView.findViewById(R.id.queue_item_display_title);
             tvPosition = (TextView) itemView.findViewById(R.id.queue_item_position);
             ivDel = (ImageView) itemView.findViewById(R.id.queue_item_del);
-            ivPlayingFlag = (ImageView) itemView.findViewById(R.id.queue_item_playing_flag_iv);
+//            ivPlayingFlag = (ImageView) itemView.findViewById(R.id.queue_item_playing_flag_iv);
+            vLine = itemView.findViewById(R.id.queue_item_selected_line);
             ivDel.setOnClickListener(this);
         }
 

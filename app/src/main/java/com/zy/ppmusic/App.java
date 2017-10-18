@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
+import com.zy.ppmusic.utils.CrashHandler;
+
 public class App extends Application {
     public static final String LOCAL_DATA_TABLE_NAME = "CACHE_PATH_LIST";
 
@@ -19,6 +21,7 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+//        CrashHandler handler = new CrashHandler(this);
     }
 
     public static int getAppVersion(Context context) {

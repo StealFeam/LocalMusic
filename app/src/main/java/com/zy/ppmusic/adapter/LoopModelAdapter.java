@@ -43,7 +43,7 @@ public class LoopModelAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         entityList = new ArrayList<>();
         entityList.add(new LoopModelEntity(R.drawable.ic_loop_model_normal, "列表播放", true));
         entityList.add(new LoopModelEntity(R.drawable.ic_loop_model_only, "单曲循环", false));
-        entityList.add(new LoopModelEntity(R.drawable.ic_loop_model_random, "随机播放", false));
+        entityList.add(new LoopModelEntity(R.drawable.ic_loop_mode_list, "列表循环", false));
     }
 
 
@@ -102,7 +102,7 @@ public class LoopModelAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         public String content;
         public boolean isSelected = false;
 
-        public LoopModelEntity(int icon, String content, boolean isSelected) {
+        private LoopModelEntity(int icon, String content, boolean isSelected) {
             this.icon = icon;
             this.content = content;
             this.isSelected = isSelected;

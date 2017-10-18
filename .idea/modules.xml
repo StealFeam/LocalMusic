@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://D:\DownloadLibrary\MyApplication\LocalMusic.iml" filepath="D:\DownloadLibrary\MyApplication\LocalMusic.iml" />
-      <module fileurl="file://G:\project\LocalMusicApp\LocalMusic\easypermissions\LocalMusic-easypermissions.iml" filepath="G:\project\LocalMusicApp\LocalMusic\easypermissions\LocalMusic-easypermissions.iml" />
       <module fileurl="file://$PROJECT_DIR$/MyApplication.iml" filepath="$PROJECT_DIR$/MyApplication.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/easypermissions/easypermissions.iml" filepath="$PROJECT_DIR$/easypermissions/easypermissions.iml" />

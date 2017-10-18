@@ -47,7 +47,7 @@ public class ScanMusicFile {
         return this;
     }
 
-    public ScanMusicFile scanMusicFile(final Context c) {
+    public void scanMusicFile(final Context c) {
         final Context context = c.getApplicationContext();
         if (mInnerStoragePath == null) {
             mInnerStoragePath = FileUtils.getStoragePath(context, false);
@@ -75,7 +75,6 @@ public class ScanMusicFile {
             }
             executor.submit(mScanTask);
         }
-        return this;
     }
 
     private static class ScanHandler extends Handler {

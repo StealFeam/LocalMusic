@@ -22,6 +22,8 @@ public interface IMediaActivityContract {
 
     interface IPresenter extends IBasePresenter {
         void refreshQueue(Context context,boolean isRefresh);
+        void changeMode(Context c,int mode);
+        int getLocalMode(Context c);
     }
 
     interface IModel extends IBaseModel {

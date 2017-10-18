@@ -91,79 +91,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         root_bl_content.setDragFinishListener {
             finish()
         }
-
-//        mScanResultRecycler!!.addOnItemTouchListener(object : RecyclerView.OnItemTouchListener {
-//
-//            override fun onTouchEvent(rv: RecyclerView?, event: MotionEvent?) {
-//
-//            }
-//
-//            override fun onInterceptTouchEvent(rv: RecyclerView?, event: MotionEvent?): Boolean {
-//                when (event!!.action) {
-//                    MotionEvent.ACTION_DOWN -> {
-//                        lastX = event.rawX.toInt()
-//                        lastY = event.rawY.toInt()
-//                        return false
-//                    }
-//                    MotionEvent.ACTION_MOVE -> {
-//                        val deltaX = event.rawX - lastX
-//                        val deltaY = event.rawY - lastY
-//                        //横向移动的数值大于纵向距离，并且向右滑动
-//                        if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 0) {
-//                            window.decorView.translationX = deltaX
-//                        }
-//                    }
-//                    MotionEvent.ACTION_UP -> {
-//                        if (window.decorView.translationX < window.decorView.measuredWidth / 3) {
-//                            window.decorView.translationX = 0f
-//                            println("小于1/3")
-//                        } else {
-//                            finish()
-//                            return true
-//                        }
-//                    }
-//                }
-//                return false
-//            }
-//
-//            override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-//
-//            }
-//
-//        })
-
-
-//        root_bl_content.setOnTouchListener(View.OnTouchListener { _, event ->
-//            when (event!!.action) {
-//                MotionEvent.ACTION_DOWN -> {
-//                    lastX = event.rawX.toInt()
-//                    lastY = event.rawY.toInt()
-//                    return@OnTouchListener true
-//                }
-//                MotionEvent.ACTION_MOVE -> {
-//                    val deltaX = event.rawX - lastX
-//                    val deltaY = event.rawY - lastY
-//                    //横向移动的数值大于纵向距离，并且向右滑动
-//                    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 0) {
-//                        window.decorView.translationX = deltaX
-//                    }
-//                }
-//                MotionEvent.ACTION_UP -> {
-//                    if (window.decorView.translationX < window.decorView.measuredWidth / 3) {
-//                        window.decorView.translationX = 0f
-//                        println("小于1/3")
-//                    } else {
-//                        finish()
-//                        return@OnTouchListener true
-//                    }
-//                }
-//            }
-//            false
-//        })
     }
-
-    private var lastX: Int = 0
-    private var lastY: Int = 0
 
     /**
      * 检查权限，6.0之后需要权限才能接收到新设备

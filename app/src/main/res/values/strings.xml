@@ -44,4 +44,5 @@
     <string name="start_scanning_the_local_file" translatable="false">开始扫描本地文件</string>
     <string name="string_large_text">android.permission.READ_EXTERNAL_STORAGE|android.permission.READ_EXTERNAL_STORAGE</string>
     <string name="string_close" translatable="false">关闭</string>
+    <string name="string_queue_playing_position" formatted="false">正在播放%d/%d</string>
 </resources>

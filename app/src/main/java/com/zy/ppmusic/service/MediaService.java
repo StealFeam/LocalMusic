@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.ResultReceiver;
@@ -217,10 +218,10 @@ public class MediaService extends MediaBrowserServiceCompat {
         Log.e(TAG, "changeMediaByMode: " + mMediaSessionCompat.getController().getRepeatMode());
         //判断重复模式，单曲重复，随机播放，列表播放
         switch (mMediaSessionCompat.getController().getRepeatMode()) {
-            //随机播放：自动下一首
+            //随机播放：自动下一首  ----暂改为列表循环
             case PlaybackStateCompat.REPEAT_MODE_ALL:
                 if (isAutoContinuedPlay) {
-                    onMediaChange(mPlayBack.randomIndex());
+                    onMediaChange(mPlayBack.onSkipToNext());
                     handlePlayOrPauseRequest();
                 }
                 break;
@@ -255,13 +256,19 @@ public class MediaService extends MediaBrowserServiceCompat {
      * 保存播放记录到本地
      */
     public void savePlayingRecord() {
+        if(mCurrentMedia == null){//当前没有播放曲目
+            return;
+        }
         MusicDbEntity dbEntity = new MusicDbEntity();
         dbEntity.setLastMediaId(mPlayBack.getCurrentMediaId());
-        dbEntity.setLastMediaPath(mCurrentMedia.getDescription().getMediaUri().getPath());
-        dbEntity.setLastPlayAuthor(String.valueOf(mCurrentMedia.getDescription().getSubtitle()));
+        if(mCurrentMedia != null && mCurrentMedia.getDescription() != null){
+            dbEntity.setLastMediaPath(mCurrentMedia.getDescription().getMediaUri().getPath());
+            dbEntity.setLastPlayAuthor(String.valueOf(mCurrentMedia.getDescription().getSubtitle()));
+            dbEntity.setLastPlayName(String.valueOf(mCurrentMedia.getDescription().getTitle()));
+        }
         dbEntity.setLastPlayedPosition(mPlayBack.getCurrentStreamPosition());
         dbEntity.setLastPlayIndex(mPlayQueueMediaId.indexOf(mPlayBack.getCurrentMediaId()));
-        dbEntity.setLastPlayName(String.valueOf(mCurrentMedia.getDescription().getTitle()));
+
         DBManager.getInstance().initDb(getApplicationContext()).deleteAll();
         DBManager.getInstance().insetEntity(dbEntity);
     }
@@ -371,9 +378,15 @@ public class MediaService extends MediaBrowserServiceCompat {
                     }
                 } else if (ACTION_PLAY_WITH_ID.equals(action)) {//播放指定id请求
                     //如果和当前的mediaId相同则视为暂停或播放操作，不同则替换曲目
-                    if (!Objects.equals(mediaId, mCurrentMedia != null ?
-                            mCurrentMedia.getDescription().getMediaId() : null)) {
-                        onMediaChange(mediaId);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        if (!Objects.equals(mediaId, mCurrentMedia != null ?
+                                mCurrentMedia.getDescription().getMediaId() : null)) {
+                            onMediaChange(mediaId);
+                        }
+                    }else{
+                        if(mCurrentMedia != null && mediaId.equals(mCurrentMedia.getDescription().getMediaId())){
+                            onMediaChange(mediaId);
+                        }
                     }
                     handlePlayOrPauseRequest();
                 } else if (ACTION_PLAY_INIT.equals(action)) {//初始化播放器，如果本地有播放记录，取播放记录，没有就初始化穿过来的media

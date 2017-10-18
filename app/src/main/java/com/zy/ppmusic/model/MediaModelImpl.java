@@ -9,7 +9,7 @@ public class MediaModelImpl implements IMediaActivityContract.IModel {
 
     @Override
     public void refreshQueue(Context context, ScanMusicFile.OnScanComplete complete) {
-        ScanMusicFile.getInstance().scanMusicFile(context).setOnScanComplete(complete);
+        ScanMusicFile.getInstance().setOnScanComplete(complete).scanMusicFile(context);
     }
 
 }

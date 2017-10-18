@@ -49,6 +49,7 @@
 
         </activity>
         <activity android:name=".ui.SplashActivity"
+            android:launchMode="singleTop"
             android:theme="@style/AppTheme.SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

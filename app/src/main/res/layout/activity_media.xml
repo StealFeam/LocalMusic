@@ -18,17 +18,20 @@
         app:layout_constraintBottom_toTopOf="@+id/control_display_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <SeekBar
         android:id="@+id/control_display_progress"
         style="@style/SelfSeekBarStyle"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
         android:max="100"
         android:progress="0"
-        app:layout_constraintBottom_toTopOf="@+id/horizontal_guideline" />
+        app:layout_constraintVertical_bias="0.5"
+        app:layout_constraintLeft_toRightOf="@+id/control_display_time_tv"
+        app:layout_constraintRight_toLeftOf="@+id/control_display_duration_tv"
+        app:layout_constraintTop_toTopOf="@+id/control_display_duration_tv"
+        app:layout_constraintBottom_toBottomOf="@+id/control_display_duration_tv" />
 
     <TextView
         android:id="@+id/control_display_title"
@@ -40,7 +43,7 @@
         android:text="@string/normal_text"
         app:layout_constraintBottom_toTopOf="@+id/control_display_sub_title"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"/>
 
     <TextView
         android:id="@+id/control_display_sub_title"
@@ -52,12 +55,12 @@
         android:text="@string/normal_text"
         app:layout_constraintBottom_toTopOf="@+id/control_display_progress"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"/>
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_show_queue"
-        android:layout_width="@dimen/dp40"
-        android:layout_height="@dimen/dp40"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/action_close_notify"
         android:padding="@dimen/dp5"
@@ -65,43 +68,42 @@
         app:layout_constraintBottom_toBottomOf="@+id/control_action_next"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/control_action_next"
-        app:layout_constraintTop_toTopOf="@+id/control_action_next" />
+        app:layout_constraintTop_toTopOf="@+id/control_action_next"/>
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_previous"
-        android:layout_width="@dimen/dp40"
-        android:layout_height="@dimen/dp40"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/action_next"
         android:src="@mipmap/ic_black_previous"
         app:layout_constraintEnd_toStartOf="@+id/control_action_play_pause"
         app:layout_constraintStart_toEndOf="@+id/control_action_loop_model"
-        app:layout_constraintTop_toTopOf="@+id/control_action_play_pause" />
+        app:layout_constraintTop_toTopOf="@+id/control_action_play_pause"/>
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_next"
-        android:layout_width="@dimen/dp40"
-        android:layout_height="@dimen/dp40"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/action_next"
         android:src="@mipmap/ic_black_next"
         app:layout_constraintBottom_toBottomOf="@+id/control_action_play_pause"
         app:layout_constraintEnd_toStartOf="@+id/control_action_show_queue"
         app:layout_constraintStart_toEndOf="@+id/control_action_play_pause"
-        app:layout_constraintTop_toTopOf="@+id/control_action_play_pause" />
+        app:layout_constraintTop_toTopOf="@+id/control_action_play_pause"/>
 
     <android.support.constraint.Guideline
         android:id="@+id/vertical_guideline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.5" />
+        app:layout_constraintGuide_percent="0.5"/>
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_play_pause"
-        android:layout_width="@dimen/dp40"
-        android:layout_height="@dimen/dp40"
-        android:layout_marginEnd="8dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/action_start_pause"
         android:src="@drawable/ic_black_play"
@@ -109,7 +111,7 @@
         app:layout_constraintEnd_toStartOf="@+id/vertical_guideline"
         app:layout_constraintStart_toStartOf="@+id/vertical_guideline"
         app:layout_constraintTop_toTopOf="@+id/horizontal_guideline"
-        app:layout_constraintVertical_bias="0.51" />
+        app:layout_constraintVertical_bias="0.5"/>
 
     <android.support.constraint.Guideline
         android:id="@+id/horizontal_guideline"
@@ -130,28 +132,30 @@
         app:layout_constraintEnd_toStartOf="@+id/control_action_previous"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/control_action_previous"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="1.0"/>
 
     <TextView
         android:id="@+id/control_display_duration_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/dp10"
         android:text="@string/string_time_init"
         android:textSize="@dimen/sp12"
-        app:layout_constraintBottom_toTopOf="@+id/control_action_show_queue"
+        android:layout_marginEnd="@dimen/dp2"
+        android:layout_marginRight="@dimen/dp2"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/horizontal_guideline" />
+        app:layout_constraintBottom_toTopOf="@+id/horizontal_guideline"
+        app:layout_constraintTop_toBottomOf="@+id/control_display_sub_title"/>
 
     <TextView
         android:id="@+id/control_display_time_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/dp10"
         android:text="@string/string_time_init"
         android:textSize="@dimen/sp12"
-        app:layout_constraintBottom_toTopOf="@+id/control_action_loop_model"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/control_display_progress" />
+        android:layout_marginLeft="@dimen/dp2"
+        android:layout_marginStart="@dimen/dp2"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintBaseline_toBaselineOf="@+id/control_display_duration_tv" />
 
 </android.support.constraint.ConstraintLayout>
