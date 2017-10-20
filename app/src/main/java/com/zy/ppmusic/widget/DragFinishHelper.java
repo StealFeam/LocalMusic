@@ -1,4 +1,4 @@
-package com.zy.ppmusic.view;
+package com.zy.ppmusic.widget;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;

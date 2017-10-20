@@ -14,7 +14,9 @@ import com.zy.ppmusic.R;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
+/**
+ * @author ZY
+ */
 public class PlayQueueAdapter extends RecyclerView.Adapter {
     private List<MediaSessionCompat.QueueItem> mData;
     private OnQueueItemClickListener onQueueItemClickListener;
@@ -140,14 +142,30 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
     }
 
     public interface OnQueueItemClickListener {
+        /**
+         * item点击回调
+         * @param obj item数据对象
+         * @param position itemPosition
+         */
         void onItemClick(Object obj, int position);
     }
 
+
     public interface OnQueueItemLongClickListener{
+        /**
+         * item长按回调
+         * @param position itemPosition
+         * @return 是否拦截
+         */
         boolean onLongClick(int position);
     }
 
     public interface OnDelQueueItemListener {
+
+        /**
+         * 删除回调
+         * @param position itemPosition
+         */
         void onDel(int position);
     }
 }

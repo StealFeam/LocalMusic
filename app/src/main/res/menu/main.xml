@@ -3,7 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/action_settings"
+        android:checkable="false"
+        android:enabled="false"
+        android:icon="@drawable/ic_music_play_state"
         android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
+        android:title="@string/string_show_play_state"
+        app:showAsAction="always" />
 </menu>

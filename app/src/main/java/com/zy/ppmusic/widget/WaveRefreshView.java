@@ -1,4 +1,4 @@
-package com.zy.ppmusic.view;
+package com.zy.ppmusic.widget;
 
 import android.animation.Animator;
 import android.animation.ValueAnimator;
@@ -8,16 +8,12 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
-
-import com.zy.ppmusic.R;
 
 import java.util.ArrayList;
 

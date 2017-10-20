@@ -8,7 +8,9 @@ import android.util.Log;
 import java.io.IOException;
 import java.util.UUID;
 
-
+/**
+ * @author ZY
+ */
 public class ConnectTask extends AsyncTask<Void,Void,Boolean>{
     private static final String TAG = "ConnectTask";
     //这条是蓝牙串口通用的UUID，不要更改

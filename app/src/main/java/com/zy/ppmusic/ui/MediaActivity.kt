@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.os.*
 import android.support.design.widget.BottomSheetDialog
+import android.support.v4.content.ContextCompat
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -14,17 +15,12 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.AppCompatDialog
 import android.support.v7.widget.*
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
 import com.zy.ppmusic.R
-import com.zy.ppmusic.adapter.LoopModelAdapter
-import com.zy.ppmusic.adapter.MainMenuAdapter
-import com.zy.ppmusic.adapter.PlayQueueAdapter
-import com.zy.ppmusic.adapter.TimeClockAdapter
+import com.zy.ppmusic.adapter.*
 import com.zy.ppmusic.bl.BlScanActivity
 import com.zy.ppmusic.contract.IMediaActivityContract
 import com.zy.ppmusic.entity.MainMenuEntity
@@ -33,8 +29,11 @@ import com.zy.ppmusic.service.MediaService
 import com.zy.ppmusic.utils.DataTransform
 import com.zy.ppmusic.utils.DateUtil
 import com.zy.ppmusic.utils.StringUtils
-import com.zy.ppmusic.view.BorderTextView
-import com.zy.ppmusic.view.EasyTintView
+import com.zy.ppmusic.utils.UIUtils
+import com.zy.ppmusic.widget.BorderTextView
+import com.zy.ppmusic.widget.EasyTintView
+import com.zy.ppmusic.widget.RecycleViewDecoration
+import com.zy.ppmusic.widget.TimBackGroundDrawable
 import kotlinx.android.synthetic.main.activity_media.*
 import java.lang.ref.WeakReference
 import java.util.*
@@ -73,10 +72,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
     private var mPresenter: IMediaActivityContract.IPresenter? = null
     private var mLoadingDialog: AppCompatDialog? = null//加载中的dialog
-    private var mLoopModelRecycler: RecyclerView? = null//播放模式的recycler
-    private var mLoopModelAdapter: LoopModelAdapter? = null//播放模式的适配器
-    private var mBottomLoopModeDialog: BottomSheetDialog? = null//播放模式的dialog
-    private var mLoopModelContentView: View? = null//播放模式dialog的content
+    private var mBottomLoopModePop: ListPopupWindow? = null//播放模式的dialog
 
     private var mTimeClockDialog: BottomSheetDialog? = null//倒计时选择的dialog
     private var mTimeContentView: View? = null
@@ -160,6 +156,8 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         setContentView(R.layout.activity_media)
         if (supportActionBar != null) {
             supportActionBar!!.elevation = 0f
+            supportActionBar!!.setLogo(R.drawable.ic_music_play_state)
+            supportActionBar!!.setIcon(R.drawable.ic_music_play_state)
         }
 
         ivNextAction = findViewById(R.id.control_action_next) as AppCompatImageView
@@ -167,6 +165,16 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         ivShowQueueAction = findViewById(R.id.control_action_show_queue) as AppCompatImageView
         ivPreviousAction = findViewById(R.id.control_action_previous) as AppCompatImageView
         ivModelAction = findViewById(R.id.control_action_loop_model) as AppCompatImageView
+
+        val titleTintRoot = findViewById(R.id.media_title_tint)
+        val drawable = TimBackGroundDrawable()
+        drawable.setDrawableColor(ContextCompat.getColor(this, R.color.colorTheme))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            titleTintRoot.background = drawable
+        } else {
+            @Suppress("DEPRECATION")
+            titleTintRoot.setBackgroundDrawable(drawable)
+        }
 
         mMainMenuRecycler = findViewById(R.id.more_function_recycle) as RecyclerView
         mPresenter = MediaPresenterImpl(this)
@@ -206,7 +214,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                     mTimeClockRecycler!!.adapter = mTimeClockAdapter
                     mTimeClockAdapter!!.setListener { _, p ->
                         mTimeClockDialog!!.cancel()
-
                         var length: Int = if (mTimeClockAdapter!!.isTick) {
                             if (p == 0) {//发送停止倒计时，隐藏倒计时文本
                                 mMediaController!!.transportControls.sendCustomAction(MediaService.ACTION_STOP_COUNT_DOWN, null)
@@ -305,44 +312,18 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         })
         //循环模式点击监听
         ivModelAction!!.setOnClickListener({
-            if (mLoopModelContentView == null) {
-                mBottomLoopModeDialog = BottomSheetDialog(this@MediaActivity)
-                mLoopModelContentView = layoutInflater.inflate(R.layout.layout_loop_model, null)
-                mBottomLoopModeDialog!!.setContentView(mLoopModelContentView, ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-                ))
-                mLoopModelRecycler = mLoopModelContentView!!.findViewById(R.id.pop_loop_model_recycler) as RecyclerView
-                mLoopModelAdapter = LoopModelAdapter()
-                mLoopModelAdapter!!.setListener { _, position ->
-                    val item = mLoopModelAdapter!!.getItem(position)
-                    if (item != null) {
-                        item.isSelected = true
-                    }
-                    var mode = 0
-                    when (item.icon) {
-                        R.drawable.ic_loop_model_normal -> {
-                            mode = PlaybackStateCompat.REPEAT_MODE_NONE
-                        }
-                        R.drawable.ic_loop_model_only -> {
-                            mode = PlaybackStateCompat.REPEAT_MODE_ONE
-                        }
-//                        R.drawable.ic_loop_model_random -> {
-//                            mMediaController!!.transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL)
-//                        }
-                        R.drawable.ic_loop_mode_list->{
-                            mode = PlaybackStateCompat.REPEAT_MODE_ALL
-                        }
-                    }
-                    mMediaController!!.transportControls.setRepeatMode(mode)
-                    mPresenter!!.changeMode(applicationContext,mode)
-                    ivModelAction!!.setImageResource(item.icon)
-                    mLoopModelAdapter!!.changeItem()
-                    mBottomLoopModeDialog!!.dismiss()
+            if (mBottomLoopModePop == null) {
+                mBottomLoopModePop = ListPopupWindow(this@MediaActivity)
+                mBottomLoopModePop!!.anchorView = ivModelAction!!
+                mBottomLoopModePop!!.setDropDownGravity(Gravity.TOP and Gravity.END)
+                mBottomLoopModePop!!.setAdapter(MenuAdapter(this@MediaActivity))
+                mBottomLoopModePop!!.setContentWidth(UIUtils.dp2px(this@MediaActivity, 110))
+                mBottomLoopModePop!!.setOnItemClickListener { parent, view, position, id ->
+                    setPlayMode(position)
+                    mBottomLoopModePop!!.dismiss()
                 }
-                mLoopModelRecycler!!.adapter = mLoopModelAdapter
-                mLoopModelRecycler!!.layoutManager = LinearLayoutManager(this@MediaActivity)
             }
-            mBottomLoopModeDialog!!.show()
+            mBottomLoopModePop!!.show()
         })
         //播放按钮监听
         ivPlayAction!!.setOnClickListener({
@@ -412,6 +393,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 mBottomQueueContentView = LayoutInflater.from(this@MediaActivity).inflate(R.layout.play_queue_layout, null)
                 mQueueRecycler = mBottomQueueContentView!!.findViewById(R.id.control_queue_recycle) as RecyclerView
                 mQueueCountTv = mBottomQueueContentView!!.findViewById(R.id.control_queue_count) as TextView?
+
             } else {
                 val parent = mBottomQueueContentView!!.parent as ViewGroup
                 parent.removeView(mBottomQueueContentView)
@@ -425,55 +407,10 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             mBottomQueueDialog!!.setContentView(mBottomQueueContentView)
             mQueueRecycler!!.adapter = mBottomQueueAdapter
             mQueueRecycler!!.layoutManager = LinearLayoutManager(this)
+            mQueueRecycler!!.addItemDecoration(RecycleViewDecoration(this@MediaActivity, LinearLayoutManager.VERTICAL,
+                    R.drawable.recyclerview_vertical_line, UIUtils.dp2px(this@MediaActivity, 25)))
             mBottomQueueAdapter!!.setData(mPlayQueueList)
             mBottomQueueDialog!!.show()
-//            val helper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-//                    ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-//                private var isMove = false
-//                override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?,
-//                                    target: RecyclerView.ViewHolder?): Boolean {
-//                    val from = viewHolder!!.adapterPosition
-//                    val to = target!!.adapterPosition
-//                    mBottomQueueAdapter!!.childMoveTo(from, to)
-//                    DataTransform.getInstance().moveTo(from, to)
-//                    isMove = true
-//                    return isMove
-//                }
-//
-//                override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
-//                    val dialog = AlertDialog.Builder(this@MediaActivity)
-//                    dialog.setTitle(getString(R.string.string_sure_del))
-//                    dialog.setMessage(getString(R.string.string_del_desc))
-//                    dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
-//                        mMediaController!!.removeQueueItemAt(viewHolder!!.adapterPosition)
-//                        mPlayQueueList!!.removeAt(viewHolder.adapterPosition)
-//                        mBottomQueueAdapter!!.setData(mPlayQueueList)
-//                        mBottomQueueAdapter!!.notifyItemRemoved(viewHolder.adapterPosition)
-//                    }
-//                    dialog.setNegativeButton(getString(R.string.string_cancel)) { d, _ ->
-//                        d.cancel()
-//                        d.dismiss()
-//                        mBottomQueueAdapter!!.notifyItemChanged(viewHolder!!.adapterPosition)
-//                    }
-//                    dialog.create().show()
-//                }
-//
-//                override fun clearView(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) {
-//                    super.clearView(recyclerView, viewHolder)
-//                    if (isMove) {
-//                        if (viewHolder!!.itemView.background != null) {
-//                            viewHolder.itemView.background.alpha = 0
-//                        }
-//                        mMediaController!!.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, null, mResultReceive)
-//                        if (mCurrentMediaIdStr != null && mBottomQueueAdapter != null) {
-//                            mBottomQueueAdapter!!.selectIndex = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
-//                        }
-//                        isMove = false
-//                    }
-//                }
-//            })
-//            helper.attachToRecyclerView(mQueueRecycler!!)
-
         })
     }
 
@@ -523,8 +460,12 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             }
             mMediaBrowser!!.connect()
         }
-
         startLoop()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main, menu)
+        return true
     }
 
     override fun showLoading() {
@@ -583,21 +524,25 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     }
 
     private fun loadMode() {
-        if(mPresenter != null && mMediaController != null){
+        if (mPresenter != null && mMediaController != null) {
             val mode = mPresenter!!.getLocalMode(applicationContext)
-            when(mode){
-                PlaybackStateCompat.REPEAT_MODE_ALL->{
-                    ivModelAction!!.setImageResource(R.drawable.ic_loop_mode_list)
-                }
-                PlaybackStateCompat.REPEAT_MODE_NONE->{
-                    ivModelAction!!.setImageResource(R.drawable.ic_loop_model_normal)
-                }
-                PlaybackStateCompat.REPEAT_MODE_ONE->{
-                    ivModelAction!!.setImageResource(R.drawable.ic_loop_model_only)
-                }
-            }
-            mMediaController!!.transportControls.setRepeatMode(mode)
+            setPlayMode(mode)
         }
+    }
+
+    private fun setPlayMode(mode: Int) {
+        when (mode) {
+            PlaybackStateCompat.REPEAT_MODE_ALL -> {
+                ivModelAction!!.setImageResource(R.drawable.ic_loop_mode_list)
+            }
+            PlaybackStateCompat.REPEAT_MODE_NONE -> {
+                ivModelAction!!.setImageResource(R.drawable.ic_loop_model_normal)
+            }
+            PlaybackStateCompat.REPEAT_MODE_ONE -> {
+                ivModelAction!!.setImageResource(R.drawable.ic_loop_model_only)
+            }
+        }
+        mMediaController!!.transportControls.setRepeatMode(mode)
     }
 
 

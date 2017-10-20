@@ -16,7 +16,9 @@ import com.zy.ppmusic.entity.MainMenuEntity;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
-
+/**
+ * @author ZY
+ */
 public class MainMenuAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final String TAG = "MainMenuAdapter";
     private List<MainMenuEntity> mDatas;
@@ -85,6 +87,11 @@ public class MainMenuAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     public interface OnRecycleItemClickListener {
+        /**
+         * item点击回调
+         * @param view itemView
+         * @param position itemPosition
+         */
         void onItemClick(View view, int position);
     }
 }

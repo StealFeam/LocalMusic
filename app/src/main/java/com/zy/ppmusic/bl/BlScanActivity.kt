@@ -17,7 +17,6 @@ import android.support.v7.widget.SwitchCompat
 import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
-import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
@@ -29,13 +28,14 @@ import com.zy.ppmusic.entity.ScanResultEntity
 import com.zy.ppmusic.presenter.BLActivityPresenter
 import com.zy.ppmusic.receiver.DeviceFoundReceiver
 import com.zy.ppmusic.receiver.StatusChangeReceiver
-import com.zy.ppmusic.view.DragFinishLayout
-import com.zy.ppmusic.view.EasyTintView
+import com.zy.ppmusic.widget.EasyTintView
 import kotlinx.android.synthetic.main.activity_bl_scan.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import java.util.*
-
+/**
+ * @author ZY
+ */
 class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermissions.PermissionCallbacks {
     private val REQUEST_ENABLE_BL = 0x001
     private var mBlueToothOpenSwitch: SwitchCompat? = null//蓝牙开关

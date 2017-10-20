@@ -1,8 +1,7 @@
-package com.zy.ppmusic.view;
+package com.zy.ppmusic.widget;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.support.annotation.NonNull;

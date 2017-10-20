@@ -133,7 +133,8 @@ public class ScanMusicFile {
         //判断文件的类型是否支持
         for (String format : mSupportMedia) {
             if (file.getName().endsWith(format)) {
-                long size = 1024L * 1024L;// * 1L  1M的大小
+                // * 1L  1M的大小
+                long size = 1024L * 1024L;
                 if (size < file.length()) {
                     Log.w(TAG, file.getAbsolutePath()+",length="+file.length());
                     mPathList.add(file.getAbsolutePath());
@@ -145,7 +146,10 @@ public class ScanMusicFile {
     }
 
     public abstract static class OnScanComplete {
-
+        /**
+         * 扫描完成
+         * @param paths 路径集合
+         */
         protected abstract void onComplete(ArrayList<String> paths);
 
         protected void onCountChange(int size) {

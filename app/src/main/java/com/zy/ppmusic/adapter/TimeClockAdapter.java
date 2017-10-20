@@ -12,7 +12,9 @@ import com.zy.ppmusic.R;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
+/**
+ * @author ZY
+ */
 public class TimeClockAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<Integer> array;
     private MainMenuAdapter.OnRecycleItemClickListener listener;

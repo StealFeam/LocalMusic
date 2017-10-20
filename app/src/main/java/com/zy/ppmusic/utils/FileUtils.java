@@ -1,14 +1,9 @@
 package com.zy.ppmusic.utils;
 
 import android.content.Context;
-import android.os.Parcel;
 import android.os.storage.StorageManager;
 import android.util.Log;
 
-import com.zy.ppmusic.entity.MusicInfoEntity;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -18,15 +13,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 1.获取手机目录所有的音乐文件
  * 2.通过首页展示
  * 3.设计首页加载的框架
+ * @author ZY
  */
 
 public class FileUtils {
@@ -38,7 +31,7 @@ public class FileUtils {
      */
     public static String getStoragePath(Context mContext, boolean isExternalStorage) {
         StorageManager mStorageManager = (StorageManager) mContext.getSystemService(Context.STORAGE_SERVICE);
-        Class<?> storageVolumeClazz = null;
+        Class<?> storageVolumeClazz;
         try {
             storageVolumeClazz = Class.forName("android.os.storage.StorageVolume");
             Method getVolumeList = mStorageManager.getClass().getMethod("getVolumeList");
@@ -54,7 +47,7 @@ public class FileUtils {
                     return path;
                 }
             }
-        } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
@@ -103,8 +96,8 @@ public class FileUtils {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            IOUtils.closeIo(objectOutputStream);
-            IOUtils.closeIo(outputStream);
+            StreamUtils.closeIo(objectOutputStream);
+            StreamUtils.closeIo(outputStream);
         }
     }
 
@@ -128,8 +121,8 @@ public class FileUtils {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
-            IOUtils.closeIo(objectInputStream);
-            IOUtils.closeIo(inputStream);
+            StreamUtils.closeIo(objectInputStream);
+            StreamUtils.closeIo(inputStream);
         }
         return null;
     }
@@ -152,7 +145,7 @@ public class FileUtils {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            IOUtils.closeIo(outputStream);
+            StreamUtils.closeIo(outputStream);
         }
     }
 
@@ -167,12 +160,10 @@ public class FileUtils {
             inputStream = new ObjectInputStream(new FileInputStream(file));
             System.out.println("read object success");
             return inputStream.readObject();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
-            IOUtils.closeIo(inputStream);
+            StreamUtils.closeIo(inputStream);
         }
         return null;
     }

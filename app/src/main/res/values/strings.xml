@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">LMusicPlayer</string>
-    <string name="action_settings" translatable="false">设置</string>
     <string name="app_subtitle" translatable="false">日常听歌的好帮手</string>
     <string name="local_music">LocalMusic</string>
     <string name="email">2295573743@qq.com</string>
@@ -45,4 +44,6 @@
     <string name="string_large_text">android.permission.READ_EXTERNAL_STORAGE|android.permission.READ_EXTERNAL_STORAGE</string>
     <string name="string_close" translatable="false">关闭</string>
     <string name="string_queue_playing_position" formatted="false">正在播放%d/%d</string>
+    <string name="string_power_author" formatted="false" translatable="false">powerd by zy</string>
+    <string name="string_show_play_state">show play state</string>
 </resources>

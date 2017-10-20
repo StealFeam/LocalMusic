@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -23,10 +24,14 @@ import java.util.Map;
 
 /**
  * 数据转换
+ * @author ZhiTouPC
  */
 public class DataTransform {
     private static final String TAG = "DataTransform";
-    private volatile List<MusicInfoEntity> musicInfoEntities;//可存放本地的数据
+    /**
+     *可存放本地的数据
+     */
+    private volatile List<MusicInfoEntity> musicInfoEntities;
     private volatile List<MediaSessionCompat.QueueItem> queueItemList;
     private volatile ArrayList<MediaBrowserCompat.MediaItem> mediaItemList;
     private volatile ArrayMap<String, MediaMetadataCompat> mapMetadataArray;
@@ -41,8 +46,12 @@ public class DataTransform {
     private DataTransform() {
         pathList = new ArrayList<>();
         musicInfoEntities = new ArrayList<>();
-        mapMetadataArray = new ArrayMap<>();
-        indexMediaArray = new ArrayMap<>();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            mapMetadataArray = new ArrayMap<>();
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            indexMediaArray = new ArrayMap<>();
+        }
         queueItemList = new ArrayList<>();
         mediaItemList = new ArrayList<>();
         mediaIdList = new ArrayList<>();
@@ -58,30 +67,6 @@ public class DataTransform {
     public void transFormData(Context context, ArrayList<String> pathList) {
         clearData();
         queryMedia(context, pathList);
-    }
-
-    public void moveTo(int from, int to) {
-        swap(pathList.get(from), pathList.get(to));
-        swap(from, to);
-        Collections.swap(pathList, from, to);
-        Collections.swap(musicInfoEntities, from, to);
-        Collections.swap(queueItemList, from, to);
-        Collections.swap(mediaItemList, from, to);
-        Collections.swap(mediaIdList, from, to);
-    }
-
-    private void swap(String fromMedia, String toMedia) {
-        MediaMetadataCompat fromMeta = mapMetadataArray.get(fromMedia);
-        MediaMetadataCompat toMeta = mapMetadataArray.get(toMedia);
-        mapMetadataArray.put(fromMedia, toMeta);
-        mapMetadataArray.put(toMedia, fromMeta);
-    }
-
-    private void swap(int from, int to) {
-        String fromMedia = indexMediaArray.get(from);
-        String toMedia = indexMediaArray.get(to);
-        indexMediaArray.put(from, toMedia);
-        indexMediaArray.put(to, fromMedia);
     }
 
     private void clearData() {
@@ -181,14 +166,12 @@ public class DataTransform {
                 } else {
                     //遍历得到内部或者外部存储的所有媒体文件的信息
                     while (query.moveToNext()) {
-                        Log.w(TAG, "queryMedia: first...");
                         String name = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
                         String title = query.getString(query.getColumnIndex(MediaStore.Audio.Media.TITLE));
                         String artist = query.getString(query.getColumnIndex(MediaStore.Audio.Media.ARTIST));
                         long duration = query.getLong(query.getColumnIndex(MediaStore.Audio.Media.DURATION));
                         String size = query.getString(query.getColumnIndex(MediaStore.Audio.Media.SIZE));
                         String queryPath = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DATA));
-                        Log.w(TAG, "queryMedia: path===" + queryPath);
                         //过滤小于20s的文件
                         if (duration < 20 * 1000) {
                             continue;

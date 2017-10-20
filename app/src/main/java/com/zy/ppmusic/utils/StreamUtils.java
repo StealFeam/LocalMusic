@@ -3,8 +3,11 @@ package com.zy.ppmusic.utils;
 import java.io.Closeable;
 import java.io.IOException;
 
-public class IOUtils {
-    public static void closeIo(Closeable... closeable){
+/**
+ * @author ZhiTouPC
+ */
+public class StreamUtils {
+    protected static void closeIo(Closeable... closeable){
         for (Closeable item : closeable) {
             if (item != null) {
                 try {

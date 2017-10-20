@@ -13,7 +13,9 @@ import com.zy.ppmusic.R
 import com.zy.ppmusic.entity.ScanResultEntity
 import java.util.*
 import kotlin.collections.ArrayList
-
+/**
+ * @author ZY
+ */
 class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var mBondDevices: ArrayList<ScanResultEntity> = ArrayList()
     private val mScanDevices: ArrayList<ScanResultEntity> = ArrayList()
@@ -137,9 +139,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
         return false
     }
 
-    override fun getItemCount(): Int {
-        return mBondDevices.size + mScanDevices.size
-    }
+    override fun getItemCount(): Int = mBondDevices.size + mScanDevices.size
 
     class TitleHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var title: TextView? = null
@@ -160,9 +160,9 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
         }
 
         var name: TextView? = null
-        var tvState: TextView? = null
+        private var tvState: TextView? = null
         var icon: ImageView? = null
-        var listener: OnItemClickListener? = null
+        private var listener: OnItemClickListener? = null
         var delBond: ImageView? = null
 
         init {
