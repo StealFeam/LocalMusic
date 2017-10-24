@@ -75,7 +75,7 @@ public class MainMenuAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 weakReference = new WeakReference<>(l);
             }
             menuTitle = (TextView) itemView.findViewById(R.id.main_menu_title);
-            itemView.setOnClickListener(this);
+            menuTitle.setOnClickListener(this);
         }
 
         @Override

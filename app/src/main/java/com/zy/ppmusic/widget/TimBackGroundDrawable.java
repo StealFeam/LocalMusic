@@ -39,7 +39,6 @@ public class TimBackGroundDrawable extends Drawable {
     public void draw(@NonNull Canvas canvas) {
         Rect bounds = getBounds();
         clipPath(canvas, bounds);
-        canvas.setDrawFilter(new PaintFlagsDrawFilter(0,Paint.ANTI_ALIAS_FLAG));
         canvas.drawPath(mPath, mPaint);
     }
 

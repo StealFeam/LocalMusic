@@ -156,8 +156,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         setContentView(R.layout.activity_media)
         if (supportActionBar != null) {
             supportActionBar!!.elevation = 0f
-            supportActionBar!!.setLogo(R.drawable.ic_music_play_state)
-            supportActionBar!!.setIcon(R.drawable.ic_music_play_state)
         }
 
         ivNextAction = findViewById(R.id.control_action_next) as AppCompatImageView
@@ -318,7 +316,8 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 mBottomLoopModePop!!.setDropDownGravity(Gravity.TOP and Gravity.END)
                 mBottomLoopModePop!!.setAdapter(MenuAdapter(this@MediaActivity))
                 mBottomLoopModePop!!.setContentWidth(UIUtils.dp2px(this@MediaActivity, 110))
-                mBottomLoopModePop!!.setOnItemClickListener { parent, view, position, id ->
+                mBottomLoopModePop!!.horizontalOffset = ivModelAction!!.measuredWidth
+                mBottomLoopModePop!!.setOnItemClickListener { _, _, position, _ ->
                     setPlayMode(position)
                     mBottomLoopModePop!!.dismiss()
                 }
@@ -339,7 +338,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         })
         //播放列表监听
         ivShowQueueAction!!.setOnClickListener({
-            //遗留问题：删除一条item之后再添加进来列表item数量显示错误----------------------------
             mBottomQueueDialog = BottomSheetDialog(this@MediaActivity)
             if (mBottomQueueAdapter == null) {
                 mBottomQueueAdapter = PlayQueueAdapter()
@@ -543,6 +541,9 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             }
         }
         mMediaController!!.transportControls.setRepeatMode(mode)
+        if (mPresenter != null) {
+            mPresenter!!.changeMode(this, mode)
+        }
     }
 
 

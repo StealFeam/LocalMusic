@@ -21,7 +21,6 @@ import java.util.List;
 public class MenuAdapter extends BaseAdapter {
     private List<MenuEntity> menuItemList;
 
-
     public MenuAdapter(Context context) {
         buildMenuList(context);
     }
@@ -32,8 +31,8 @@ public class MenuAdapter extends BaseAdapter {
                 context.getString(R.string.string_loop_model_list)));
         menuItemList.add(new MenuEntity(R.drawable.ic_loop_model_only,
                 context.getString(R.string.string_loop_model_only)));
-        menuItemList.add(new MenuEntity(R.drawable.ic_loop_model_random,
-                context.getString(R.string.string_loop_model_random)));
+        menuItemList.add(new MenuEntity(R.drawable.ic_loop_mode_list,
+                context.getString(R.string.string_loop_model_list_recycle)));
     }
 
     @Override

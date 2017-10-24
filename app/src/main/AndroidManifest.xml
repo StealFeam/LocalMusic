@@ -45,9 +45,8 @@
 
         <activity
             android:name=".ui.MediaActivity"
-            android:launchMode="singleTop">
+            android:launchMode="singleTop"/>
 
-        </activity>
         <activity android:name=".ui.SplashActivity"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.SplashTheme">

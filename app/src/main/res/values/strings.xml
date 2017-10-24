@@ -23,6 +23,7 @@
     <string name="string_loop_mode" translatable="false">播放模式</string>
     <string name="string_loop_model_list" translatable="false">顺序播放</string>
     <string name="string_loop_model_only" translatable="false">单曲循环</string>
+    <string name="string_loop_model_list_recycle" translatable="false">列表循环</string>
     <string name="string_loop_model_random" translatable="false">随机播放</string>
     <string name="string_del_media" translatable="false">删除</string>
     <string name="string_sure_del" translatable="false">确认删除吗</string>

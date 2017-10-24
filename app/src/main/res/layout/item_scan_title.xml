@@ -17,6 +17,7 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_marginEnd="@dimen/dp10"
+        android:layout_marginRight="@dimen/dp10"
         android:layout_gravity="center_vertical"
         android:layout_height="@dimen/dp1"
         android:background="@color/colorAccent" />

@@ -10,46 +10,30 @@
     android:orientation="vertical"
     tools:context="com.zy.ppmusic.ui.MediaActivity">
 
-    <RelativeLayout
+    <TextView
         android:id="@+id/media_title_tint"
         android:layout_width="0dp"
         android:layout_height="@dimen/dp50"
-        android:clipChildren="false"
+        android:paddingLeft="@dimen/dp20"
+        android:paddingStart="@dimen/dp20"
+        android:paddingRight="@dimen/dp20"
+        android:paddingEnd="@dimen/dp20"
+        android:ellipsize="end"
+        android:lines="2"
+        android:text="@string/string_power_author"
+        android:textColor="@color/colorWhite"
+        android:textSize="@dimen/sp16"
+        android:textStyle="italic"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_marginLeft="@dimen/dp20"
-            android:layout_marginStart="@dimen/dp20"
-            android:layout_toLeftOf="@+id/media_title_tint_area_center"
-            android:layout_toStartOf="@id/media_title_tint_area_center"
-            android:ellipsize="end"
-            android:lines="2"
-            android:text="@string/string_power_author"
-            android:textColor="@color/colorWhite"
-            android:textSize="@dimen/sp16"
-            android:textStyle="italic" />
-
-        <android.support.v4.widget.Space
-            android:id="@id/media_title_tint_area_center"
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_centerInParent="true" />
-
-    </RelativeLayout>
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/more_function_recycle"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        app:layoutManager="GridLayoutManager"
         android:overScrollMode="never"
+        app:layoutManager="GridLayoutManager"
         app:layout_constraintBottom_toTopOf="@+id/control_display_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -69,26 +53,32 @@
 
     <TextView
         android:id="@+id/control_display_title"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/dp10"
-        android:ellipsize="end"
+        android:ellipsize="marquee"
+        android:gravity="center"
         android:lines="1"
         android:text="@string/normal_text"
         app:layout_constraintBottom_toTopOf="@+id/control_display_sub_title"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/control_display_sub_title"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/dp10"
+        android:layout_margin="@dimen/dp10"
         android:ellipsize="end"
+        android:gravity="center"
         android:lines="1"
         android:text="@string/normal_text"
         app:layout_constraintBottom_toTopOf="@+id/control_display_progress"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <android.support.v7.widget.AppCompatImageView

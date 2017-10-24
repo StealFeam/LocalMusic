@@ -17,6 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * @author ZhiTouPC
+ */
 public class BLActivityModel implements IBLActivityContract.IModel{
 
     public BLActivityModel() {
@@ -24,7 +27,8 @@ public class BLActivityModel implements IBLActivityContract.IModel{
 
     @NotNull
     @Override
-    public List<ScanResultEntity> getExitsDevices(@NotNull BluetoothAdapter mBlueAdapter,@NotNull BluetoothA2dp mBlueA2dp) {
+    public List<ScanResultEntity> getExitsDevices(@NotNull BluetoothAdapter mBlueAdapter,@NotNull
+            BluetoothA2dp mBlueA2dp) {
         List<ScanResultEntity> list = new ArrayList<>();
         Set<BluetoothDevice> bondedDevices = mBlueAdapter.getBondedDevices();
         for (BluetoothDevice bondedDevice : bondedDevices) {
