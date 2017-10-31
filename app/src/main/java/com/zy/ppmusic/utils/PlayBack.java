@@ -14,20 +14,32 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * @author ZhiTouPC
+ */
 public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnCompletionListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnSeekCompleteListener {
     private static final String TAG = "PlayBack";
 
-    // we don't have audio focus, and can't duck (play at a low volume)
+    /**
+     * we don't have audio focus, and can't duck (play at a low volume)
+     */
     private static final int AUDIO_NO_FOCUS_NO_DUCK = 0;
-    // we don't have focus, but can duck (play at a low volume)
+    /**
+     * we don't have focus, but can duck (play at a low volume)
+     */
     private static final int AUDIO_NO_FOCUS_CAN_DUCK = 1;
-    // we have full audio focus
+    /**
+     * we have full audio focus
+     */
     private static final int AUDIO_FOCUSED = 2;
 
     private MediaPlayer mMediaPlayer;
     private final MediaService mMediaService;
-    private volatile List<String> mPlayQueue;//当前播放队列
+    /**
+     * 当前播放队列
+     */
+    private volatile List<String> mPlayQueue;
     private volatile int mCurrentPosition;
     private volatile String mCurrentMediaId;
     private int mCurrentIndex;
@@ -36,18 +48,36 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
     private int mAudioFocus = AUDIO_NO_FOCUS_NO_DUCK;
 
     private boolean mIsAutoStart = false;
-    private boolean mIsUserPause = false;//是否是用户点击的暂停
-    private boolean mIsPauseCauseAudio = false;//是否是因为焦点占用被暂停了
+    /**
+     * 是否是用户点击的暂停
+     */
+    private boolean mIsUserPause = false;
+    /**
+     * 是否是因为焦点占用被暂停了
+     */
+    private boolean mIsPauseCauseAudio = false;
 
     private boolean mPlayOnFocusGain;
     private int mState = PlaybackStateCompat.STATE_NONE;
     private Random mRandom;
 
     public interface CallBack {
+        /**
+         * 播放完成
+         */
         void onCompletion();
 
+        /**
+         * 播放器状态变化
+         * @param state 状态
+         */
         void onPlayBackStateChange(int state);
 
+        /**
+         * 发生错误
+         * @param errorCode 错误码
+         * @param error 错误信息
+         */
         void onError(int errorCode, String error);
     }
 
