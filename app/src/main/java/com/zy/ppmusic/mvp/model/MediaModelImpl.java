@@ -1,8 +1,8 @@
-package com.zy.ppmusic.model;
+package com.zy.ppmusic.mvp.model;
 
 import android.content.Context;
 
-import com.zy.ppmusic.contract.IMediaActivityContract;
+import com.zy.ppmusic.mvp.contract.IMediaActivityContract;
 import com.zy.ppmusic.utils.ScanMusicFile;
 
 public class MediaModelImpl implements IMediaActivityContract.IModel {

@@ -1,4 +1,4 @@
-package com.zy.ppmusic.contract
+package com.zy.ppmusic.mvp.contract
 
 import android.bluetooth.BluetoothA2dp
 import android.bluetooth.BluetoothAdapter

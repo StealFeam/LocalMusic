@@ -1,4 +1,4 @@
-package com.zy.ppmusic.contract;
+package com.zy.ppmusic.mvp.contract;
 
 import android.content.Context;
 

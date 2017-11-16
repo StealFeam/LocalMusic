@@ -410,8 +410,9 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
     @Override
     public void onPrepared(MediaPlayer mp) {
         Log.e(TAG, "onPrepared: called " + mMediaPlayer.getCurrentPosition());
+        //准备完成
         if (mState == PlaybackStateCompat.STATE_BUFFERING) {
-            mState = PlaybackStateCompat.STATE_CONNECTING;//准备完成
+            mState = PlaybackStateCompat.STATE_CONNECTING;
         }
         if (mCallBack != null) {
             mCallBack.onPlayBackStateChange(mState);

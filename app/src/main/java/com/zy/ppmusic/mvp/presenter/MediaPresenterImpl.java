@@ -1,12 +1,12 @@
-package com.zy.ppmusic.presenter;
+package com.zy.ppmusic.mvp.presenter;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.zy.ppmusic.contract.IMediaActivityContract;
+import com.zy.ppmusic.mvp.contract.IMediaActivityContract;
 import com.zy.ppmusic.entity.MusicInfoEntity;
-import com.zy.ppmusic.model.MediaModelImpl;
+import com.zy.ppmusic.mvp.model.MediaModelImpl;
 import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.FileUtils;
 import com.zy.ppmusic.utils.ScanMusicFile;

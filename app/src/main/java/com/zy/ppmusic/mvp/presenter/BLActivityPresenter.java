@@ -1,25 +1,24 @@
-package com.zy.ppmusic.presenter;
+package com.zy.ppmusic.mvp.presenter;
 
 import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
-import android.support.annotation.NonNull;
 
-import com.zy.ppmusic.contract.IBLActivityContract;
+import com.zy.ppmusic.mvp.contract.IBLActivityContract;
 import com.zy.ppmusic.entity.ScanResultEntity;
-import com.zy.ppmusic.model.BLActivityModel;
+import com.zy.ppmusic.mvp.model.BLActivityModel;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * @author ZY
+ */
 public class BLActivityPresenter implements IBLActivityContract.IPresenter {
     private BluetoothAdapter mBlueAdapter;
     private BluetoothA2dp mBlueA2dp;

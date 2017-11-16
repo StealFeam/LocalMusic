@@ -94,7 +94,10 @@ public class MediaService extends MediaBrowserServiceCompat {
     private MediaSessionCompat.QueueItem mCurrentMedia;
     private AudioBecomingNoisyReceiver mAudioReceiver;
     private boolean mServiceStarted;
-    private boolean isAutoContinuedPlay = true;//播放完成是否继续下一首
+    /**
+     * 播放完成是否继续下一首
+     */
+    private boolean isAutoContinuedPlay = true;
     private List<MediaBrowserCompat.MediaItem> mMediaItemList = new ArrayList<>();
     private List<MediaSessionCompat.QueueItem> mQueueItemList = new ArrayList<>();
     private CountDownTimer timer;
@@ -256,7 +259,8 @@ public class MediaService extends MediaBrowserServiceCompat {
      * 保存播放记录到本地
      */
     public void savePlayingRecord() {
-        if(mCurrentMedia == null){//当前没有播放曲目
+        //当前没有播放曲目
+        if(mCurrentMedia == null){
             return;
         }
         MusicDbEntity dbEntity = new MusicDbEntity();
@@ -366,7 +370,8 @@ public class MediaService extends MediaBrowserServiceCompat {
             if (extras != null) {
                 String action = extras.getString(ACTION_PARAM);
                 Log.d(TAG, "onPlayFromMediaId: extra=" + action);
-                if (ACTION_PREPARED_WITH_ID.equals(action)) {//缓冲请求
+                //缓冲请求
+                if (ACTION_PREPARED_WITH_ID.equals(action)) {
                     if ("-1".equals(mediaId)) {
                         if (mPlayQueueMediaId != null && mPlayQueueMediaId.size() > 0) {
                             onMediaChange(mPlayQueueMediaId.get(0));
@@ -376,7 +381,8 @@ public class MediaService extends MediaBrowserServiceCompat {
                     } else {
                         onMediaChange(mediaId);
                     }
-                } else if (ACTION_PLAY_WITH_ID.equals(action)) {//播放指定id请求
+                    //播放指定id请求
+                } else if (ACTION_PLAY_WITH_ID.equals(action)) {
                     //如果和当前的mediaId相同则视为暂停或播放操作，不同则替换曲目
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                         if (!Objects.equals(mediaId, mCurrentMedia != null ?
@@ -389,7 +395,8 @@ public class MediaService extends MediaBrowserServiceCompat {
                         }
                     }
                     handlePlayOrPauseRequest();
-                } else if (ACTION_PLAY_INIT.equals(action)) {//初始化播放器，如果本地有播放记录，取播放记录，没有就初始化穿过来的media
+                    //初始化播放器，如果本地有播放记录，取播放记录，没有就初始化穿过来的media
+                } else if (ACTION_PLAY_INIT.equals(action)) {
                     List<MusicDbEntity> entity = DBManager.getInstance().initDb(getApplicationContext()).getEntity();
                     if (entity.size() > 0) {
                         onMediaChange(entity.get(0).getLastMediaId());
@@ -483,7 +490,8 @@ public class MediaService extends MediaBrowserServiceCompat {
                         cb.send(COMMAND_POSITION_CODE, resultExtra);
                     }
                     break;
-                case COMMAND_UPDATE_QUEUE://如果本地有记录，读取记录，没有就初始化第一个媒体
+                //如果本地有记录，读取记录，没有就初始化第一个媒体
+                case COMMAND_UPDATE_QUEUE:
                     savePlayingRecord();
                     updateQueue();
                     List<MusicDbEntity> entity = DBManager.getInstance()
@@ -548,6 +556,8 @@ public class MediaService extends MediaBrowserServiceCompat {
                         timer = null;
                     }
                     break;
+                    default:
+                        break;
             }
         }
     }

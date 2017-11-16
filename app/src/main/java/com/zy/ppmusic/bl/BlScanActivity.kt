@@ -23,9 +23,9 @@ import android.view.animation.RotateAnimation
 import android.widget.Toast
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.ScanResultAdapter
-import com.zy.ppmusic.contract.IBLActivityContract
+import com.zy.ppmusic.mvp.contract.IBLActivityContract
 import com.zy.ppmusic.entity.ScanResultEntity
-import com.zy.ppmusic.presenter.BLActivityPresenter
+import com.zy.ppmusic.mvp.presenter.BLActivityPresenter
 import com.zy.ppmusic.receiver.DeviceFoundReceiver
 import com.zy.ppmusic.receiver.StatusChangeReceiver
 import com.zy.ppmusic.widget.EasyTintView
@@ -233,9 +233,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         }
     }
 
-    override fun getContext(): Context {
-        return applicationContext
-    }
+    override fun getContext(): Context = applicationContext
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.bl_refresh, menu)
@@ -458,9 +456,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         super.onActivityResult(requestCode, resultCode, data)
     }
 
-    fun showToast(msg: String) {
-        EasyTintView.makeText(mScanResultRecycler!!, msg, EasyTintView.TINT_SHORT).show()
-    }
+    fun showToast(msg: String) = EasyTintView.makeText(mScanResultRecycler!!, msg, EasyTintView.TINT_SHORT).show()
 
     override fun onDestroy() {
         super.onDestroy()

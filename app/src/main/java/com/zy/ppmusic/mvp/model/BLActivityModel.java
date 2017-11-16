@@ -1,13 +1,11 @@
-package com.zy.ppmusic.model;
+package com.zy.ppmusic.mvp.model;
 
 import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothProfile;
-import android.content.Context;
 
 import com.zy.ppmusic.R;
-import com.zy.ppmusic.contract.IBLActivityContract;
+import com.zy.ppmusic.mvp.contract.IBLActivityContract;
 import com.zy.ppmusic.entity.ScanResultEntity;
 
 import org.jetbrains.annotations.NotNull;
