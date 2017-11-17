@@ -52,17 +52,17 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bl_scan)
-        mToolBar = findViewById(R.id.toolbar_bl) as Toolbar
+        mToolBar = findViewById<Toolbar>(R.id.toolbar_bl) as Toolbar
 
         mPresenter = BLActivityPresenter(this)
-        mScanResultRecycler = findViewById(R.id.show_device_recycler) as RecyclerView
+        mScanResultRecycler = findViewById<RecyclerView>(R.id.show_device_recycler) as RecyclerView
         if (mPresenter!!.isSupportBl().not()) {
             Toast.makeText(this, "您的设备不支持蓝牙", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
         mScanDeviceList = ArrayList()
-        mBlueToothOpenSwitch = findViewById(R.id.switch_bl) as SwitchCompat
+        mBlueToothOpenSwitch = findViewById<SwitchCompat>(R.id.switch_bl) as SwitchCompat
         mToolBar!!.title = if (mPresenter!!.isEnable()) {
             mBlueToothOpenSwitch!!.isChecked = true
             mPresenter!!.getExitsDevices()

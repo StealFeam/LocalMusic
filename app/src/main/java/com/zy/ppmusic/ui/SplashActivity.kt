@@ -20,7 +20,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-        val tvSplash = findViewById(R.id.tv_splash_open) as TextView
+        val tvSplash = findViewById<TextView>(R.id.tv_splash_open)
         val animation = AnimationSet(true)
         val alphaAnim = AlphaAnimation(0f, 1f)
         alphaAnim.fillAfter = true

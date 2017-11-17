@@ -16,7 +16,6 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.AppCompatDialog
 import android.support.v7.widget.*
 import android.view.*
-import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
 import com.zy.ppmusic.R
@@ -157,13 +156,13 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         if (supportActionBar != null) {
             supportActionBar?.elevation = 0f
         }
-        ivNextAction = findViewById(R.id.control_action_next) as AppCompatImageView
-        ivPlayAction = findViewById(R.id.control_action_play_pause) as AppCompatImageView
-        ivShowQueueAction = findViewById(R.id.control_action_show_queue) as AppCompatImageView
-        ivPreviousAction = findViewById(R.id.control_action_previous) as AppCompatImageView
-        ivModelAction = findViewById(R.id.control_action_loop_model) as AppCompatImageView
+        ivNextAction = findViewById(R.id.control_action_next)
+        ivPlayAction = findViewById(R.id.control_action_play_pause)
+        ivShowQueueAction = findViewById(R.id.control_action_show_queue)
+        ivPreviousAction = findViewById(R.id.control_action_previous)
+        ivModelAction = findViewById(R.id.control_action_loop_model)
 
-        val titleTintRoot = findViewById(R.id.media_title_tint)
+        val titleTintRoot = findViewById<View>(R.id.media_title_tint)
         val drawable = TimBackGroundDrawable()
         drawable.setDrawableColor(ContextCompat.getColor(this, R.color.colorTheme))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -173,7 +172,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             titleTintRoot.setBackgroundDrawable(drawable)
         }
 
-        mMainMenuRecycler = findViewById(R.id.more_function_recycle) as RecyclerView
+        mMainMenuRecycler = findViewById(R.id.more_function_recycle)
         mPresenter = MediaPresenterImpl(this)
 
         val dataList = ArrayList<MainMenuEntity>()
@@ -201,7 +200,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             }
         }
 
-        mProgressSeekBar = findViewById(R.id.control_display_progress) as SeekBar
+        mProgressSeekBar = findViewById(R.id.control_display_progress)
         mProgressSeekBar?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
@@ -223,8 +222,8 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             }
         })
 
-        tvDisPlayName = findViewById(R.id.control_display_title) as TextView
-        tvSubName = findViewById(R.id.control_display_sub_title) as TextView
+        tvDisPlayName = findViewById(R.id.control_display_title)
+        tvSubName = findViewById(R.id.control_display_sub_title)
         //下一首的监听
         ivNextAction?.setOnClickListener({
             mMediaController?.transportControls?.skipToNext()
@@ -289,9 +288,10 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             }
         }
         if (mBottomQueueContentView == null) {
-            mBottomQueueContentView = LayoutInflater.from(this@MediaActivity).inflate(R.layout.play_queue_layout, null)
-            mQueueRecycler = mBottomQueueContentView?.findViewById(R.id.control_queue_recycle) as RecyclerView
-            mQueueCountTv = mBottomQueueContentView?.findViewById(R.id.control_queue_count) as TextView?
+            mBottomQueueContentView = LayoutInflater.from(this@MediaActivity).
+                    inflate(R.layout.play_queue_layout, null)
+            mQueueRecycler = mBottomQueueContentView?.findViewById(R.id.control_queue_recycle)
+            mQueueCountTv = mBottomQueueContentView?.findViewById(R.id.control_queue_count)
 
         } else {
             val parent = mBottomQueueContentView?.parent as ViewGroup
@@ -334,7 +334,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         dialog.setTitle(getString(R.string.string_sure_del))
         dialog.setMessage(getString(R.string.string_del_desc))
         dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
-            mMediaController?.removeQueueItemAt(position)
+            mMediaController?.removeQueueItem(mPlayQueueList!![position].description)
             mPlayQueueList?.removeAt(position)
             mBottomQueueAdapter?.setData(mPlayQueueList)
             mBottomQueueAdapter?.notifyItemRemoved(position)
@@ -375,7 +375,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         mTimeClockDialog = BottomSheetDialog(this@MediaActivity)
         mTimeContentView = LayoutInflater.from(this@MediaActivity).
                 inflate(R.layout.layout_time_lock, null)
-        mTimeClockRecycler = mTimeContentView?.findViewById(R.id.time_selector_recycler) as RecyclerView
+        mTimeClockRecycler = mTimeContentView?.findViewById(R.id.time_selector_recycler)
         mTimeClockRecycler?.layoutManager = LinearLayoutManager(this@MediaActivity)
         mTimeClockAdapter = TimeClockAdapter()
         //如果正在倒计时显示取消计时选项，否则隐藏
@@ -395,20 +395,20 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 mTimeClockDialog = null
             }
         }
-        val lengthSeekBar = mTimeContentView?.findViewById(R.id.time_selector_seek_bar) as AppCompatSeekBar
-        val progressHintTv = mTimeContentView?.findViewById(R.id.time_selector_progress_hint_tv) as TextView
-        progressHintTv.visibility = View.VISIBLE
-        progressHintTv.text = String.format(Locale.CHINA, "%d", (lengthSeekBar.progress + 1))
+        val lengthSeekBar = mTimeContentView?.findViewById<SeekBar>(R.id.time_selector_seek_bar)
+        val progressHintTv = mTimeContentView?.findViewById<TextView>(R.id.time_selector_progress_hint_tv)
+        progressHintTv?.visibility = View.VISIBLE
+        progressHintTv?.text = String.format(Locale.CHINA, "%d", (lengthSeekBar!!.progress + 1))
         lengthSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             var percent = 0f
             override fun onProgressChanged(s: SeekBar?, progress: Int, fromUser: Boolean) {
-                progressHintTv.translationX = percent * progress
-                progressHintTv.text = String.format(Locale.CHINA, "%d", (progress + 1))
+                progressHintTv?.translationX = percent * progress
+                progressHintTv?.text = String.format(Locale.CHINA, "%d", (progress + 1))
             }
 
             override fun onStartTrackingTouch(s: SeekBar?) {
                 val transXRound = (s!!.measuredWidth - s.paddingLeft - s.paddingRight
-                        + progressHintTv.measuredWidth / 2).toFloat()
+                        + progressHintTv!!.measuredWidth / 2).toFloat()
                 val mMaxProgress = s.max.toFloat()
                 percent = transXRound / mMaxProgress
                 if (mDelayHandler == null) {
@@ -420,12 +420,12 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
             override fun onStopTrackingTouch(s: SeekBar?) {
                 mDelayHandler?.postDelayed({
-                    progressHintTv.visibility = View.INVISIBLE
+                    progressHintTv?.visibility = View.INVISIBLE
                 }, 1000)
             }
         })
-        val btnSure = mTimeContentView?.findViewById(R.id.time_selector_sure_btn) as Button
-        btnSure.setOnClickListener {
+        val btnSure = mTimeContentView?.findViewById<View>(R.id.time_selector_sure_btn)
+        btnSure?.setOnClickListener {
             val bundle = Bundle()
             bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME,
                     ((lengthSeekBar.progress + 1) * 1000 * 60).toLong())
@@ -539,7 +539,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             println("connected service....")
             mMediaId = mMediaBrowser?.root
             mMediaBrowser?.subscribe(mMediaId!!, subscriptionCallBack)
-            mMediaController = MediaControllerCompat(this@MediaActivity, mMediaBrowser?.sessionToken)
+            mMediaController = MediaControllerCompat(this@MediaActivity, mMediaBrowser!!.sessionToken)
             mResultReceive = MediaResultReceive(Handler())
             mLooperHandler = LoopHandler(mMediaController!!, mResultReceive!!)
             MediaControllerCompat.setMediaController(this@MediaActivity, mMediaController)
