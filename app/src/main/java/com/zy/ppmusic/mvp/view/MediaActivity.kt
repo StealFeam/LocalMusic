@@ -284,6 +284,10 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 (mBottomQueueAdapter!!.selectIndex + 1), if (mPlayQueueList == null) 0 else mPlayQueueList?.size)
         mBottomQueueDialog?.setContentView(mBottomQueueContentView)
         mQueueRecycler?.adapter = mBottomQueueAdapter
+        //计划实现滚动到当前播放歌曲位置
+//        mBottomQueueDialog?.setOnShowListener {
+//            mQueueRecycler?.smoothScrollToPosition(mBottomQueueAdapter!!.selectIndex)
+//        }
         mQueueRecycler?.layoutManager = LinearLayoutManager(this)
         mQueueRecycler?.addItemDecoration(RecycleViewDecoration(this@MediaActivity, LinearLayoutManager.VERTICAL,
                 R.drawable.recyclerview_vertical_line, UIUtils.dp2px(this@MediaActivity, 25)))
@@ -637,6 +641,10 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 startPosition = 0
                 control_display_duration_tv.text = DateUtil.getInstance().getTime(endPosition)
                 println("endPosition=$endPosition,step=$stepPosition")
+                if (mCurrentMediaIdStr != null && mBottomQueueAdapter != null) {
+                    mBottomQueueAdapter?.selectIndex = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
+                    mBottomQueueAdapter?.notifyDataSetChanged()
+                }
                 setMediaInfo(StringUtils.ifEmpty(displayTitle, "unknown"),
                         StringUtils.ifEmpty(subTitle, "unknown"))
             }

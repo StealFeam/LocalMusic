@@ -12,6 +12,9 @@ import android.widget.FrameLayout;
 
 import com.zy.ppmusic.R;
 
+/**
+ * @author ZhiTouPC
+ */
 public class BorderTextView extends AppCompatTextView implements ViewGroup.OnHierarchyChangeListener {
     private static final String TAG = "BorderTextView";
     private FrameLayout mRootView;
