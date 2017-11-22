@@ -9,6 +9,7 @@ import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import android.widget.TextView
 import com.zy.ppmusic.R
+import com.zy.ppmusic.mvp.view.MediaActivity
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 

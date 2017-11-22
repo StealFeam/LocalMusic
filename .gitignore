@@ -8,4 +8,4 @@
 /captures
 .externalNativeBuild
 /easypermissions/build
-/easypermissions/*.iml
+app/app-release.apk

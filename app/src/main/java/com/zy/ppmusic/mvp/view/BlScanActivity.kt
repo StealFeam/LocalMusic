@@ -1,4 +1,4 @@
-package com.zy.ppmusic.bl
+package com.zy.ppmusic.mvp.view
 
 import android.app.Activity
 import android.bluetooth.BluetoothA2dp
@@ -25,7 +25,7 @@ import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.ScanResultAdapter
 import com.zy.ppmusic.mvp.contract.IBLActivityContract
 import com.zy.ppmusic.entity.ScanResultEntity
-import com.zy.ppmusic.mvp.presenter.BLActivityPresenter
+import com.zy.ppmusic.mvp.presenter.BlActivityPresenter
 import com.zy.ppmusic.receiver.DeviceFoundReceiver
 import com.zy.ppmusic.receiver.StatusChangeReceiver
 import com.zy.ppmusic.widget.EasyTintView
@@ -44,7 +44,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
     private var mScanResultRecycler: RecyclerView? = null
     private var mScanResultAdapter: ScanResultAdapter? = null
     private var mDeviceFoundReceiver: DeviceFoundReceiver? = null
-    private var mPresenter: BLActivityPresenter? = null
+    private var mPresenter: BlActivityPresenter? = null
     private var mLoadingAnim: RotateAnimation? = null
     private var mToolBar: Toolbar? = null
     private var mRefreshScanMenu: View? = null
@@ -54,7 +54,7 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermi
         setContentView(R.layout.activity_bl_scan)
         mToolBar = findViewById<Toolbar>(R.id.toolbar_bl) as Toolbar
 
-        mPresenter = BLActivityPresenter(this)
+        mPresenter = BlActivityPresenter(this)
         mScanResultRecycler = findViewById<RecyclerView>(R.id.show_device_recycler) as RecyclerView
         if (mPresenter!!.isSupportBl().not()) {
             Toast.makeText(this, "您的设备不支持蓝牙", Toast.LENGTH_SHORT).show()

@@ -1,15 +1,13 @@
 package com.zy.ppmusic.receiver;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Bundle;
 import android.util.Log;
 
-import com.zy.ppmusic.bl.BlScanActivity;
+import com.zy.ppmusic.mvp.view.BlScanActivity;
 
 import java.lang.ref.WeakReference;
 import java.util.Objects;

@@ -1,6 +1,7 @@
 package com.zy.ppmusic.utils;
 
 import android.content.Context;
+import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.PowerManager;
@@ -69,14 +70,16 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
 
         /**
          * 播放器状态变化
+         *
          * @param state 状态
          */
         void onPlayBackStateChange(int state);
 
         /**
          * 发生错误
+         *
          * @param errorCode 错误码
-         * @param error 错误信息
+         * @param error     错误信息
          */
         void onError(int errorCode, String error);
     }
@@ -190,7 +193,14 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
     }
 
     private void getAudioFocus() {
-        int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+        int result;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            AudioFocusRequest.Builder builder = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN);
+            builder.setOnAudioFocusChangeListener(this);
+            result = audioManager.requestAudioFocus(builder.build());
+        } else {
+            result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+        }
         mAudioFocus = (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) ? AUDIO_FOCUSED : AUDIO_NO_FOCUS_NO_DUCK;
     }
 
@@ -214,7 +224,6 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
         if (mAudioFocus != AUDIO_FOCUSED) {
             getAudioFocus();
         }
-        Log.w(TAG, "play: called");
         if (mState == PlaybackStateCompat.STATE_PLAYING) {
             if (mMediaPlayer.isPlaying()) {
                 mMediaPlayer.pause();

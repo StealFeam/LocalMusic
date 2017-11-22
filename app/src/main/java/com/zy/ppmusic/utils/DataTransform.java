@@ -84,6 +84,7 @@ public class DataTransform {
     /**
      * 测试耗时比较长，废弃
      */
+    @Deprecated
     private void queryMedia(List<String> localList) {
         MediaMetadataCompat.Builder builder;
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
@@ -149,6 +150,7 @@ public class DataTransform {
         int index = 0;
         MediaMetadataCompat.Builder builder;
         boolean isNeedRe = false;
+
         for (String itemPath : localList) {
             if (mediaIdList.contains(String.valueOf(itemPath.hashCode()))) {
                 continue;
@@ -177,7 +179,7 @@ public class DataTransform {
                             continue;
                         }
 
-                        if (!new File(queryPath).exists()) {
+                        if (!isExits(queryPath)) {
                             continue;
                         }
 
@@ -237,6 +239,10 @@ public class DataTransform {
         Log.d(TAG, "queryResolver() called with: context = [" + context + "]");
     }
 
+    private boolean isExits(String path){
+        return new File(path).exists();
+    }
+
     /**
      * 重新对数据遍历，筛选出系统ContentProvider中不存在的媒体
      *
@@ -264,12 +270,15 @@ public class DataTransform {
                 String musicName = getMusicName(itemPath);
                 builder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, String.valueOf(itemPath.hashCode()));
                 builder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, itemPath);
-                builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, (String) StringUtils.Companion.ifEmpty(titleS, musicName));
+                builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE,
+                        StringUtils.Companion.ifEmpty(titleS, musicName));
 
                 //作者
-                builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, (String) StringUtils.Companion.ifEmpty(artistS));
+                builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE,
+                        StringUtils.Companion.ifEmpty(artistS,"unknown"));
                 //作者
-                builder.putString(MediaMetadataCompat.METADATA_KEY_AUTHOR, (String) StringUtils.Companion.ifEmpty(artistS));
+                builder.putString(MediaMetadataCompat.METADATA_KEY_AUTHOR,
+                        StringUtils.Companion.ifEmpty(artistS,"unknown"));
                 //时长
                 builder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, d);
 

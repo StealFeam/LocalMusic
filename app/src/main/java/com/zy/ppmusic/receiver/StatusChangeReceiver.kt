@@ -6,7 +6,7 @@ import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.zy.ppmusic.bl.BlScanActivity
+import com.zy.ppmusic.mvp.view.BlScanActivity
 import java.lang.ref.WeakReference
 
 /**

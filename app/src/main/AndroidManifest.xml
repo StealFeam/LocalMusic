@@ -21,7 +21,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".bl.BlScanActivity"
+            android:name=".mvp.view.BlScanActivity"
             android:theme="@style/AppTheme.NoActionBar.Translate">
             <!--<intent-filter>-->
                 <!--<action android:name="android.intent.action.MAIN" />-->
@@ -44,7 +44,7 @@
         </receiver>
 
         <activity
-            android:name=".ui.MediaActivity"
+            android:name=".mvp.view.MediaActivity"
             android:launchMode="singleTop"/>
 
         <activity android:name=".ui.SplashActivity"

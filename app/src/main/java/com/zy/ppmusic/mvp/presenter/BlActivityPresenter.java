@@ -19,7 +19,7 @@ import java.util.Set;
 /**
  * @author ZY
  */
-public class BLActivityPresenter implements IBLActivityContract.IPresenter {
+public class BlActivityPresenter implements IBLActivityContract.IPresenter {
     private BluetoothAdapter mBlueAdapter;
     private BluetoothA2dp mBlueA2dp;
     private IBLActivityContract.IModel mModel;
@@ -27,7 +27,7 @@ public class BLActivityPresenter implements IBLActivityContract.IPresenter {
     private boolean isNeedRe = false;
     private Context context;
 
-    public BLActivityPresenter(IBLActivityContract.IView mView) {
+    public BlActivityPresenter(IBLActivityContract.IView mView) {
         this.mView = new WeakReference<>(mView);
         context = mView.getContext();
         mModel = new BLActivityModel();

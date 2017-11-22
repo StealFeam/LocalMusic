@@ -8,7 +8,7 @@
     android:clipChildren="false"
     android:fitsSystemWindows="true"
     android:orientation="vertical"
-    tools:context="com.zy.ppmusic.ui.MediaActivity">
+    tools:context="com.zy.ppmusic.mvp.view.MediaActivity">
 
     <TextView
         android:id="@+id/media_title_tint"

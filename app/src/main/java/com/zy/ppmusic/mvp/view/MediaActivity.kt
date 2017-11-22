@@ -1,4 +1,4 @@
-package com.zy.ppmusic.ui
+package com.zy.ppmusic.mvp.view
 
 import android.annotation.SuppressLint
 import android.content.ComponentName
@@ -20,7 +20,6 @@ import android.widget.SeekBar
 import android.widget.TextView
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.*
-import com.zy.ppmusic.bl.BlScanActivity
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract
 import com.zy.ppmusic.entity.MainMenuEntity
 import com.zy.ppmusic.mvp.presenter.MediaPresenterImpl
@@ -334,7 +333,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         dialog.setTitle(getString(R.string.string_sure_del))
         dialog.setMessage(getString(R.string.string_del_desc))
         dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
-            mMediaController?.removeQueueItem(mPlayQueueList!![position].description)
+            mMediaController!!.removeQueueItem(mPlayQueueList!![position].description)
             mPlayQueueList?.removeAt(position)
             mBottomQueueAdapter?.setData(mPlayQueueList)
             mBottomQueueAdapter?.notifyItemRemoved(position)
@@ -658,7 +657,8 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 startPosition = 0
                 control_display_duration_tv.text = DateUtil.getInstance().getTime(endPosition)
                 println("endPosition=$endPosition,step=$stepPosition")
-                setMediaInfo(StringUtils.ifEmpty(displayTitle), StringUtils.ifEmpty(subTitle))
+                setMediaInfo(StringUtils.ifEmpty(displayTitle, "unknown"),
+                        StringUtils.ifEmpty(subTitle, "unknown"))
             }
         }
 
@@ -742,10 +742,10 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         //目前仅当播放器发生错误时调用
         override fun onQueueTitleChanged(title: CharSequence?) {
             super.onQueueTitleChanged(title)
-            println("onQueueTitleChanged .... $title")
-            showMsg((title as String))
-            //播放下一首
-            mMediaController?.transportControls?.skipToNext()
+//            println("onQueueTitleChanged .... $title")
+//            showMsg((title as String))
+//            //播放下一首
+//            mMediaController?.transportControls?.skipToNext()
         }
 
         override fun onExtrasChanged(extras: Bundle?) {
@@ -797,9 +797,9 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     /**
      * 更新媒体信息
      */
-    fun setMediaInfo(displayTitle: CharSequence?, subTitle: CharSequence?) {
-        tvDisPlayName?.text = StringUtils.ifEmpty(displayTitle)
-        tvSubName?.text = StringUtils.ifEmpty(subTitle)
+    fun setMediaInfo(displayTitle: String?, subTitle: String?) {
+        tvDisPlayName?.text = StringUtils.Companion.ifEmpty(displayTitle,"unknown")
+        tvSubName?.text = StringUtils.Companion.ifEmpty(subTitle,"unknown")
     }
 
     /**

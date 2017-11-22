@@ -18,6 +18,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaBrowserServiceCompat;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -27,15 +28,18 @@ import android.view.KeyEvent;
 
 import com.zy.ppmusic.data.db.DBManager;
 import com.zy.ppmusic.entity.MusicDbEntity;
-import com.zy.ppmusic.ui.MediaActivity;
+import com.zy.ppmusic.mvp.view.MediaActivity;
 import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.FileUtils;
 import com.zy.ppmusic.utils.NotificationUtils;
 import com.zy.ppmusic.utils.PlayBack;
+import com.zy.ppmusic.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static java.lang.Long.getLong;
 
 public class MediaService extends MediaBrowserServiceCompat {
     private static final String TAG = "MediaService";
@@ -101,6 +105,11 @@ public class MediaService extends MediaBrowserServiceCompat {
     private List<MediaBrowserCompat.MediaItem> mMediaItemList = new ArrayList<>();
     private List<MediaSessionCompat.QueueItem> mQueueItemList = new ArrayList<>();
     private CountDownTimer timer;
+    /**
+     * 错误曲目数量
+     * 当无法播放曲目数量和列表数量相同时销毁播放器避免循环
+     */
+    private int mErrorTimes;
 
     @Override
     public void onCreate() {
@@ -139,6 +148,9 @@ public class MediaService extends MediaBrowserServiceCompat {
         mPlayBack.setCallBack(new PlayBack.CallBack() {
             @Override
             public void onCompletion() {
+                if (mErrorTimes != 0) {
+                    mErrorTimes = 0;
+                }
                 handleStopRequest(false);
             }
 
@@ -149,8 +161,10 @@ public class MediaService extends MediaBrowserServiceCompat {
 
             @Override
             public void onError(int errorCode, String error) {
-                onPlayStateChange(errorCode, error);
-                mMediaSessionCompat.setQueueTitle("播放器发生错误");
+                mErrorTimes++;
+                if (mErrorTimes < mMediaItemList.size()) {
+                    onMediaChange(mPlayBack.onSkipToNext());
+                }
             }
         });
 
@@ -260,12 +274,12 @@ public class MediaService extends MediaBrowserServiceCompat {
      */
     public void savePlayingRecord() {
         //当前没有播放曲目
-        if(mCurrentMedia == null){
+        if (mCurrentMedia == null) {
             return;
         }
         MusicDbEntity dbEntity = new MusicDbEntity();
         dbEntity.setLastMediaId(mPlayBack.getCurrentMediaId());
-        if(mCurrentMedia != null && mCurrentMedia.getDescription() != null){
+        if (mCurrentMedia != null && mCurrentMedia.getDescription() != null) {
             dbEntity.setLastMediaPath(mCurrentMedia.getDescription().getMediaUri().getPath());
             dbEntity.setLastPlayAuthor(String.valueOf(mCurrentMedia.getDescription().getSubtitle()));
             dbEntity.setLastPlayName(String.valueOf(mCurrentMedia.getDescription().getTitle()));
@@ -361,7 +375,7 @@ public class MediaService extends MediaBrowserServiceCompat {
      * 响应Activity的调用
      * getController.transportControls.
      */
-    private final class MediaSessionCallBack extends MediaSessionCompat.Callback {
+    private class MediaSessionCallBack extends MediaSessionCompat.Callback {
 
         @Override
         public void onPlayFromMediaId(String mediaId, Bundle extras) {
@@ -389,8 +403,8 @@ public class MediaService extends MediaBrowserServiceCompat {
                                 mCurrentMedia.getDescription().getMediaId() : null)) {
                             onMediaChange(mediaId);
                         }
-                    }else{
-                        if(mCurrentMedia != null && mediaId.equals(mCurrentMedia.getDescription().getMediaId())){
+                    } else {
+                        if (mCurrentMedia != null && mediaId.equals(mCurrentMedia.getDescription().getMediaId())) {
                             onMediaChange(mediaId);
                         }
                     }
@@ -520,9 +534,10 @@ public class MediaService extends MediaBrowserServiceCompat {
         }
 
         @Override
-        public void onRemoveQueueItemAt(int index) {
-            super.onRemoveQueueItemAt(index);
-            removeQueueItemAt(index);
+        public void onRemoveQueueItem(MediaDescriptionCompat description) {
+            super.onRemoveQueueItem(description);
+            Log.d(TAG, "onRemoveQueueItem() called with: description = [" + description + "]");
+            removeQueueItemByDes(description);
         }
 
         @Override
@@ -556,10 +571,28 @@ public class MediaService extends MediaBrowserServiceCompat {
                         timer = null;
                     }
                     break;
-                    default:
-                        break;
+                default:
+                    break;
             }
         }
+    }
+
+    private void removeQueueItemByDes(MediaDescriptionCompat des) {
+        int index = getIndexByDes(des);
+        removeQueueItemAt(index);
+    }
+
+    private int getIndexByDes(MediaDescriptionCompat des) {
+        for (int i = 0; i < mQueueItemList.size(); i++) {
+            MediaSessionCompat.QueueItem queueItem = mQueueItemList.get(i);
+            if (queueItem != null && des != null) {
+                if (StringUtils.Companion.ifEquals(queueItem.getDescription().getMediaId(),
+                        des.getMediaId())) {
+                    return i;
+                }
+            }
+        }
+        return -1;
     }
 
     /**
@@ -568,6 +601,11 @@ public class MediaService extends MediaBrowserServiceCompat {
      * @param removeIndex 要移除item的位置
      */
     public void removeQueueItemAt(int removeIndex) {
+        if (removeIndex == -1) {
+            Log.e(TAG, "removeQueueItemAt: the index is " + removeIndex);
+            return;
+        }
+        Log.e(TAG, "removeQueueItemAt: " + removeIndex);
         int state = mPlayBack.getState();
         if (mPlayBack.isPlaying()) {
             mPlayBack.pause();
