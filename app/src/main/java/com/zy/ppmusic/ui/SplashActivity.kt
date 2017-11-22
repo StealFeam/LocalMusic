@@ -7,9 +7,9 @@ import android.support.v7.app.AppCompatActivity
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.AnimationSet
-import android.widget.TextView
 import com.zy.ppmusic.R
 import com.zy.ppmusic.mvp.view.MediaActivity
+import kotlinx.android.synthetic.main.activity_splash.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 
@@ -21,14 +21,13 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-        val tvSplash = findViewById<TextView>(R.id.tv_splash_open)
         val animation = AnimationSet(true)
         val alphaAnim = AlphaAnimation(0f, 1f)
         alphaAnim.fillAfter = true
         alphaAnim.duration = 1500
         animation.addAnimation(alphaAnim)
 
-        tvSplash.animation = animation
+        tv_splash_open.animation = animation
         animation.start()
         animation.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationRepeat(a: Animation?) {

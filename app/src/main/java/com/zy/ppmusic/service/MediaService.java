@@ -39,8 +39,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static java.lang.Long.getLong;
 
+/**
+ * @author ZhiTouPC
+ */
 public class MediaService extends MediaBrowserServiceCompat {
     private static final String TAG = "MediaService";
     /*-------------------play action--------------------------*/
@@ -156,7 +158,7 @@ public class MediaService extends MediaBrowserServiceCompat {
 
             @Override
             public void onPlayBackStateChange(int state) {
-                onPlayStateChange(0, null);
+                onPlayStateChange();
             }
 
             @Override
@@ -205,7 +207,6 @@ public class MediaService extends MediaBrowserServiceCompat {
                 result.sendResult(mMediaItemList);
             }
             updateQueue();
-            //初始化媒体库
         }
     }
 
@@ -293,11 +294,8 @@ public class MediaService extends MediaBrowserServiceCompat {
 
     /**
      * 当播放状态发生改变时
-     *
-     * @param errorCode 错误代码
-     * @param error     错误描述
      */
-    private void onPlayStateChange(int errorCode, String error) {
+    private void onPlayStateChange() {
         Log.d(TAG, "onPlayStateChange() called with: " + mPlayBack.getState());
         long position = PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN;
         if (mPlayBack != null) {
@@ -311,10 +309,7 @@ public class MediaService extends MediaBrowserServiceCompat {
         PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
                 .setActions(playbackActions);
         int state = mPlayBack.getState();
-        if (error != null) {
-            stateBuilder.setErrorMessage(errorCode, error);
-            state = PlaybackStateCompat.STATE_ERROR;
-        }
+
         stateBuilder.setState(state, position, 1.0f, SystemClock.elapsedRealtime());
         if (mCurrentMedia != null) {
             stateBuilder.setActiveQueueItemId(mCurrentMedia.getQueueId());

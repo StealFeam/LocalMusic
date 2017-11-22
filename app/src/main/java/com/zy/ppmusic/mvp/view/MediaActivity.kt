@@ -43,23 +43,14 @@ import java.util.*
  */
 class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     private var mMediaBrowser: MediaBrowserCompat? = null
-    private var mMainMenuRecycler: RecyclerView? = null
     private var mMainMenuAdapter: MainMenuAdapter? = null
     private var mMediaId: String? = null
     private var mMediaController: MediaControllerCompat? = null//媒体控制器
     private var mPlayQueueList: MutableList<MediaSessionCompat.QueueItem>? = null//播放列表与service同步
-    private var ivNextAction: AppCompatImageView? = null//下一首
-    private var ivPreviousAction: AppCompatImageView? = null//上一首
-    private var ivPlayAction: AppCompatImageView? = null//播放按钮
-    private var ivModelAction: AppCompatImageView? = null//模式切换按钮
-    private var ivShowQueueAction: AppCompatImageView? = null//展示播放列表
-    private var tvDisPlayName: TextView? = null//歌曲名称显示
-    private var tvSubName: TextView? = null//作者名称显示
     private var mQueueRecycler: RecyclerView? = null//播放列表的recycler
     private var mBottomQueueDialog: BottomSheetDialog? = null//展示播放列表的dialog
     private var mBottomQueueAdapter: PlayQueueAdapter? = null//播放列表的适配器
     private var mCurrentMediaIdStr: String? = null//当前播放的媒体id
-    private var mProgressSeekBar: SeekBar? = null//播放进度条
     private var endPosition: Long = 0//结束位置
     private var stepPosition: Long = 0//自增量
     private var startPosition: Long = 0//起始位置
@@ -128,7 +119,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                     startPosition = position
                     percent = ((startPosition * 100f) / endPosition * 1.0f)
                     if (mIsTrackingBar!!.not()) {
-                        mProgressSeekBar?.progress = percent.toInt()
+                        control_display_progress.progress = percent.toInt()
                     }
                     control_display_time_tv.text = DateUtil.getInstance().getTime(position)
                 }
@@ -155,23 +146,16 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         if (supportActionBar != null) {
             supportActionBar?.elevation = 0f
         }
-        ivNextAction = findViewById(R.id.control_action_next)
-        ivPlayAction = findViewById(R.id.control_action_play_pause)
-        ivShowQueueAction = findViewById(R.id.control_action_show_queue)
-        ivPreviousAction = findViewById(R.id.control_action_previous)
-        ivModelAction = findViewById(R.id.control_action_loop_model)
 
-        val titleTintRoot = findViewById<View>(R.id.media_title_tint)
         val drawable = TimBackGroundDrawable()
         drawable.setDrawableColor(ContextCompat.getColor(this, R.color.colorTheme))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            titleTintRoot.background = drawable
+            media_title_tint.background = drawable
         } else {
             @Suppress("DEPRECATION")
-            titleTintRoot.setBackgroundDrawable(drawable)
+            media_title_tint.setBackgroundDrawable(drawable)
         }
 
-        mMainMenuRecycler = findViewById(R.id.more_function_recycle)
         mPresenter = MediaPresenterImpl(this)
 
         val dataList = ArrayList<MainMenuEntity>()
@@ -179,8 +163,8 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         dataList.add(MainMenuEntity("蓝牙管理", R.drawable.ic_bl_manager))
         dataList.add(MainMenuEntity("定时关闭", R.drawable.ic_time_clock))
         mMainMenuAdapter = MainMenuAdapter(dataList)
-        mMainMenuRecycler?.adapter = mMainMenuAdapter
-        mMainMenuRecycler?.layoutManager = GridLayoutManager(this, 3)
+        more_function_recycle.adapter = mMainMenuAdapter
+        more_function_recycle.layoutManager = GridLayoutManager(this, 3)
 
         mMainMenuAdapter?.setListener { _, position ->
             //view,position
@@ -199,8 +183,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             }
         }
 
-        mProgressSeekBar = findViewById(R.id.control_display_progress)
-        mProgressSeekBar?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        control_display_progress.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
                     control_display_time_tv.text = DateUtil.getInstance().getTime(progress * stepPosition)
@@ -220,24 +203,21 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 mIsTrackingBar = false
             }
         })
-
-        tvDisPlayName = findViewById(R.id.control_display_title)
-        tvSubName = findViewById(R.id.control_display_sub_title)
         //下一首的监听
-        ivNextAction?.setOnClickListener({
+        control_action_next.setOnClickListener({
             mMediaController?.transportControls?.skipToNext()
         })
         //上一首的监听
-        ivPreviousAction?.setOnClickListener({
+        control_action_previous.setOnClickListener({
             mMediaController?.transportControls?.skipToPrevious()
         })
         //循环模式点击监听
-        ivModelAction?.setOnClickListener({
+        control_action_loop_model.setOnClickListener({
             createLoopModePop()
 
         })
         //播放按钮监听
-        ivPlayAction?.setOnClickListener({
+        control_action_play_pause.setOnClickListener({
             //初始化的时候点击的按钮直接播放当前的media
             val extra = Bundle()
             extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_WITH_ID)
@@ -249,7 +229,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             }
         })
         //播放列表监听
-        ivShowQueueAction?.setOnClickListener({
+        control_action_show_queue.setOnClickListener({
             createBottomQueueDialog()
         })
     }
@@ -354,11 +334,11 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     private fun createLoopModePop() {
         if (mBottomLoopModePop == null) {
             mBottomLoopModePop = ListPopupWindow(this@MediaActivity)
-            mBottomLoopModePop?.anchorView = ivModelAction!!
+            mBottomLoopModePop?.anchorView = control_action_loop_model
             mBottomLoopModePop?.setDropDownGravity(Gravity.TOP and Gravity.END)
             mBottomLoopModePop?.setAdapter(MenuAdapter(this@MediaActivity))
             mBottomLoopModePop?.setContentWidth(UIUtils.dp2px(this@MediaActivity, 110))
-            mBottomLoopModePop?.horizontalOffset = ivModelAction!!.measuredWidth
+            mBottomLoopModePop?.horizontalOffset = control_action_loop_model.measuredWidth
             mBottomLoopModePop?.setOnItemClickListener { _, _, position, _ ->
                 setPlayMode(position)
                 mBottomLoopModePop?.dismiss()
@@ -573,13 +553,13 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     private fun setPlayMode(mode: Int) {
         when (mode) {
             PlaybackStateCompat.REPEAT_MODE_ALL -> {
-                ivModelAction?.setImageResource(R.drawable.ic_loop_mode_list)
+                control_action_loop_model.setImageResource(R.drawable.ic_loop_mode_list)
             }
             PlaybackStateCompat.REPEAT_MODE_NONE -> {
-                ivModelAction?.setImageResource(R.drawable.ic_loop_model_normal)
+                control_action_loop_model.setImageResource(R.drawable.ic_loop_model_normal)
             }
             PlaybackStateCompat.REPEAT_MODE_ONE -> {
-                ivModelAction?.setImageResource(R.drawable.ic_loop_model_only)
+                control_action_loop_model.setImageResource(R.drawable.ic_loop_model_only)
             }
         }
         mMediaController?.transportControls?.setRepeatMode(mode)
@@ -688,7 +668,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 println("position=" + state?.position + ",buffer=" + state?.bufferedPosition)
                 startPosition = state!!.position
                 percent = ((startPosition * 1.0f) / endPosition * 1.0f)
-                mProgressSeekBar?.progress = (percent * 100f).toInt()
+                control_display_progress.progress = (percent * 100f).toInt()
                 control_display_time_tv.text = DateUtil.getInstance().getTime(startPosition)
                 handlePlayState(state.state)
             })
@@ -719,10 +699,10 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                     val formatStr: String
                     if (h > 0) {
                         formatStr = getString(R.string.format_string_time_count_down_with_hour)
-                        mBorderTextView?.show(ivNextAction, String.format(Locale.CHINA, formatStr, h, m, s))
+                        mBorderTextView?.show(control_action_next, String.format(Locale.CHINA, formatStr, h, m, s))
                     } else {
                         formatStr = getString(R.string.format_string_time_count_down_no_hour)
-                        mBorderTextView?.show(ivNextAction, String.format(Locale.CHINA, formatStr, m, s))
+                        mBorderTextView?.show(control_action_next, String.format(Locale.CHINA, formatStr, m, s))
                     }
 
                 }
@@ -739,15 +719,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             }
         }
 
-        //目前仅当播放器发生错误时调用
-        override fun onQueueTitleChanged(title: CharSequence?) {
-            super.onQueueTitleChanged(title)
-//            println("onQueueTitleChanged .... $title")
-//            showMsg((title as String))
-//            //播放下一首
-//            mMediaController?.transportControls?.skipToNext()
-        }
-
         override fun onExtrasChanged(extras: Bundle?) {
             super.onExtrasChanged(extras)
             println("onExtrasChanged.....")
@@ -762,13 +733,13 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         println("handlePlayState=" + state)
         if (state != PlaybackStateCompat.STATE_PLAYING) {
             stopLoop()
-            ivPlayAction?.setImageResource(R.drawable.ic_black_play)
+            control_action_play_pause.setImageResource(R.drawable.ic_black_play)
             if (state == PlaybackStateCompat.STATE_STOPPED) {
-                mProgressSeekBar?.progress = 0
+                control_display_progress.progress = 0
             }
         } else {
             startLoop()
-            ivPlayAction?.setImageResource(R.drawable.ic_black_pause)
+            control_action_play_pause.setImageResource(R.drawable.ic_black_pause)
         }
     }
 
@@ -791,15 +762,15 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     }
 
     fun showMsg(msg: String) {
-        EasyTintView.makeText(ivNextAction!!, msg, EasyTintView.TINT_SHORT).show()
+        EasyTintView.makeText(control_action_next, msg, EasyTintView.TINT_SHORT).show()
     }
 
     /**
      * 更新媒体信息
      */
     fun setMediaInfo(displayTitle: String?, subTitle: String?) {
-        tvDisPlayName?.text = StringUtils.Companion.ifEmpty(displayTitle,"unknown")
-        tvSubName?.text = StringUtils.Companion.ifEmpty(subTitle,"unknown")
+        control_display_title.text = StringUtils.Companion.ifEmpty(displayTitle,"unknown")
+        control_display_sub_title.text = StringUtils.Companion.ifEmpty(subTitle,"unknown")
     }
 
     /**

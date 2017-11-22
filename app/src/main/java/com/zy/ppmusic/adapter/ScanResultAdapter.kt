@@ -168,10 +168,10 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
         init {
             this.listener = l
             itemView.setOnClickListener(this)
-            icon = itemView.findViewById<ImageView>(R.id.iv_scan_result_icon) as ImageView
-            name = itemView.findViewById<TextView>(R.id.tv_scan_result_name) as TextView
-            tvState = itemView.findViewById<TextView>(R.id.tv_connect_state) as TextView
-            delBond = itemView.findViewById<ImageView>(R.id.bl_del_bond_iv) as ImageView
+            icon = itemView.findViewById(R.id.iv_scan_result_icon)
+            name = itemView.findViewById(R.id.tv_scan_result_name)
+            tvState = itemView.findViewById(R.id.tv_connect_state)
+            delBond = itemView.findViewById(R.id.bl_del_bond_iv)
             delBond!!.setOnClickListener(this)
         }
 
