@@ -69,6 +69,11 @@ public class MediaPresenterImpl implements IMediaActivityContract.IPresenter {
         return mModeCachePreference.getInt(CACHE_MODE_KEY,0);
     }
 
+    @Override
+    public boolean deleteFile(String path) {
+        return FileUtils.deleteFile(path);
+    }
+
     private void refresh(final Context context, final boolean isRefresh) {
         if (isScanning) {
             return;

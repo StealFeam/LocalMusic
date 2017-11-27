@@ -6,7 +6,8 @@ import android.support.v4.content.ContextCompat;
 import com.zy.ppmusic.App;
 
 /**
- * Created by ZhiTouPC on 2017/10/19.
+ * @author ZhiTouPC
+ * @date 2017/10/19
  */
 
 public class UIUtils {

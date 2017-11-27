@@ -27,19 +27,18 @@
     <string name="string_loop_model_random" translatable="false">随机播放</string>
     <string name="string_del_media" translatable="false">删除</string>
     <string name="string_sure_del" translatable="false">确认删除吗</string>
-    <string name="string_del_desc" translatable="false">此操作会同时删除本地文件</string>
     <string name="string_del" translatable="false">删除</string>
     <string name="string_cancel" translatable="false">取消</string>
     <string name="string_custom_time_hint" translatable="false">自定义</string>
     <string name="string_sure" translatable="false">确定</string>
     <string name="itemImgDes">itemImg</string>
     <string name="string_time_init">00:00</string>
-    <string name="format_string_time_count_down_with_hour" translatable="false" formatted="false">%dh:%02dm:%02ds后关闭</string>
-    <string name="format_string_time_count_down_no_hour" translatable="false" formatted="false">%02d:%02d后关闭</string>
+    <string name="format_string_time_count_down_with_hour" formatted="false" translatable="false">%dh:%02dm:%02ds后关闭</string>
+    <string name="format_string_time_count_down_no_hour" formatted="false" translatable="false">%02d:%02d后关闭</string>
     <string name="empty_play_queue" translatable="false">播放列表为空，未发现曲目</string>
     <string name="queue_loading" translatable="false">加载列表中...</string>
     <string name="loading_complete" translatable="false">加载完成</string>
-    <string name="format_string_search_media_count" translatable="false" formatted="false">扫描到%d首曲目</string>
+    <string name="format_string_search_media_count" formatted="false" translatable="false">扫描到%d首曲目</string>
     <string name="no_media_searched" translatable="false">未扫描到曲目</string>
     <string name="start_scanning_the_local_file" translatable="false">开始扫描本地文件</string>
     <string name="string_large_text">android.permission.READ_EXTERNAL_STORAGE|android.permission.READ_EXTERNAL_STORAGE</string>
@@ -47,4 +46,5 @@
     <string name="string_queue_playing_position" formatted="false">正在播放%d/%d</string>
     <string name="string_power_author" formatted="false" translatable="false">powerd by zy</string>
     <string name="string_show_play_state">show play state</string>
+    <string name="unknown_name">unknown</string>
 </resources>

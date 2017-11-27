@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'org.greenrobot.greendao' // apply pluginapply plugin: 'org.greenrobot.greendao' // apply plugin
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'com.waynell.tinypng'
 
 android {
     compileSdkVersion 26
@@ -10,13 +11,15 @@ android {
         applicationId "com.zy.ppmusic"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.0.1"
+        resConfigs 'zh'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
-            minifyEnabled false
+            shrinkResources true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -29,6 +32,22 @@ android {
         schemaVersion 1
         daoPackage 'com.zy.ppmusic.data.db.dao'
         targetGenDir 'src/main/java'
+    }
+    tinyInfo {
+        resourceDir = [
+                // 你的资源目录
+                "app/src/main/res",
+                "lib/src/main/res"
+        ]
+        resourcePattern = [
+                // 你的资源文件夹
+                "drawable[a-z-]*",
+                "mipmap[a-z-]*"
+        ]
+        whiteList = [
+                // 在这里添加文件白名单，支持正则表达式
+        ]
+        apiKey = 'VX42QdGnH2l2wmTvDcGRCeskzZJ1wEZD'
     }
 }
 

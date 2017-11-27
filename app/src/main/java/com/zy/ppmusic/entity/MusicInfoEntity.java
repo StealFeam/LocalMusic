@@ -1,25 +1,48 @@
 package com.zy.ppmusic.entity;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
+/**
+ * @author ZhiTouPC
+ */
 public class MusicInfoEntity implements Serializable{
     private String mediaId;
     private String musicName;
     private String artist;
     private String queryPath;
-    private long size;//文件大小
-    private long duration;//时长
+    /**
+     * 文件大小
+     */
+    private long size;
+    /**
+     * 时长
+     */
+    private long duration;
+    /**
+     * 专辑图片数据
+     */
+    private byte[] iconData;
 
     public MusicInfoEntity() {
     }
 
-    public MusicInfoEntity(String mediaId,String musicName, String artist, String queryPath, long size, long duration) {
+    public MusicInfoEntity(String mediaId, String musicName, String artist, String queryPath, long size, long duration, byte[] iconData) {
         this.mediaId = mediaId;
         this.musicName = musicName;
         this.artist = artist;
         this.queryPath = queryPath;
         this.size = size;
         this.duration = duration;
+        this.iconData = iconData;
+    }
+
+    public byte[] getIconData() {
+        return iconData;
+    }
+
+    public void setIconData(byte[] iconData) {
+        this.iconData = iconData;
     }
 
     public String getMusicName() {
@@ -73,11 +96,15 @@ public class MusicInfoEntity implements Serializable{
     @Override
     public String toString() {
         return "MusicInfoEntity{" +
-                "musicName='" + musicName + '\'' +
+                "mediaId='" + mediaId + '\'' +
+                ", musicName='" + musicName + '\'' +
                 ", artist='" + artist + '\'' +
                 ", queryPath='" + queryPath + '\'' +
                 ", size=" + size +
-                ", length=" + duration +
+                ", duration=" + duration +
+                ", iconData=" + Arrays.toString(iconData) +
                 '}';
     }
+
+
 }

@@ -2,6 +2,7 @@ package com.zy.ppmusic.utils;
 
 import android.content.Context;
 import android.os.storage.StorageManager;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.File;
@@ -19,6 +20,7 @@ import java.lang.reflect.Method;
  * 1.获取手机目录所有的音乐文件
  * 2.通过首页展示
  * 3.设计首页加载的框架
+ *
  * @author ZY
  */
 
@@ -127,11 +129,16 @@ public class FileUtils {
         return null;
     }
 
-    public static void saveObject(Object obj,String dir){
-        File file = new File(dir+"/cache.obj");
-        if(!file.exists()){
+    public static void saveObject(Object obj, String dir) {
+        File file = new File(dir + "/cache.obj");
+        if (!file.exists()) {
             try {
-                file.createNewFile();
+                boolean createFileResult = file.createNewFile();
+                if (createFileResult) {
+                    System.out.println("创建缓存文件成功");
+                } else {
+                    System.out.println("创建缓存文件失败");
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -150,9 +157,9 @@ public class FileUtils {
     }
 
 
-    public static Object readObject(String dir){
-        File file = new File(dir+"/cache.obj");
-        if(!file.exists()){
+    public static Object readObject(String dir) {
+        File file = new File(dir + "/cache.obj");
+        if (!file.exists()) {
             return null;
         }
         ObjectInputStream inputStream = null;
@@ -166,6 +173,20 @@ public class FileUtils {
             StreamUtils.closeIo(inputStream);
         }
         return null;
+    }
+
+
+    public static boolean deleteFile(String path) {
+        if (TextUtils.isEmpty(path)) {
+            System.err.println("删除文件失败，路径为空");
+            return false;
+        }
+        File file = new File(path);
+        if (!file.exists()) {
+            System.err.println("删除文件失败，找不到该文件");
+            return false;
+        }
+        return file.delete();
     }
 
 

@@ -6,16 +6,36 @@ import org.greenrobot.greendao.annotation.Generated;
 
 /**
  * 记录上次播放媒体信息
+ * @author ZhiTouPC
  */
 @Entity
 public class MusicDbEntity {
+    /**
+     * 媒体的唯一id
+     */
     @Id
-    private String lastMediaId;//媒体的唯一id
-    private String lastPlayName;//上次播放媒体名称
-    private int lastPlayIndex;//该媒体处于媒体库列表中的位置
-    private int lastPlayedPosition;//媒体上次播放的位置
-    private String lastPlayAuthor;//媒体的作者
-    private String lastMediaPath;//媒体的路径
+    private String lastMediaId;
+    /**
+     * 上次播放媒体名称
+     */
+    private String lastPlayName;
+    /**
+     * 该媒体处于媒体库列表中的位置
+     */
+    private int lastPlayIndex;
+    /**
+     * 媒体上次播放的位置
+     */
+    private int lastPlayedPosition;
+    /**
+     * 媒体的作者
+     */
+    private String lastPlayAuthor;
+
+    /**
+     * 媒体的路径
+     */
+    private String lastMediaPath;
     @Generated(hash = 702547690)
     public MusicDbEntity(String lastMediaId, String lastPlayName, int lastPlayIndex,
             int lastPlayedPosition, String lastPlayAuthor, String lastMediaPath) {

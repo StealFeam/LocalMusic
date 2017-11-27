@@ -3,6 +3,8 @@ package com.zy.ppmusic.utils;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
@@ -18,18 +20,18 @@ import com.zy.ppmusic.entity.MusicInfoEntity;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
  * 数据转换
+ *
  * @author ZhiTouPC
  */
 public class DataTransform {
     private static final String TAG = "DataTransform";
     /**
-     *可存放本地的数据
+     * 可存放本地的数据
      */
     private volatile List<MusicInfoEntity> musicInfoEntities;
     private volatile List<MediaSessionCompat.QueueItem> queueItemList;
@@ -129,7 +131,7 @@ public class DataTransform {
             mediaItemList.add(mediaItem);
 
             MusicInfoEntity infoEntity = new MusicInfoEntity(String.valueOf(itemPath.hashCode()),
-                    titleS, artistS, itemPath, 0l, d);
+                    titleS, artistS, itemPath, 0, d, null);
             musicInfoEntities.add(infoEntity);
             pathList.add(itemPath);
             indexMediaArray.put(index, String.valueOf(itemPath.hashCode()));
@@ -150,6 +152,8 @@ public class DataTransform {
         int index = 0;
         MediaMetadataCompat.Builder builder;
         boolean isNeedRe = false;
+
+        MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
 
         for (String itemPath : localList) {
             if (mediaIdList.contains(String.valueOf(itemPath.hashCode()))) {
@@ -174,6 +178,14 @@ public class DataTransform {
                         long duration = query.getLong(query.getColumnIndex(MediaStore.Audio.Media.DURATION));
                         String size = query.getString(query.getColumnIndex(MediaStore.Audio.Media.SIZE));
                         String queryPath = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DATA));
+
+                        mediaMetadataRetriever.setDataSource(queryPath);
+                        Bitmap mBitmap = null;
+                        if (mediaMetadataRetriever.getEmbeddedPicture() != null) {
+                            mBitmap = BitmapFactory.decodeByteArray(mediaMetadataRetriever.getEmbeddedPicture(),
+                                    0, mediaMetadataRetriever.getEmbeddedPicture().length);
+                        }
+
                         //过滤小于20s的文件
                         if (duration < 20 * 1000) {
                             continue;
@@ -194,6 +206,9 @@ public class DataTransform {
                         builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, artist);
                         //作者
                         builder.putString(MediaMetadataCompat.METADATA_KEY_AUTHOR, artist);
+
+                        builder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, mBitmap);
+
                         //时长
                         builder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration);
 
@@ -210,7 +225,7 @@ public class DataTransform {
                         mediaItemList.add(mediaItem);
 
                         MusicInfoEntity infoEntity = new MusicInfoEntity(String.valueOf(queryPath.hashCode()),
-                                title, artist, queryPath, Long.parseLong(size), duration);
+                                title, artist, queryPath, Long.parseLong(size), duration, mediaMetadataRetriever.getEmbeddedPicture());
                         musicInfoEntities.add(infoEntity);
                         pathList.add(queryPath);
                         indexMediaArray.put(index, String.valueOf(queryPath.hashCode()));
@@ -239,9 +254,10 @@ public class DataTransform {
         Log.d(TAG, "queryResolver() called with: context = [" + context + "]");
     }
 
-    private boolean isExits(String path){
+    private boolean isExits(String path) {
         return new File(path).exists();
     }
+
 
     /**
      * 重新对数据遍历，筛选出系统ContentProvider中不存在的媒体
@@ -272,13 +288,21 @@ public class DataTransform {
                 builder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, itemPath);
                 builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE,
                         StringUtils.Companion.ifEmpty(titleS, musicName));
+                byte[] embeddedPicture = retriever.getEmbeddedPicture();
+                Bitmap bitmap = null;
+                if (embeddedPicture != null) {
+                    System.out.println("获取媒体专辑图片数据。。。。" + embeddedPicture.length);
+                    bitmap = BitmapFactory.decodeByteArray(embeddedPicture, 0, embeddedPicture.length);
+                }
+
+                builder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, bitmap);
 
                 //作者
                 builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE,
-                        StringUtils.Companion.ifEmpty(artistS,"unknown"));
+                        StringUtils.Companion.ifEmpty(artistS, "unknown"));
                 //作者
                 builder.putString(MediaMetadataCompat.METADATA_KEY_AUTHOR,
-                        StringUtils.Companion.ifEmpty(artistS,"unknown"));
+                        StringUtils.Companion.ifEmpty(artistS, "unknown"));
                 //时长
                 builder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, d);
 
@@ -295,7 +319,7 @@ public class DataTransform {
                 mediaItemList.add(mediaItem);
 
                 MusicInfoEntity infoEntity = new MusicInfoEntity(String.valueOf(itemPath.hashCode()),
-                        musicName, artistS, itemPath, 0, d);
+                        musicName, artistS, itemPath, 0, d, embeddedPicture);
                 musicInfoEntities.add(infoEntity);
                 System.out.println("put else index=" + i + ",path=" + itemPath);
                 pathList.add(itemPath);
@@ -333,6 +357,9 @@ public class DataTransform {
             itemBuilder.putString(MediaMetadataCompat.METADATA_KEY_AUTHOR, itemEntity.getArtist());
 
             itemBuilder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, itemEntity.getDuration());
+
+            itemBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, itemEntity.getIconData() == null
+                    ? null : BitmapFactory.decodeByteArray(itemEntity.getIconData(), 0, itemEntity.getIconData().length));
 
             metadataCompatItem = itemBuilder.build();
 

@@ -11,13 +11,16 @@ import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v7.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.zy.ppmusic.R;
 import com.zy.ppmusic.service.MediaService;
 
+/**
+ * @author ZhiTouPC
+ */
 public class NotificationUtils {
     private static final String TAG = "NotificationUtils";
 
@@ -26,9 +29,12 @@ public class NotificationUtils {
         NotificationManager manager = (NotificationManager) context.getApplicationContext()
                 .getSystemService(Context.NOTIFICATION_SERVICE);
         Notification notification;
-        MediaControllerCompat controller = mediaSession.getController();//获取媒体控制器
-        MediaMetadataCompat metadata = controller.getMetadata();//media信息
-        PlaybackStateCompat playbackState = controller.getPlaybackState();//播放状态
+        //获取媒体控制器
+        MediaControllerCompat controller = mediaSession.getController();
+        //media信息
+        MediaMetadataCompat metadata = controller.getMetadata();
+        //播放状态
+        PlaybackStateCompat playbackState = controller.getPlaybackState();
         if (metadata == null || playbackState == null) {
             Log.e(TAG, "postNotification: " + (metadata == null) + "," + (playbackState == null));
             return null;
@@ -38,17 +44,24 @@ public class NotificationUtils {
         if (descriptionCompat != null) {
             iconBitmap = descriptionCompat.getIconBitmap();
         }
-        if (iconBitmap == null) {
-            iconBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_music_normal_round);
-        }
+
         //添加内容布局
         RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.notify_copy_layout);
         contentView.setImageViewBitmap(R.id.notify_artist_head_iv, iconBitmap);
+
         if (isPlaying) {
-            contentView.setImageViewResource(R.id.notify_artist_head_iv,R.drawable.ic_music_play);
+            if (iconBitmap == null) {
+                contentView.setImageViewResource(R.id.notify_artist_head_iv, R.drawable.ic_music_play);
+            } else {
+                contentView.setImageViewBitmap(R.id.notify_artist_head_iv, iconBitmap);
+            }
             contentView.setImageViewResource(R.id.notify_action_play_pause, R.drawable.ic_pause);
         } else {
-            contentView.setImageViewResource(R.id.notify_artist_head_iv,R.drawable.ic_music_normal_round);
+            if (iconBitmap == null) {
+                contentView.setImageViewResource(R.id.notify_artist_head_iv, R.drawable.ic_music_normal_round);
+            } else {
+                contentView.setImageViewBitmap(R.id.notify_artist_head_iv, iconBitmap);
+            }
             contentView.setImageViewResource(R.id.notify_action_play_pause, R.drawable.ic_play);
         }
         if (descriptionCompat != null) {
@@ -65,7 +78,7 @@ public class NotificationUtils {
         contentView.setOnClickPendingIntent(R.id.notify_action_close, MediaButtonReceiver.
                 buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_STOP));
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, String.valueOf(MediaService.NOTIFY_ID));
         builder.setSmallIcon(R.drawable.ic_small_notify);
         builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         builder.setCustomContentView(contentView);
@@ -75,7 +88,7 @@ public class NotificationUtils {
 
         notification = builder.build();
         notification.flags |= Notification.FLAG_NO_CLEAR;
-        if(manager != null){
+        if (manager != null) {
             manager.notify(MediaService.NOTIFY_ID, notification);
         }
         return notification;

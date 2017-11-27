@@ -2,8 +2,11 @@ package com.zy.ppmusic.mvp.view
 
 import android.annotation.SuppressLint
 import android.content.ComponentName
+import android.content.DialogInterface
 import android.content.Intent
+import android.net.Uri
 import android.os.*
+import android.support.annotation.ArrayRes
 import android.support.design.widget.BottomSheetDialog
 import android.support.v4.content.ContextCompat
 import android.support.v4.media.MediaBrowserCompat
@@ -11,6 +14,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.support.v4.widget.TextViewCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.AppCompatDialog
@@ -33,8 +37,10 @@ import com.zy.ppmusic.widget.EasyTintView
 import com.zy.ppmusic.widget.RecycleViewDecoration
 import com.zy.ppmusic.widget.TimBackGroundDrawable
 import kotlinx.android.synthetic.main.activity_media.*
+import kotlinx.android.synthetic.main.dl_content_del_item.view.*
 import java.lang.ref.WeakReference
 import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * 与MediaService两种通信方式：
@@ -315,8 +321,16 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     private fun createDelQueueItemDialog(position: Int) {
         val dialog = AlertDialog.Builder(this@MediaActivity)
         dialog.setTitle(getString(R.string.string_sure_del))
-        dialog.setMessage(getString(R.string.string_del_desc))
+        val delContentView = LayoutInflater.from(this).inflate(R.layout.dl_content_del_item,null)
+        delContentView.setPadding(UIUtils.dp2px(this,20),UIUtils.dp2px(this,20),
+                UIUtils.dp2px(this,10),UIUtils.dp2px(this,10))
+        dialog.setView(delContentView)
         dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
+            if(delContentView.checkbox_dl_content_message.isChecked){
+                mPresenter?.deleteFile(DataTransform.getInstance().getPath(position)) as Boolean
+                val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(DataTransform.getInstance().getPath(position)))
+                sendBroadcast(intent)
+            }
             mMediaController!!.removeQueueItem(mPlayQueueList!![position].description)
             mPlayQueueList?.removeAt(position)
             mBottomQueueAdapter?.setData(mPlayQueueList)
@@ -493,6 +507,14 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         return true
     }
 
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item?.itemId) {
+            R.id.action_settings -> {
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     override fun showLoading() {
         println("showLoading。。。。。")
         if (mLoadingDialog == null) {
@@ -524,7 +546,9 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
             mMediaBrowser?.subscribe(mMediaId!!, subscriptionCallBack)
             mMediaController = MediaControllerCompat(this@MediaActivity, mMediaBrowser!!.sessionToken)
             mResultReceive = MediaResultReceive(Handler())
-            mLooperHandler = LoopHandler(mMediaController!!, mResultReceive!!)
+            if (mLooperHandler == null) {
+                mLooperHandler = LoopHandler(mMediaController!!, mResultReceive!!)
+            }
             MediaControllerCompat.setMediaController(this@MediaActivity, mMediaController)
             mMediaController?.registerCallback(mControllerCallBack)
             loadMode()
@@ -645,8 +669,8 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                     mBottomQueueAdapter?.selectIndex = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
                     mBottomQueueAdapter?.notifyDataSetChanged()
                 }
-                setMediaInfo(StringUtils.ifEmpty(displayTitle, "unknown"),
-                        StringUtils.ifEmpty(subTitle, "unknown"))
+                setMediaInfo(StringUtils.ifEmpty(displayTitle, getString(R.string.unknown_name)),
+                        StringUtils.ifEmpty(subTitle, getString(R.string.unknown_name)))
             }
         }
 
@@ -777,8 +801,8 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
      * 更新媒体信息
      */
     fun setMediaInfo(displayTitle: String?, subTitle: String?) {
-        control_display_title.text = StringUtils.Companion.ifEmpty(displayTitle,"unknown")
-        control_display_sub_title.text = StringUtils.Companion.ifEmpty(subTitle,"unknown")
+        control_display_title.text = StringUtils.Companion.ifEmpty(displayTitle, getString(R.string.unknown_name))
+        control_display_sub_title.text = StringUtils.Companion.ifEmpty(subTitle, getString(R.string.unknown_name))
     }
 
     /**
