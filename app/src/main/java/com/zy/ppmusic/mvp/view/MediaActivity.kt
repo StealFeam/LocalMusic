@@ -1,12 +1,9 @@
 package com.zy.ppmusic.mvp.view
 
-import android.annotation.SuppressLint
 import android.content.ComponentName
-import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.*
-import android.support.annotation.ArrayRes
 import android.support.design.widget.BottomSheetDialog
 import android.support.v4.content.ContextCompat
 import android.support.v4.media.MediaBrowserCompat
@@ -14,18 +11,23 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.support.v4.widget.TextViewCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.AppCompatDialog
-import android.support.v7.widget.*
+import android.support.v7.widget.GridLayoutManager
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.ListPopupWindow
+import android.support.v7.widget.RecyclerView
 import android.view.*
 import android.widget.SeekBar
 import android.widget.TextView
 import com.zy.ppmusic.R
-import com.zy.ppmusic.adapter.*
-import com.zy.ppmusic.mvp.contract.IMediaActivityContract
+import com.zy.ppmusic.adapter.MainMenuAdapter
+import com.zy.ppmusic.adapter.MenuAdapter
+import com.zy.ppmusic.adapter.PlayQueueAdapter
+import com.zy.ppmusic.adapter.TimeClockAdapter
 import com.zy.ppmusic.entity.MainMenuEntity
+import com.zy.ppmusic.mvp.contract.IMediaActivityContract
 import com.zy.ppmusic.mvp.presenter.MediaPresenterImpl
 import com.zy.ppmusic.service.MediaService
 import com.zy.ppmusic.utils.DataTransform
@@ -114,7 +116,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
      * 接收媒体服务回传的信息，这里处理的是当前播放的位置和进度
      * kotlin普通内部类
      */
-    @SuppressLint("ParcelCreator")
     inner class MediaResultReceive(handler: Handler) : ResultReceiver(handler) {
 
         override fun onReceiveResult(resultCode: Int, resultData: Bundle) {
@@ -165,9 +166,9 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         mPresenter = MediaPresenterImpl(this)
 
         val dataList = ArrayList<MainMenuEntity>()
-        dataList.add(MainMenuEntity("扫描音乐", R.drawable.ic_search_music))
-        dataList.add(MainMenuEntity("蓝牙管理", R.drawable.ic_bl_manager))
-        dataList.add(MainMenuEntity("定时关闭", R.drawable.ic_time_clock))
+        dataList.add(MainMenuEntity(getString(R.string.scan_local_music), R.drawable.ic_search_music))
+        dataList.add(MainMenuEntity(getString(R.string.bluetooth_manager), R.drawable.ic_bl_manager))
+        dataList.add(MainMenuEntity(getString(R.string.time_to_close), R.drawable.ic_time_clock))
         mMainMenuAdapter = MainMenuAdapter(dataList)
         more_function_recycle.adapter = mMainMenuAdapter
         more_function_recycle.layoutManager = GridLayoutManager(this, 3)
@@ -312,7 +313,8 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
         val item = mPlayQueueList!![position].description ?: return false
         val dialog = AlertDialog.Builder(this@MediaActivity)
-        dialog.setTitle(String.format(Locale.CHINA, "%s-%s", item.title, item.subtitle))
+        dialog.setTitle(String.format(Locale.CHINA, getString(R.string.show_name_and_author),
+                item.title, item.subtitle))
         dialog.setMessage(item.mediaUri.toString())
         dialog.create().show()
         return true
@@ -321,12 +323,12 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     private fun createDelQueueItemDialog(position: Int) {
         val dialog = AlertDialog.Builder(this@MediaActivity)
         dialog.setTitle(getString(R.string.string_sure_del))
-        val delContentView = LayoutInflater.from(this).inflate(R.layout.dl_content_del_item,null)
-        delContentView.setPadding(UIUtils.dp2px(this,20),UIUtils.dp2px(this,20),
-                UIUtils.dp2px(this,10),UIUtils.dp2px(this,10))
+        val delContentView = LayoutInflater.from(this).inflate(R.layout.dl_content_del_item, null)
+        delContentView.setPadding(UIUtils.dp2px(this, 20), UIUtils.dp2px(this, 20),
+                UIUtils.dp2px(this, 10), UIUtils.dp2px(this, 10))
         dialog.setView(delContentView)
         dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
-            if(delContentView.checkbox_dl_content_message.isChecked){
+            if (delContentView.checkbox_dl_content_message.isChecked) {
                 mPresenter?.deleteFile(DataTransform.getInstance().getPath(position)) as Boolean
                 val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(DataTransform.getInstance().getPath(position)))
                 sendBroadcast(intent)
@@ -507,16 +509,9 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when (item?.itemId) {
-            R.id.action_settings -> {
-            }
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
     override fun showLoading() {
         println("showLoading。。。。。")
+
         if (mLoadingDialog == null) {
             mLoadingDialog = AppCompatDialog(this, R.style.TransDialog)
             mLoadingDialog?.setContentView(LayoutInflater.from(this).inflate(R.layout.loading_layout, null))

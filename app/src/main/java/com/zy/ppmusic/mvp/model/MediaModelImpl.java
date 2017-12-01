@@ -5,6 +5,9 @@ import android.content.Context;
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract;
 import com.zy.ppmusic.utils.ScanMusicFile;
 
+/**
+ * @author ZhiTouPC
+ */
 public class MediaModelImpl implements IMediaActivityContract.IModel {
 
     @Override

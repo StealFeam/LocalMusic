@@ -109,11 +109,11 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
             this.delL = dl;
             itemView.setOnClickListener(this);
             itemView.setOnLongClickListener(this);
-            tvSubTitle = (TextView) itemView.findViewById(R.id.queue_item_display_sub_title);
-            tvTitle = (TextView) itemView.findViewById(R.id.queue_item_display_title);
-            tvPosition = (TextView) itemView.findViewById(R.id.queue_item_position);
-            ivDel = (ImageView) itemView.findViewById(R.id.queue_item_del);
-//            ivPlayingFlag = (ImageView) itemView.findViewById(R.id.queue_item_playing_flag_iv);
+            tvSubTitle = itemView.findViewById(R.id.queue_item_display_sub_title);
+            tvTitle = itemView.findViewById(R.id.queue_item_display_title);
+            tvPosition = itemView.findViewById(R.id.queue_item_position);
+            ivDel = itemView.findViewById(R.id.queue_item_del);
+//            ivPlayingFlag = itemView.findViewById(R.id.queue_item_playing_flag_iv);
             vLine = itemView.findViewById(R.id.queue_item_selected_line);
             ivDel.setOnClickListener(this);
         }

@@ -9,13 +9,14 @@ import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import com.zy.ppmusic.R
 import com.zy.ppmusic.mvp.view.MediaActivity
+import com.zy.ppmusic.mvp.view.MediaActivityNewDesign
 import kotlinx.android.synthetic.main.activity_splash.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 
 class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
-    var REQUEST_CODE = 0x010
-    private var PREFERENCE_NAME = "SPLASH"
+    val REQUEST_CODE = 0x010
+    private val PREFERENCE_NAME = "SPLASH"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +54,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
 
 
     fun actionToMain() {
-        val mediaIntent = Intent(this@SplashActivity, MediaActivity::class.java)
+        val mediaIntent = Intent(this@SplashActivity, MediaActivityNewDesign::class.java)
         startActivity(mediaIntent)
         finish()
     }

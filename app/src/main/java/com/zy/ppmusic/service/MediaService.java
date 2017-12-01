@@ -29,6 +29,7 @@ import android.view.KeyEvent;
 import com.zy.ppmusic.data.db.DBManager;
 import com.zy.ppmusic.entity.MusicDbEntity;
 import com.zy.ppmusic.mvp.view.MediaActivity;
+import com.zy.ppmusic.mvp.view.MediaActivityNewDesign;
 import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.FileUtils;
 import com.zy.ppmusic.utils.NotificationUtils;
@@ -141,7 +142,7 @@ public class MediaService extends MediaBrowserServiceCompat {
             mMediaSessionCompat.setActive(true);
         }
 
-        Intent it = new Intent(getBaseContext(), MediaActivity.class);
+        Intent it = new Intent(getBaseContext(), MediaActivityNewDesign.class);
         it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 1, it, PendingIntent.FLAG_UPDATE_CURRENT);
         mMediaSessionCompat.setSessionActivity(pendingIntent);

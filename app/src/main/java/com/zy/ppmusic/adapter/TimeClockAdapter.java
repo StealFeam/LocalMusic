@@ -22,7 +22,8 @@ public class TimeClockAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
 
     public TimeClockAdapter() {
         this.array = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
+        int mCount = 5;
+        for (int i = 0; i < mCount; i++) {
             this.array.add((i + 1) * 15);
         }
         this.array.add(120);
@@ -86,7 +87,7 @@ public class TimeClockAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
 
         private TimeClockHolder(View itemView, MainMenuAdapter.OnRecycleItemClickListener listener) {
             super(itemView);
-            tvTime = (TextView) itemView.findViewById(R.id.item_normal_text);
+            tvTime = itemView.findViewById(R.id.item_normal_text);
             this.listener = listener;
             tvTime.setGravity(Gravity.CENTER);
             itemView.setOnClickListener(this);

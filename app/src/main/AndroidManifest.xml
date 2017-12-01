@@ -47,6 +47,10 @@
             android:name=".mvp.view.MediaActivity"
             android:launchMode="singleTop"/>
 
+        <activity
+            android:name=".mvp.view.MediaActivityNewDesign"
+            android:launchMode="singleTop"/>
+
         <activity android:name=".ui.SplashActivity"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.SplashTheme">

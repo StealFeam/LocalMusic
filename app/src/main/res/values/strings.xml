@@ -47,4 +47,8 @@
     <string name="string_power_author" formatted="false" translatable="false">powerd by zy</string>
     <string name="string_show_play_state">show play state</string>
     <string name="unknown_name">unknown</string>
+    <string name="scan_local_music">扫描音乐</string>
+    <string name="bluetooth_manager">蓝牙管理</string>
+    <string name="time_to_close">定时关闭</string>
+    <string name="show_name_and_author">%s-%s</string>
 </resources>
