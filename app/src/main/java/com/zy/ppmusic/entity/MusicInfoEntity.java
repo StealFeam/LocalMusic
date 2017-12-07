@@ -7,6 +7,7 @@ import java.util.Arrays;
  * @author ZhiTouPC
  */
 public class MusicInfoEntity implements Serializable{
+    private static final long serialVersionUID = -1016970004377532215L;
     private String mediaId;
     private String musicName;
     private String artist;

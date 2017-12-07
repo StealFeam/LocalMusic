@@ -5,7 +5,7 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/media_title_tint"
+        android:id="@+id/tv_media_tint"
         android:layout_width="0dp"
         android:layout_height="@dimen/dp50"
         android:ellipsize="end"
@@ -29,15 +29,79 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/media_title_tint" />
+        app:layout_constraintTop_toBottomOf="@+id/tv_media_tint" />
 
-    <android.support.v4.view.ViewPager
-        android:id="@+id/vp_media_play_info"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp100"
-        android:layout_gravity="center"
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_media_play_mode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/dp80"
+        android:layout_marginEnd="@dimen/dp10"
+        android:layout_marginLeft="@dimen/dp10"
+        android:layout_marginRight="@dimen/dp10"
+        android:layout_marginStart="@dimen/dp10"
+        android:src="@drawable/ic_loop_mode_list"
+        app:backgroundTint="@color/colorWhite"
+        app:elevation="@dimen/dp5"
+        app:fabSize="mini"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:rippleColor="@color/colorTheme" />
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp70"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="@dimen/dp5"
+        app:cardUseCompatPadding="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TableRow>
+
+                <android.support.v7.widget.AppCompatSeekBar
+                    android:id="@+id/seek_bar_show_media_progress"
+                    style="@style/SelfSeekBarStyle"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content" />
+            </TableRow>
+
+            <TableRow android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+                <android.support.v4.view.ViewPager
+                    android:id="@+id/vp_media_play_info"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+
+                <android.support.v7.widget.AppCompatImageView
+                    android:id="@+id/iv_media_play_or_pause"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="@dimen/dp10"
+                    android:layout_marginStart="@dimen/dp10"
+                    app:srcCompat="@drawable/ic_black_play" />
+
+                <android.support.v7.widget.AppCompatImageView
+                    android:id="@+id/iv_media_show_queue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_margin="@dimen/dp10"
+                    app:srcCompat="@drawable/ic_menu" />
+            </TableRow>
+        </TableLayout>
+    </android.support.v7.widget.CardView>
+
 
 </android.support.constraint.ConstraintLayout>

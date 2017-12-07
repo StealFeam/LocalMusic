@@ -12,6 +12,9 @@ import com.zy.ppmusic.mvp.view.BlScanActivity;
 import java.lang.ref.WeakReference;
 import java.util.Objects;
 
+/**
+ * @author ZhiTouPC
+ */
 public class DeviceFoundReceiver extends BroadcastReceiver{
     private static final String TAG = "DeviceFoundReceiver";
     private WeakReference<BlScanActivity> weakReference;

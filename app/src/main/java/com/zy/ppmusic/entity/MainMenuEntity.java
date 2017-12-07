@@ -3,6 +3,9 @@ package com.zy.ppmusic.entity;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+/**
+ * @author ZhiTouPC
+ */
 public class MainMenuEntity implements Parcelable{
     private String menuTitle;
     private int menuRes;

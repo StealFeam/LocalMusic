@@ -1,7 +1,11 @@
 package com.zy.ppmusic.entity;
 
+
 import android.bluetooth.BluetoothDevice;
 
+/**
+ * @author ZhiTouPC
+ */
 public class ScanResultEntity {
     private int type;//布局的id
     private String title;//头布局的标题

@@ -44,8 +44,7 @@ class MediaInfoFragment : Fragment() {
             tvNameInfo?.text = displayTitle
             tvAuthorInfo?.text = subTitle
             if (extra.description.iconBitmap == null) {
-                Glide.with(this).asDrawable()
-                        .load(R.mipmap.ic_music_launcher_round).apply(requestOptions).into(ivInfo)
+                Glide.with(this).load(R.mipmap.ic_music_launcher_round).apply(requestOptions).into(ivInfo)
             } else {
                 ivInfo?.setImageBitmap(extra.description.iconBitmap)
             }

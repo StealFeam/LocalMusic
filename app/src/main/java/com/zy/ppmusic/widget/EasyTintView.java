@@ -23,6 +23,9 @@ import com.zy.ppmusic.R;
 
 import java.util.Locale;
 
+/**
+ * @author ZhiTouPC
+ */
 public class EasyTintView extends AppCompatTextView {
     private static final String TAG = "EasyTintView";
     public static final int TINT_LONG = 3000;
@@ -105,7 +108,8 @@ public class EasyTintView extends AppCompatTextView {
                 DisplayMetrics metrics = new DisplayMetrics();
                 Display defaultDisplay = manager.getDefaultDisplay();
                 defaultDisplay.getMetrics(metrics);
-                System.out.println(String.format(Locale.CHINA, "%f,%d,%f", metrics.density, metrics.densityDpi, metrics.scaledDensity));
+                System.out.println(String.format(Locale.CHINA, "%f,%d,%f",
+                        metrics.density, metrics.densityDpi, metrics.scaledDensity));
                 screenParams[0] = metrics.widthPixels;
                 screenParams[1] = metrics.heightPixels;
                 screenParams[2] = metrics.scaledDensity;

@@ -511,7 +511,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
     override fun showLoading() {
         println("showLoading。。。。。")
-
         if (mLoadingDialog == null) {
             mLoadingDialog = AppCompatDialog(this, R.style.TransDialog)
             mLoadingDialog?.setContentView(LayoutInflater.from(this).inflate(R.layout.loading_layout, null))
@@ -575,14 +574,14 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
     private fun setPlayMode(mode: Int) {
         when (mode) {
-            PlaybackStateCompat.REPEAT_MODE_ALL -> {
-                control_action_loop_model.setImageResource(R.drawable.ic_loop_mode_list)
-            }
             PlaybackStateCompat.REPEAT_MODE_NONE -> {
                 control_action_loop_model.setImageResource(R.drawable.ic_loop_model_normal)
             }
             PlaybackStateCompat.REPEAT_MODE_ONE -> {
                 control_action_loop_model.setImageResource(R.drawable.ic_loop_model_only)
+            }
+            PlaybackStateCompat.REPEAT_MODE_ALL -> {
+                control_action_loop_model.setImageResource(R.drawable.ic_loop_mode_list)
             }
         }
         mMediaController?.transportControls?.setRepeatMode(mode)

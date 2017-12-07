@@ -12,6 +12,7 @@
         android:drawablePadding="@dimen/dp5"
         android:background="?android:attr/selectableItemBackground"
         android:gravity="center_horizontal"
+        android:textColor="@color/colorBlack"
         android:layout_gravity="center_horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

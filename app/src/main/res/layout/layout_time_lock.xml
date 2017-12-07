@@ -13,15 +13,14 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/time_selector_progress_hint_tv"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/time_selector_desc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/dp5"
+        android:layout_marginLeft="@dimen/dp5"
         android:padding="@dimen/dp5"
         android:text="@string/string_custom_time_hint"
         app:layout_constraintBottom_toBottomOf="@+id/time_selector_seek_bar"
@@ -38,17 +37,18 @@
         app:layout_constraintTop_toTopOf="@+id/time_selector_sure_btn"
         app:layout_constraintBottom_toBottomOf="@+id/time_selector_sure_btn" />
 
-    <Button
+    <android.support.v7.widget.AppCompatButton
         android:id="@+id/time_selector_sure_btn"
         android:layout_width="@dimen/dp50"
         android:layout_height="@dimen/dp30"
         android:layout_margin="@dimen/dp5"
+        android:layout_marginTop="8dp"
         android:background="@drawable/normal_btn_shape"
         android:text="@string/string_sure"
         android:textColor="@color/colorTheme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/time_selector_seek_bar"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@+id/time_selector_recycler" />
 
     <TextView
         android:id="@+id/time_selector_progress_hint_tv"

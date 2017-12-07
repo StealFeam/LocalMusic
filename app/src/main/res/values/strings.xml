@@ -21,6 +21,9 @@
     <string name="string_permission_read" translatable="false">只有得到本地存储权限才能获取到本地媒体文件</string>
     <string name="exit" translatable="false">退出</string>
     <string name="string_loop_mode" translatable="false">播放模式</string>
+    <string name="loop_list_recycle">列表循环</string>
+    <string name="loop_order_list">顺序播放</string>
+    <string name="loop_single_recycle">单曲循环</string>
     <string name="string_loop_model_list" translatable="false">顺序播放</string>
     <string name="string_loop_model_only" translatable="false">单曲循环</string>
     <string name="string_loop_model_list_recycle" translatable="false">列表循环</string>
