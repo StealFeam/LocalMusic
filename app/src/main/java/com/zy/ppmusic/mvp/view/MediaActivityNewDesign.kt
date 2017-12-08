@@ -2,7 +2,6 @@ package com.zy.ppmusic.mvp.view
 
 import android.content.ComponentName
 import android.content.Intent
-import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.*
 import android.support.design.widget.BottomSheetDialog
@@ -476,13 +475,13 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
         }
     }
 
-    private fun setPageData(pathList:List<String>) {
-        if(mPageAdapter == null){
+    private fun setPageData(pathList: List<String>) {
+        if (mPageAdapter == null) {
             mPageAdapter = MediaInfoAdapter(supportFragmentManager)
             mPageAdapter?.setPathList(pathList)
             vp_media_play_info.adapter = mPageAdapter
             vp_media_play_info.addOnPageChangeListener(mPageChangeListener)
-        }else{
+        } else {
             mPageAdapter?.setPathList(pathList)
         }
     }
@@ -537,6 +536,10 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
     override fun loadFinished() {
         println("------------- refresh Queue ......loadFinished..............")
         setPageData(DataTransform.getInstance().pathList)
+        connectServer()
+    }
+
+    private fun connectServer(){
         if (mMediaBrowser == null) {
             val extra = Bundle()
             extra.putParcelableArrayList("queueList", DataTransform.getInstance().mediaItemList)
@@ -613,12 +616,10 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
         override fun onConnectionSuspended() {
             super.onConnectionSuspended()
             println("onConnectionSuspended....")
-            mMediaBrowser?.unsubscribe(mMediaBrowser!!.root, subscriptionCallBack)
-            val mediaController = MediaControllerCompat.getMediaController(this@MediaActivityNewDesign)
-            if (mediaController != null) {
-                mediaController.unregisterCallback(mControllerCallBack)
-                MediaControllerCompat.setMediaController(this@MediaActivityNewDesign, null)
-            }
+
+            mDelayHandler?.postDelayed({
+                connectServer()
+            },2000)
         }
 
         override fun onConnectionFailed() {
@@ -667,6 +668,7 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
                     val extra = Bundle()
                     extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_INIT)
                     mMediaController?.transportControls?.playFromMediaId(mCurrentMediaIdStr, extra)
+
                 }
             } else {
                 seek_bar_show_media_progress.progress = 0
@@ -857,23 +859,24 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
      * 断开媒体服务
      */
     fun disConnectService() {
+        mMediaBrowser?.extras?.clear()
+        mMediaController?.extras?.clear()
         //释放控制器
-        val mediaController = MediaControllerCompat.getMediaController(this@MediaActivityNewDesign)
+        val mediaController = MediaControllerCompat.getMediaController(this)
         if (mediaController != null) {
+            mediaController.extras?.clear()
             mediaController.unregisterCallback(mControllerCallBack)
-            MediaControllerCompat.setMediaController(this@MediaActivityNewDesign, null)
+            MediaControllerCompat.setMediaController(this, null)
         }
         //停止进度更新
         stopLoop()
         //取消播放状态监听
-        if (mMediaBrowser != null) {
-            if (mMediaId != null) {
-                mMediaBrowser?.unsubscribe(mMediaId!!, subscriptionCallBack)
-            }
-            //断开与媒体服务的链接
-            mMediaBrowser?.disconnect()
-            mMediaBrowser = null
+        if (mMediaId != null) {
+            mMediaBrowser?.unsubscribe(mMediaId!!, subscriptionCallBack)
         }
+        //断开与媒体服务的链接
+        mMediaBrowser?.disconnect()
+        mMediaBrowser = null
     }
 
 

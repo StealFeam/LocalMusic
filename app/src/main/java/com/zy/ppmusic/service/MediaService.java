@@ -143,7 +143,7 @@ public class MediaService extends MediaBrowserServiceCompat {
             mMediaSessionCompat.setActive(true);
         }
 
-        Intent it = new Intent(getBaseContext(), MediaActivityNewDesign.class);
+        Intent it = new Intent(getBaseContext(), MediaActivity.class);
         it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 1, it, PendingIntent.FLAG_UPDATE_CURRENT);
         mMediaSessionCompat.setSessionActivity(pendingIntent);
