@@ -54,9 +54,10 @@ public class WaveRefreshView extends View {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         maxChange = h / 3;
-
-        lineWidth = getMeasuredWidth() * LINE_AREA;//线区域总宽
-        whiteWidth = getMeasuredWidth() * OTHER_AREA;//空白区总宽
+        //线区域总宽
+        lineWidth = getMeasuredWidth() * LINE_AREA;
+        //空白区总宽
+        whiteWidth = getMeasuredWidth() * OTHER_AREA;
 
         lineWidth /= lineRectF.length;
         whiteWidth /= lineRectF.length;
@@ -109,7 +110,7 @@ public class WaveRefreshView extends View {
         return screenParams[posi];
     }
 
-    public void startAnim() {
+    public synchronized void startAnim() {
         stopAnim();
         for (int i = 0; i < delayArray.length; i++) {
             final int index = i;
@@ -131,7 +132,7 @@ public class WaveRefreshView extends View {
         }
     }
 
-    public void stopAnim() {
+    public synchronized void stopAnim() {
         isPaused = true;
         for (Animator animator : mAnimatorList) {
             if (animator != null && animator.isRunning()) {

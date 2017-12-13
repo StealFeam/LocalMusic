@@ -54,7 +54,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
 
 
     fun actionToMain() {
-        val mediaIntent = Intent(this, MediaActivity::class.java)
+        val mediaIntent = Intent(this, MediaActivityNewDesign::class.java)
         startActivity(mediaIntent)
         finish()
     }

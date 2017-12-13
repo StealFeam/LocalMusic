@@ -152,6 +152,7 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media_new_design)
+        println("oncreate//////")
         if (supportActionBar != null) {
             supportActionBar?.elevation = 0f
         }
@@ -374,6 +375,13 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
         mBottomLoopModePop?.show()
     }
 
+    override fun onSaveInstanceState(outState: Bundle?) {
+        //清除状态缓存，避免出现异常，界面刷新由onStart方法中完成
+        //猜测是由于fragment数据大小超出限制
+        outState?.clear()
+        super.onSaveInstanceState(outState)
+    }
+
     private fun setPlayMode(mode: Int) {
         fab_media_play_mode.setImageDrawable(ContextCompat.getDrawable(this, getModeRes(mode)))
         mMediaController?.transportControls?.setRepeatMode(mode)
@@ -554,18 +562,9 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
 
     override fun onStart() {
         super.onStart()
+        println("onstart")
         //加载数据
         mPresenter?.refreshQueue(this, false)
-    }
-
-    override fun onRestart() {
-        super.onRestart()
-        if (mMediaBrowser != null) {
-            if (mMediaBrowser!!.isConnected) {
-                mMediaBrowser?.disconnect()
-            }
-            mMediaBrowser?.connect()
-        }
         startLoop()
     }
 
@@ -658,7 +657,6 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
                         stepPosition = endPosition / 100L
                         startPosition = 0
                         mLooperHandler?.sendEmptyMessage(0)
-                        seek_bar_show_media_progress.progress = 0
                         vp_media_play_info.currentItem = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
                     }
                     handlePlayState(mMediaController!!.playbackState!!.state)
@@ -670,6 +668,8 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
                     mMediaController?.transportControls?.playFromMediaId(mCurrentMediaIdStr, extra)
 
                 }
+                //请求更新播放进度
+                startLoop()
             } else {
                 seek_bar_show_media_progress.progress = 0
             }
