@@ -152,7 +152,6 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media_new_design)
-        println("oncreate//////")
         if (supportActionBar != null) {
             supportActionBar?.elevation = 0f
         }
@@ -165,7 +164,6 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
             @Suppress("DEPRECATION")
             tv_media_tint.setBackgroundDrawable(drawable)
         }
-
         mPresenter = MediaPresenterImpl(this)
 
         val dataList = ArrayList<MainMenuEntity>()
@@ -193,7 +191,7 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
             }
         }
 
-        fab_media_play_mode.setOnClickListener {
+        iv_media_play_mode.setOnClickListener {
             createLoopModePop()
         }
 
@@ -214,11 +212,10 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
             createBottomQueueDialog()
         })
 
-
         seek_bar_show_media_progress.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    TintView.makeView(fab_media_play_mode,
+                    TintView.makeView(iv_media_play_mode,
                             String.format(Locale.CHINA, "%s/%s",
                                     DateUtil.getInstance().getTime(stepPosition * progress),
                                     DateUtil.getInstance().getTime(stepPosition * 100))
@@ -232,7 +229,7 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                TintView.findView(fab_media_play_mode).hide()
+                TintView.findView(iv_media_play_mode).hide()
                 val extra = Bundle()
                 extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_SEEK_TO)
                 extra.putInt(MediaService.SEEK_TO_POSITION_PARAM, (seekBar!!.progress * stepPosition).toInt())
@@ -248,6 +245,11 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
      * 创建播放列表
      */
     private fun createBottomQueueDialog() {
+        if (mPlayQueueList == null || mPlayQueueList?.size == 0) {
+            showMsg("列表为空，请先扫描")
+            return
+        }
+
         mBottomQueueDialog = BottomSheetDialog(this)
         if (mBottomQueueAdapter == null) {
             mBottomQueueAdapter = PlayQueueAdapter()
@@ -362,11 +364,9 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
     private fun createLoopModePop() {
         if (mBottomLoopModePop == null) {
             mBottomLoopModePop = ListPopupWindow(this)
-            mBottomLoopModePop?.anchorView = fab_media_play_mode
+            mBottomLoopModePop?.anchorView = iv_media_play_mode
             mBottomLoopModePop?.setAdapter(MenuAdapter(this))
             mBottomLoopModePop?.setContentWidth(UIUtils.dp2px(this, 110))
-            mBottomLoopModePop?.verticalOffset = fab_media_play_mode.measuredHeight / 3
-            mBottomLoopModePop!!.horizontalOffset = -fab_media_play_mode.measuredWidth
             mBottomLoopModePop?.setOnItemClickListener { _, _, position, _ ->
                 setPlayMode(position)
                 mBottomLoopModePop?.dismiss()
@@ -376,14 +376,24 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
+
         //清除状态缓存，避免出现异常，界面刷新由onStart方法中完成
         //猜测是由于fragment数据大小超出限制
         outState?.clear()
+        outState?.keySet()?.forEachIndexed { index, s ->
+            outState.remove(s)
+        }
         super.onSaveInstanceState(outState)
+        println("onSaveInstanceState............................." + outState?.toString())
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+        super.onRestoreInstanceState(savedInstanceState)
+        println("onRestoreInstanceState.............................")
     }
 
     private fun setPlayMode(mode: Int) {
-        fab_media_play_mode.setImageDrawable(ContextCompat.getDrawable(this, getModeRes(mode)))
+        iv_media_play_mode.setImageDrawable(ContextCompat.getDrawable(this, getModeRes(mode)))
         mMediaController?.transportControls?.setRepeatMode(mode)
         if (mPresenter != null) {
             mPresenter?.changeMode(this, mode)
@@ -485,19 +495,23 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
 
     private fun setPageData(pathList: List<String>) {
         if (mPageAdapter == null) {
-            mPageAdapter = MediaInfoAdapter(supportFragmentManager)
-            mPageAdapter?.setPathList(pathList)
-            vp_media_play_info.adapter = mPageAdapter
+            println("null........")
+            mPageAdapter = MediaInfoAdapter(supportFragmentManager,pathList)
             vp_media_play_info.addOnPageChangeListener(mPageChangeListener)
-        } else {
+        }else{
             mPageAdapter?.setPathList(pathList)
         }
+        vp_media_play_info.adapter = mPageAdapter
     }
 
     private val mPageChangeListener = object : ViewPager.OnPageChangeListener {
         var mSelectedPosition = 0
 
         override fun onPageScrollStateChanged(state: Int) {
+            if (DataTransform.getInstance().pathList == null ||
+                    DataTransform.getInstance().pathList.size <= 0) {
+                return
+            }
             if (state == 0 && mSelectedPosition >= 0) {
                 val mediaId = DataTransform.getInstance().mediaIdList[mSelectedPosition]
                 if (mCurrentMediaIdStr != null && mCurrentMediaIdStr!! == mediaId) {
@@ -547,7 +561,7 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
         connectServer()
     }
 
-    private fun connectServer(){
+    private fun connectServer() {
         if (mMediaBrowser == null) {
             val extra = Bundle()
             extra.putParcelableArrayList("queueList", DataTransform.getInstance().mediaItemList)
@@ -618,7 +632,7 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
 
             mDelayHandler?.postDelayed({
                 connectServer()
-            },2000)
+            }, 2000)
         }
 
         override fun onConnectionFailed() {

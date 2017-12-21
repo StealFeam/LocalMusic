@@ -1,6 +1,7 @@
 package com.zy.ppmusic.mvp.view.frag
 
 import android.os.Bundle
+import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v7.widget.AppCompatImageView
@@ -11,6 +12,7 @@ import android.view.ViewGroup
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.zy.ppmusic.R
+import com.zy.ppmusic.utils.UIUtils
 
 /**
  * @author ZhiTouPC
@@ -31,10 +33,10 @@ class MediaInfoFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val rootView = inflater?.inflate(R.layout.frag_media_info, container, false)
-        val ivInfo = rootView?.findViewById<AppCompatImageView>(R.id.iv_media_info)
-        val tvNameInfo = rootView?.findViewById<AppCompatTextView>(R.id.tv_media_info_name)
-        val tvAuthorInfo = rootView?.findViewById<AppCompatTextView>(R.id.tv_media_info_author)
+        val rootView = inflater?.inflate(R.layout.frag_media_info, container, false) as ConstraintLayout
+        val ivInfo = rootView.findViewById<AppCompatImageView>(R.id.iv_media_info)
+        val tvNameInfo = rootView.findViewById<AppCompatTextView>(R.id.tv_media_info_name)
+        val tvAuthorInfo = rootView.findViewById<AppCompatTextView>(R.id.tv_media_info_author)
         val extra = arguments.getParcelable<MediaMetadataCompat>(EXTRA)
         val requestOptions = RequestOptions()
         requestOptions.fitCenter()
@@ -49,6 +51,7 @@ class MediaInfoFragment : Fragment() {
                 ivInfo?.setImageBitmap(extra.description.iconBitmap)
             }
         } else {
+            println("load null.....")
             Glide.with(this).load(R.mipmap.ic_music_launcher_round).apply(requestOptions).into(ivInfo)
             tvNameInfo?.text = getString(R.string.app_name)
             tvAuthorInfo?.text = getString(R.string.app_name)

@@ -11,9 +11,13 @@ import com.zy.ppmusic.utils.DataTransform
  * @author ZhiTouPC
  * @date 2017/11/28
  */
-class MediaInfoAdapter(manager: FragmentManager) : FragmentStatePagerAdapter(manager) {
+class MediaInfoAdapter(manager: FragmentManager, pathList: List<String>) : FragmentStatePagerAdapter(manager) {
     private var mPathList: List<String>? = null
     private var mIsNotifyChanged: Boolean? = null
+
+    init {
+        this.mPathList = pathList
+    }
 
     fun setPathList(pathList: List<String>) {
         this.mPathList = pathList
@@ -40,7 +44,7 @@ class MediaInfoAdapter(manager: FragmentManager) : FragmentStatePagerAdapter(man
     override fun getItem(position: Int): Fragment = createFragmentByInfo(position)
 
     private fun createFragmentByInfo(position: Int): Fragment {
-        return if (mPathList == null) {
+        return if (mPathList == null || mPathList?.size == 0) {
             MediaInfoFragment.createInstance(null)
         } else {
             val mediaId = DataTransform.getInstance().mediaIdList[position]
@@ -49,7 +53,7 @@ class MediaInfoAdapter(manager: FragmentManager) : FragmentStatePagerAdapter(man
     }
 
     override fun getCount(): Int {
-        return if (mPathList == null) {
+        return if (mPathList == null || mPathList?.size == 0) {
             1
         } else {
             mPathList!!.size

@@ -7,6 +7,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -17,21 +21,26 @@ import android.view.WindowManager;
 
 import java.util.ArrayList;
 
+/**
+ * @author ZhiTouPC
+ */
 public class WaveRefreshView extends View {
     private static final String TAG = "WaveRefreshView";
     private final float LINE_AREA = 3f / 5f;
     private final float OTHER_AREA = 2f / 5f;
-    private final float MIN_WIDTH_PERCENT = 1F/6F;//最小宽度占屏幕的比例
+    /**
+     * 最小宽度占屏幕的比例
+     */
+    private final float MIN_WIDTH_PERCENT = 1F / 6F;
     private Paint mCirclePaint;
     private int minWidth = 20;
     private float lineWidth;
     private float whiteWidth;
     private int maxChange;
     private ArrayList<Animator> mAnimatorList = new ArrayList<>();
-    private long[] delayArray = {80, 200, 300, 400, 500};
     private RectF[] lineRectF = new RectF[5];
-    private boolean isPaused = false;
     private float[] screenParams;
+    private AnimatorHandler handler;
 
     public WaveRefreshView(Context context) {
         this(context, null);
@@ -63,12 +72,12 @@ public class WaveRefreshView extends View {
         whiteWidth /= lineRectF.length;
 
         minWidth = (int) ((getScreenParams(0) * MIN_WIDTH_PERCENT) / getScreenParams(2));
-        System.out.println("最小宽度计算值："+minWidth);
+        System.out.println("最小宽度计算值：" + minWidth);
 
         for (int i = 0; i < lineRectF.length; i++) {
             lineRectF[i] = new RectF((lineWidth + whiteWidth) * i, maxChange,
                     (lineWidth + whiteWidth) * i + lineWidth, getMeasuredHeight() - maxChange);
-            Log.w(TAG, "onSizeChanged: "+lineRectF[i].toString());
+            Log.w(TAG, "onSizeChanged: " + lineRectF[i].toString());
         }
         startAnim();
     }
@@ -89,8 +98,8 @@ public class WaveRefreshView extends View {
         }
     }
 
-    private float getScreenParams(int posi){
-        if(posi < 0 || posi > 2){
+    private float getScreenParams(int posi) {
+        if (posi < 0 || posi > 2) {
             return 0;
         }
         if (screenParams == null) {
@@ -103,41 +112,63 @@ public class WaveRefreshView extends View {
                 screenParams[0] = metrics.widthPixels;
                 screenParams[1] = metrics.heightPixels;
                 screenParams[2] = metrics.scaledDensity;
-            }else {
+            } else {
                 return 0;
             }
         }
         return screenParams[posi];
     }
 
-    public synchronized void startAnim() {
-        stopAnim();
-        for (int i = 0; i < delayArray.length; i++) {
+    public void startAnim() {
+        for (Animator animator : mAnimatorList) {
+            animator.cancel();
+        }
+        mAnimatorList.clear();
+        for (int i = 0; i < lineRectF.length; i++) {
             final int index = i;
-            ValueAnimator animator = ValueAnimator.ofInt(maxChange, 0, maxChange);
-            animator.setStartDelay(delayArray[i]);
+            ValueAnimator animator = ValueAnimator.ofInt(0, maxChange);
+            animator.setDuration(500);
+            animator.setRepeatMode(ValueAnimator.REVERSE);
+            animator.setRepeatCount(-1);
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
-                    int change = (int) animation.getAnimatedValue();
-                    lineRectF[index].top = maxChange - change;
-                    lineRectF[index].bottom = getMeasuredHeight() - (maxChange - change);
+                    float percent = animation.getAnimatedFraction();
+                    lineRectF[index].top = maxChange * percent;
+                    lineRectF[index].bottom = getMeasuredHeight() - maxChange * percent;
                     invalidate();
                 }
             });
-            animator.setDuration(1000);
-            animator.setRepeatCount(-1);
-            animator.start();
             mAnimatorList.add(animator);
         }
+        if(handler != null){
+            handler.removeCallbacksAndMessages(null);
+        }else{
+            handler = new AnimatorHandler(Looper.getMainLooper(), mAnimatorList);
+        }
+        for (int i = 0; i < mAnimatorList.size(); i++) {
+            handler.sendEmptyMessageDelayed(i, (i + 1) * 80);
+        }
+
+
     }
 
-    public synchronized void stopAnim() {
-        isPaused = true;
-        for (Animator animator : mAnimatorList) {
-            if (animator != null && animator.isRunning()) {
-                animator.end();
-                animator.cancel();
+    private static class AnimatorHandler extends Handler {
+        private ArrayList<Animator> animatorArrayList;
+
+        private AnimatorHandler(Looper looper, ArrayList<Animator> animatorArrayList) {
+            super(looper);
+            this.animatorArrayList = animatorArrayList;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            int currentStartIndex = msg.what;
+            if (animatorArrayList != null && currentStartIndex < animatorArrayList.size()) {
+                Animator animator = animatorArrayList.get(currentStartIndex);
+                animator.start();
+                Log.e(TAG, "handleMessage: " + System.currentTimeMillis());
             }
         }
     }
