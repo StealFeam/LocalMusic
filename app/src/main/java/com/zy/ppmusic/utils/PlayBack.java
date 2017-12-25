@@ -4,6 +4,8 @@ import android.content.Context;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.audiofx.Virtualizer;
+import android.media.audiofx.Visualizer;
 import android.os.PowerManager;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
@@ -34,9 +36,8 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
      * we have full audio focus
      */
     private static final int AUDIO_FOCUSED = 2;
-
-    private MediaPlayer mMediaPlayer;
     private final MediaService mMediaService;
+    private MediaPlayer mMediaPlayer;
     /**
      * 当前播放队列
      */
@@ -61,28 +62,6 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
     private boolean mPlayOnFocusGain;
     private int mState = PlaybackStateCompat.STATE_NONE;
     private Random mRandom;
-
-    public interface CallBack {
-        /**
-         * 播放完成
-         */
-        void onCompletion();
-
-        /**
-         * 播放器状态变化
-         *
-         * @param state 状态
-         */
-        void onPlayBackStateChange(int state);
-
-        /**
-         * 发生错误
-         *
-         * @param errorCode 错误码
-         * @param error     错误信息
-         */
-        void onError(int errorCode, String error);
-    }
 
     public PlayBack(MediaService mMediaService) {
         this.mMediaService = mMediaService;
@@ -243,8 +222,8 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
         if (mCallBack != null) {
             mCallBack.onPlayBackStateChange(mState);
         }
-    }
 
+    }
 
     public void seekTo(int position, boolean isAutoStart) {
         if (mMediaPlayer == null) {
@@ -426,6 +405,8 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
         if (mCallBack != null) {
             mCallBack.onPlayBackStateChange(mState);
         }
+
+
     }
 
     /**
@@ -450,5 +431,27 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
         if (mCallBack != null) {
             mCallBack.onPlayBackStateChange(mState);
         }
+    }
+
+    public interface CallBack {
+        /**
+         * 播放完成
+         */
+        void onCompletion();
+
+        /**
+         * 播放器状态变化
+         *
+         * @param state 状态
+         */
+        void onPlayBackStateChange(int state);
+
+        /**
+         * 发生错误
+         *
+         * @param errorCode 错误码
+         * @param error     错误信息
+         */
+        void onError(int errorCode, String error);
     }
 }

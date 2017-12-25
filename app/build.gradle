@@ -1,8 +1,7 @@
 apply plugin: 'com.android.application'
-apply plugin: 'org.greenrobot.greendao' // apply pluginapply plugin: 'org.greenrobot.greendao' // apply plugin
+apply plugin: 'org.greenrobot.greendao'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-apply plugin: 'com.waynell.tinypng'
 
 android {
     compileSdkVersion 26
@@ -12,7 +11,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 26
         versionCode 3
-        versionName "1.0.2"
+        versionName "1.0.3"
         resConfigs 'zh'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -32,22 +31,6 @@ android {
         schemaVersion 1
         daoPackage 'com.zy.ppmusic.data.db.dao'
         targetGenDir 'src/main/java'
-    }
-    tinyInfo {
-        resourceDir = [
-                // 你的资源目录
-                "app/src/main/res",
-                "lib/src/main/res"
-        ]
-        resourcePattern = [
-                // 你的资源文件夹
-                "drawable[a-z-]*",
-                "mipmap[a-z-]*"
-        ]
-        whiteList = [
-                // 在这里添加文件白名单，支持正则表达式
-        ]
-        apiKey = 'VX42QdGnH2l2wmTvDcGRCeskzZJ1wEZD'
     }
 }
 
