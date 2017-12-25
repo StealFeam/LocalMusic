@@ -824,7 +824,7 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
     /**
      * 播放器状态处理
      */
-    fun handlePlayState(state: Int) {
+    private fun handlePlayState(state: Int) {
         println("handlePlayState=" + state)
         if (state != PlaybackStateCompat.STATE_PLAYING) {
             stopLoop()
@@ -865,14 +865,14 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
         mLooperHandler = null
     }
 
-    fun showMsg(msg: String) {
+    private fun showMsg(msg: String) {
         EasyTintView.makeText(recycler_media_menu, msg, EasyTintView.TINT_SHORT).show()
     }
 
     /**
      * 断开媒体服务
      */
-    fun disConnectService() {
+    private fun disConnectService() {
         mMediaBrowser?.extras?.clear()
         mMediaController?.extras?.clear()
         //释放控制器

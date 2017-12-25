@@ -7,7 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -41,6 +40,7 @@ public class WaveRefreshView extends View {
     private RectF[] lineRectF = new RectF[5];
     private float[] screenParams;
     private AnimatorHandler handler;
+    private float lastPercent;
 
     public WaveRefreshView(Context context) {
         this(context, null);
@@ -127,7 +127,7 @@ public class WaveRefreshView extends View {
         for (int i = 0; i < lineRectF.length; i++) {
             final int index = i;
             ValueAnimator animator = ValueAnimator.ofInt(0, maxChange);
-            animator.setDuration(500);
+            animator.setDuration(lineRectF.length * 100);
             animator.setRepeatMode(ValueAnimator.REVERSE);
             animator.setRepeatCount(-1);
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -136,21 +136,19 @@ public class WaveRefreshView extends View {
                     float percent = animation.getAnimatedFraction();
                     lineRectF[index].top = maxChange * percent;
                     lineRectF[index].bottom = getMeasuredHeight() - maxChange * percent;
-                    invalidate();
+                    postInvalidate();
                 }
             });
             mAnimatorList.add(animator);
         }
-        if(handler != null){
+        if (handler != null) {
             handler.removeCallbacksAndMessages(null);
-        }else{
+        } else {
             handler = new AnimatorHandler(Looper.getMainLooper(), mAnimatorList);
         }
         for (int i = 0; i < mAnimatorList.size(); i++) {
             handler.sendEmptyMessageDelayed(i, (i + 1) * 80);
         }
-
-
     }
 
     private static class AnimatorHandler extends Handler {
