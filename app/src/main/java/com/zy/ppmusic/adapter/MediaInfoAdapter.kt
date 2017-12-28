@@ -3,7 +3,6 @@ package com.zy.ppmusic.adapter
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentStatePagerAdapter
-import android.support.v4.view.PagerAdapter
 import com.zy.ppmusic.mvp.view.frag.MediaInfoFragment
 import com.zy.ppmusic.utils.DataTransform
 
@@ -36,7 +35,7 @@ class MediaInfoAdapter(manager: FragmentManager, pathList: List<String>) : Fragm
         return if (mIsNotifyChanged!!.not()) {
             super.getItemPosition(`object`)
         } else {
-            PagerAdapter.POSITION_NONE
+            POSITION_NONE
         }
     }
 

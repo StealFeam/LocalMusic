@@ -10,41 +10,67 @@
     android:orientation="vertical"
     tools:context="com.zy.ppmusic.mvp.view.MediaActivity">
 
-    <TextView
+    <View
         android:id="@+id/media_title_tint"
         android:layout_width="0dp"
-        android:layout_height="@dimen/dp50"
-        android:ellipsize="end"
-        android:lines="2"
-        android:paddingEnd="@dimen/dp20"
-        android:paddingLeft="@dimen/dp20"
-        android:paddingRight="@dimen/dp20"
-        android:paddingStart="@dimen/dp20"
-        android:text="@string/string_power_author"
-        android:textColor="@color/colorWhite"
-        android:textSize="@dimen/sp16"
-        android:textStyle="italic"
+        android:layout_height="@dimen/dp30"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/more_function_recycle"
-        android:layout_width="0dp"
+    <android.support.v4.view.ViewPager
+        android:id="@+id/vp_show_media_head"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:overScrollMode="never"
-        app:layoutManager="GridLayoutManager"
-        app:layout_constraintBottom_toTopOf="@+id/control_display_title"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/iv_bl_manage"
         app:layout_constraintTop_toBottomOf="@+id/media_title_tint" />
+
+    <android.support.v7.widget.AppCompatImageView
+        android:id="@+id/iv_search_media"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
+        android:padding="@dimen/dp5"
+        android:background="?android:attr/selectableItemBackground"
+        android:layout_marginBottom="@dimen/dp20"
+        app:layout_constraintBottom_toTopOf="@+id/control_display_sub_title"
+        app:layout_constraintEnd_toStartOf="@+id/iv_bl_manage"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/ic_search_music" />
+
+    <android.support.v7.widget.AppCompatImageView
+        android:id="@+id/iv_bl_manage"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
+        android:padding="@dimen/dp5"
+        android:background="?android:attr/selectableItemBackground"
+        app:layout_constraintBottom_toBottomOf="@+id/iv_search_media"
+        app:layout_constraintEnd_toStartOf="@+id/iv_time_clock"
+        app:layout_constraintStart_toEndOf="@+id/iv_search_media"
+        app:layout_constraintTop_toTopOf="@+id/iv_search_media"
+        app:srcCompat="@drawable/ic_bl_manager" />
+
+    <android.support.v7.widget.AppCompatImageView
+        android:id="@+id/iv_time_clock"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
+        android:padding="@dimen/dp5"
+        android:background="?android:attr/selectableItemBackground"
+        app:layout_constraintBottom_toBottomOf="@+id/iv_bl_manage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/iv_bl_manage"
+        app:layout_constraintTop_toTopOf="@+id/iv_bl_manage"
+        app:srcCompat="@drawable/ic_time_clock" />
 
     <SeekBar
         android:id="@+id/control_display_progress"
         style="@style/SelfSeekBarStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/dp5"
+        android:layout_marginLeft="@dimen/dp5"
+        android:layout_marginRight="@dimen/dp5"
+        android:layout_marginStart="@dimen/dp5"
         android:max="100"
         android:progress="0"
         app:layout_constraintBottom_toBottomOf="@+id/control_display_duration_tv"
@@ -61,6 +87,7 @@
         android:gravity="center"
         android:singleLine="true"
         android:text="@string/normal_text"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/control_display_sub_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -76,6 +103,7 @@
         android:gravity="center"
         android:lines="1"
         android:text="@string/normal_text"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/control_display_progress"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -84,8 +112,8 @@
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_show_queue"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
         android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/action_close_notify"
         android:padding="@dimen/dp5"
@@ -97,8 +125,8 @@
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_previous"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
         android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/action_previous"
         android:src="@mipmap/ic_black_previous"
@@ -108,8 +136,8 @@
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_next"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
         android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/action_next"
         android:src="@mipmap/ic_black_next"
@@ -127,8 +155,8 @@
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_play_pause"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
         android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/action_start_pause"
         android:src="@drawable/ic_black_play"
@@ -146,8 +174,8 @@
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/control_action_loop_model"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="@dimen/dp40"
+        android:layout_height="@dimen/dp40"
         android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/string_loop_mode"
         android:padding="@dimen/dp10"
@@ -162,10 +190,10 @@
         android:id="@+id/control_display_duration_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/dp2"
-        android:layout_marginRight="@dimen/dp2"
+        android:layout_marginEnd="@dimen/dp5"
+        android:layout_marginRight="@dimen/dp5"
         android:text="@string/string_time_init"
-        android:textSize="@dimen/sp12"
+        android:textSize="@dimen/sp10"
         app:layout_constraintBottom_toTopOf="@+id/horizontal_guideline"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/control_display_sub_title" />
@@ -174,10 +202,10 @@
         android:id="@+id/control_display_time_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/dp2"
-        android:layout_marginStart="@dimen/dp2"
+        android:layout_marginLeft="@dimen/dp5"
+        android:layout_marginStart="@dimen/dp5"
         android:text="@string/string_time_init"
-        android:textSize="@dimen/sp12"
+        android:textSize="@dimen/sp10"
         app:layout_constraintBaseline_toBaselineOf="@+id/control_display_duration_tv"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

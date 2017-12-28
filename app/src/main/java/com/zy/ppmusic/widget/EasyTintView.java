@@ -20,6 +20,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
 
 import com.zy.ppmusic.R;
+import com.zy.ppmusic.utils.PrintOut;
 
 import java.util.Locale;
 
@@ -108,7 +109,7 @@ public class EasyTintView extends AppCompatTextView {
                 DisplayMetrics metrics = new DisplayMetrics();
                 Display defaultDisplay = manager.getDefaultDisplay();
                 defaultDisplay.getMetrics(metrics);
-                System.out.println(String.format(Locale.CHINA, "%f,%d,%f",
+                PrintOut.print(String.format(Locale.CHINA, "%f,%d,%f",
                         metrics.density, metrics.densityDpi, metrics.scaledDensity));
                 screenParams[0] = metrics.widthPixels;
                 screenParams[1] = metrics.heightPixels;
@@ -144,7 +145,7 @@ public class EasyTintView extends AppCompatTextView {
             return;
         }
         if (isVisible) {
-            System.out.println("view is already showing in screen");
+            PrintOut.print("view is already showing in screen");
             return;
         }
 

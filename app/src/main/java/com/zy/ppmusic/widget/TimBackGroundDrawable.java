@@ -4,7 +4,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
-import android.graphics.PaintFlagsDrawFilter;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
@@ -17,9 +16,14 @@ import android.support.annotation.Nullable;
  * @author ZhiTouPC
  */
 public class TimBackGroundDrawable extends Drawable {
+    public static final int TOP = 1;
+    public static final int MIDDLE = 2;
+    public static final int BOTTOM = 3;
+
     private Paint mPaint;
     private Path mPath;
     private int mPaintColor = Color.BLUE;
+    private int mLinePercent = MIDDLE;
 
     public TimBackGroundDrawable() {
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -31,7 +35,12 @@ public class TimBackGroundDrawable extends Drawable {
 
     public void setDrawableColor(int color) {
         this.mPaintColor = color;
-        mPaint.setColor(mPaintColor);
+        this.mPaint.setColor(mPaintColor);
+        invalidateSelf();
+    }
+
+    public void setPercent(int mode) {
+        this.mLinePercent = mode;
         invalidateSelf();
     }
 
@@ -46,7 +55,21 @@ public class TimBackGroundDrawable extends Drawable {
         mPath.rewind();
         mPath.moveTo(area.left, 0);
         mPath.lineTo(area.width(), 0);
-        mPath.lineTo(area.width(), area.height() / 3);
+        switch (mLinePercent) {
+            case TOP:
+                mPath.lineTo(area.width(), 0);
+                break;
+            case MIDDLE:
+                mPath.lineTo(area.width(), area.height() / 2);
+                break;
+            case BOTTOM:
+                mPath.lineTo(area.width(), area.height());
+                break;
+            default:
+                mPath.lineTo(area.width(), area.height() / 3);
+                break;
+        }
+
         mPath.lineTo(0, area.height());
         mPath.close();
         canvas.clipPath(mPath);

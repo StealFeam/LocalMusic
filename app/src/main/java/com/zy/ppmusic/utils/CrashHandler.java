@@ -30,7 +30,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
         if (e == null) {
             return;
         }
-        System.out.println(e.getMessage());
+        PrintOut.print(e.getMessage());
         new Thread(new Runnable() {
             @Override
             public void run() {

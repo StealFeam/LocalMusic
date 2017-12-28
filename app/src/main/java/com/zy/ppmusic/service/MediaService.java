@@ -34,6 +34,7 @@ import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.FileUtils;
 import com.zy.ppmusic.utils.NotificationUtils;
 import com.zy.ppmusic.utils.PlayBack;
+import com.zy.ppmusic.utils.PrintOut;
 import com.zy.ppmusic.utils.StringUtils;
 
 import java.util.ArrayList;
@@ -143,7 +144,7 @@ public class MediaService extends MediaBrowserServiceCompat {
             mMediaSessionCompat.setActive(true);
         }
 
-        Intent it = new Intent(getBaseContext(), MediaActivityNewDesign.class);
+        Intent it = new Intent(getBaseContext(), MediaActivity.class);
         it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 1, it, PendingIntent.FLAG_UPDATE_CURRENT);
         mMediaSessionCompat.setSessionActivity(pendingIntent);
@@ -202,7 +203,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                 ArrayList<MediaBrowserCompat.MediaItem> list = getBrowserRootHints().getParcelableArrayList("queueList");
                 if (list != null) {
                     mMediaItemList = list;
-                    System.out.println("load ... " + mMediaItemList.toString());
+                    PrintOut.print("load ... " + mMediaItemList.toString());
                 }
                 result.sendResult(list);
             } else {
@@ -518,7 +519,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                     }
                     break;
                 default:
-                    System.out.println("onCommand no match");
+                    PrintOut.print("onCommand no match");
                     super.onCommand(command, reqExtra, cb);
                     break;
             }

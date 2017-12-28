@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">LMusicPlayer</string>
+    <string name="app_name">LoveMusic</string>
     <string name="app_subtitle" translatable="false">日常听歌的好帮手</string>
-    <string name="local_music">LocalMusic</string>
-    <string name="email">2295573743@qq.com</string>
+    <string name="local_music">LoveMusic</string>
+    <string name="email">qmail_zy@qq.com</string>
     <string name="bl_title" translatable="false">蓝牙</string>
     <string name="normal_text">@string/app_name</string>
     <string name="scan_result_icon" translatable="false">扫描设备的标识</string>

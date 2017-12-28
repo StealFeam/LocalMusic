@@ -135,9 +135,9 @@ public class FileUtils {
             try {
                 boolean createFileResult = file.createNewFile();
                 if (createFileResult) {
-                    System.out.println("创建缓存文件成功");
+                    PrintOut.print("创建缓存文件成功");
                 } else {
-                    System.out.println("创建缓存文件失败");
+                    PrintOut.print("创建缓存文件失败");
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -148,7 +148,7 @@ public class FileUtils {
             outputStream = new ObjectOutputStream(new FileOutputStream(file));
             outputStream.writeObject(obj);
             outputStream.flush();
-            System.out.println("write object success");
+            PrintOut.print("write object success");
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -165,7 +165,7 @@ public class FileUtils {
         ObjectInputStream inputStream = null;
         try {
             inputStream = new ObjectInputStream(new FileInputStream(file));
-            System.out.println("read object success");
+            PrintOut.print("read object success");
             return inputStream.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();

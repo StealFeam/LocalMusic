@@ -2,6 +2,9 @@ package com.zy.ppmusic.utils;
 
 import java.util.Locale;
 
+/**
+ * @author ZhiTouPC
+ */
 public class DateUtil {
     private static class UtilInner {
         private static DateUtil util = new DateUtil();

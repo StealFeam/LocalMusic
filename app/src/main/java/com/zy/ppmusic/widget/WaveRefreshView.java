@@ -18,6 +18,8 @@ import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
 
+import com.zy.ppmusic.utils.PrintOut;
+
 import java.util.ArrayList;
 
 /**
@@ -72,7 +74,7 @@ public class WaveRefreshView extends View {
         whiteWidth /= lineRectF.length;
 
         minWidth = (int) ((getScreenParams(0) * MIN_WIDTH_PERCENT) / getScreenParams(2));
-        System.out.println("最小宽度计算值：" + minWidth);
+        PrintOut.print("最小宽度计算值：" + minWidth);
 
         for (int i = 0; i < lineRectF.length; i++) {
             lineRectF[i] = new RectF((lineWidth + whiteWidth) * i, maxChange,
@@ -166,7 +168,6 @@ public class WaveRefreshView extends View {
             if (animatorArrayList != null && currentStartIndex < animatorArrayList.size()) {
                 Animator animator = animatorArrayList.get(currentStartIndex);
                 animator.start();
-                Log.e(TAG, "handleMessage: " + System.currentTimeMillis());
             }
         }
     }

@@ -159,7 +159,7 @@ public class DataTransform {
             if (mediaIdList.contains(String.valueOf(itemPath.hashCode()))) {
                 continue;
             } else {
-                System.out.println(itemPath);
+                PrintOut.print(itemPath);
             }
             //根据音频地址获取uri，区分为内部存储和外部存储
             Uri audioUri = MediaStore.Audio.Media.getContentUriForPath(itemPath);
@@ -291,7 +291,7 @@ public class DataTransform {
                 byte[] embeddedPicture = retriever.getEmbeddedPicture();
                 Bitmap bitmap = null;
                 if (embeddedPicture != null) {
-                    System.out.println("获取媒体专辑图片数据。。。。" + embeddedPicture.length);
+                    PrintOut.print("获取媒体专辑图片数据。。。。" + embeddedPicture.length);
                     bitmap = BitmapFactory.decodeByteArray(embeddedPicture, 0, embeddedPicture.length);
                 }
 
@@ -321,7 +321,7 @@ public class DataTransform {
                 MusicInfoEntity infoEntity = new MusicInfoEntity(String.valueOf(itemPath.hashCode()),
                         musicName, artistS, itemPath, 0, d, embeddedPicture);
                 musicInfoEntities.add(infoEntity);
-                System.out.println("put else index=" + i + ",path=" + itemPath);
+                PrintOut.print("put else index=" + i + ",path=" + itemPath);
                 pathList.add(itemPath);
                 indexMediaArray.put(i, String.valueOf(itemPath.hashCode()));
                 mediaIdList.add(String.valueOf(itemPath.hashCode()));
@@ -438,7 +438,6 @@ public class DataTransform {
     }
 
     public MediaMetadataCompat getMetadataItem(String mediaId) {
-        System.out.println("mediaId=" + mediaId + ",data=" + mapMetadataArray.toString());
         if (mapMetadataArray.containsKey(mediaId)) {
             return mapMetadataArray.get(mediaId);
         }

@@ -493,7 +493,9 @@ class MediaActivityNewDesign : AppCompatActivity(), IMediaActivityContract.IView
         }
     }
 
+
     private fun setPageData(pathList: List<String>) {
+        vp_media_play_info.adapter = null
         if (mPageAdapter == null) {
             println("null........")
             mPageAdapter = MediaInfoAdapter(supportFragmentManager,pathList)
