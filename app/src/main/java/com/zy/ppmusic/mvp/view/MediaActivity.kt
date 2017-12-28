@@ -201,8 +201,14 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
         override fun onPageScrollStateChanged(state: Int) {
             val nextMediaId = mPlayQueueList!![selectedPosition].description.mediaId
+            val currentIndex = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
+            if(currentIndex == selectedPosition && Math.abs(currentIndex - selectedPosition) > 1){
+                PrintOut.e("current $currentIndex selected $selectedPosition")
+                return
+            }
 
             if (state == ViewPager.SCROLL_STATE_IDLE && nextMediaId != mCurrentMediaIdStr) {
+
                 val extra = Bundle()
                 extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_WITH_ID)
                 mMediaController?.transportControls?.playFromMediaId(
@@ -443,22 +449,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
-        //清除状态缓存，避免出现异常，界面刷新由onStart方法中完成
-        //猜测是由于fragment数据大小超出限制
-        outState?.clear()
-        outState?.keySet()?.forEachIndexed { _, s ->
-            outState.remove(s)
-        }
-        super.onSaveInstanceState(outState)
-        println("onSaveInstanceState............................." + outState?.toString())
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
-        super.onRestoreInstanceState(savedInstanceState)
-        println("onRestoreInstanceState.............................")
-    }
-
     private fun updateHead() {
         if (mHeadAdapter == null) {
             mHeadAdapter = MediaHeadAdapter(supportFragmentManager, DataTransform.getInstance().pathList)
@@ -468,6 +458,23 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         } else {
             mHeadAdapter!!.setPathList(DataTransform.getInstance().pathList)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+
+        //清除状态缓存，避免出现异常，界面刷新由onStart方法中完成
+        //猜测是由于fragment数据大小超出限制
+        outState?.clear()
+        outState?.keySet()?.forEachIndexed { index, s ->
+            outState.remove(s)
+        }
+        super.onSaveInstanceState(outState)
+        println("onSaveInstanceState............................." + outState?.toString())
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+        super.onRestoreInstanceState(savedInstanceState)
+        println("onRestoreInstanceState.............................")
     }
 
     /**
@@ -611,9 +618,11 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                         control_display_duration_tv.text = DateUtil.getInstance().getTime(endPosition)
                         setMediaInfo(displayTitle, subTitle)
                         val position = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
-                        if (mHeadAdapter != null && mHeadAdapter!!.count < position) {
-                            vp_show_media_head.setCurrentItem(position, false)
+                        if (mHeadAdapter == null) {
+                            updateHead()
                         }
+                        vp_show_media_head.setCurrentItem(position, false)
+                        PrintOut.e("seek to position $position")
                     }
                     handlePlayState(mMediaController!!.playbackState!!.state)
                 } else {
