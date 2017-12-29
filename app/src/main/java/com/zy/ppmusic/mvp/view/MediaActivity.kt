@@ -4,6 +4,7 @@ import android.content.*
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.os.ResultReceiver
 import android.support.design.widget.BottomSheetDialog
 import android.support.v4.content.ContextCompat
@@ -21,7 +22,10 @@ import android.support.v7.app.AppCompatDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.ListPopupWindow
 import android.support.v7.widget.RecyclerView
-import android.view.*
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.TextView
 import com.zy.ppmusic.R
@@ -632,6 +636,16 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
             super.onMetadataChanged(metadata)
             PrintOut.print("onMetadataChanged ------------- called")
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                runOnUiThread {
+                    updateMetadata(metadata)
+                }
+            } else {
+                updateMetadata(metadata)
+            }
+        }
+
+        fun updateMetadata(metadata: MediaMetadataCompat?) {
             if (metadata != null) {
                 mCurrentMediaIdStr = metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID)
                 val displayTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE)
@@ -641,13 +655,16 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
                 startPosition = 0
                 control_display_duration_tv.text = DateUtil.getInstance().getTime(endPosition)
                 PrintOut.print("endPosition=$endPosition,step=$stepPosition")
-                if (mCurrentMediaIdStr != null && mBottomQueueAdapter != null) {
-                    mBottomQueueAdapter?.selectIndex = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
-                    mBottomQueueAdapter?.notifyDataSetChanged()
+                val position = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
+                //只在dialog显示时刷新
+                if (mCurrentMediaIdStr != null && mBottomQueueDialog != null) {
+                    if (mBottomQueueDialog!!.isShowing) {
+                        mBottomQueueAdapter?.selectIndex = position
+                        mBottomQueueAdapter?.notifyDataSetChanged()
+                    }
                 }
                 setMediaInfo(StringUtils.ifEmpty(displayTitle, getString(R.string.unknown_name)),
                         StringUtils.ifEmpty(subTitle, getString(R.string.unknown_name)))
-                val position = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
                 if (mHeadAdapter != null && mHeadAdapter!!.count > position) {
                     vp_show_media_head.setCurrentItem(position, false)
                 }
@@ -688,10 +705,10 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         override fun onSessionEvent(event: String?, extras: Bundle?) {
             super.onSessionEvent(event, extras)
             when (event) {
-                MediaService.LOCAL_CACHE_POSITION_EVENT->{
+                MediaService.LOCAL_CACHE_POSITION_EVENT -> {
                     val lastPosition = extras?.getInt(MediaService.LOCAL_CACHE_POSITION_EVENT) as Int
-                    if(lastPosition in 1..(endPosition - 1)){
-                       control_display_progress.progress = (lastPosition * 100 /endPosition).toInt()
+                    if (lastPosition in 1..(endPosition - 1)) {
+                        control_display_progress.progress = (lastPosition * 100 / endPosition).toInt()
                     }
                 }
                 MediaService.ERROR_PLAY_QUEUE_EVENT -> {
@@ -762,14 +779,14 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
 
     private var filter: IntentFilter? = null
     private var isStarted = false
-    private var mLoopReceiver:LoopReceiver?=null
+    private var mLoopReceiver: LoopReceiver? = null
 
 
     private fun startLoop() {
         if (!isStarted) {
             if (filter == null) {
                 filter = IntentFilter(LoopReceiver.ACTION)
-                mLoopReceiver = LoopReceiver(mMediaController!!,mResultReceive!!)
+                mLoopReceiver = LoopReceiver(mMediaController!!, mResultReceive!!)
             }
 
             LocalBroadcastManager.getInstance(this).registerReceiver(mLoopReceiver, filter!!)
@@ -778,20 +795,21 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         }
     }
 
-    class LoopReceiver(controller: MediaControllerCompat,resultReceiver: ResultReceiver) :BroadcastReceiver(){
+    class LoopReceiver(controller: MediaControllerCompat, resultReceiver: ResultReceiver) : BroadcastReceiver() {
         companion object {
             val ACTION = "com.zy.ppmusic.LoopReceiver"
         }
 
-        private var mWeakController:WeakReference<MediaControllerCompat>?=null
-        private var mWeakResultReceiver:WeakReference<ResultReceiver>?=null
+        private var mWeakController: WeakReference<MediaControllerCompat>? = null
+        private var mWeakResultReceiver: WeakReference<ResultReceiver>? = null
+
         init {
             this.mWeakController = WeakReference<MediaControllerCompat>(controller)
             this.mWeakResultReceiver = WeakReference(resultReceiver)
         }
 
         override fun onReceive(context: Context?, intent: Intent?) {
-            if(mWeakController!!.get() != null && mWeakResultReceiver!!.get()!=null){
+            if (mWeakController!!.get() != null && mWeakResultReceiver!!.get() != null) {
                 val mMediaController = mWeakController!!.get()
                 if (mMediaController!!.playbackState?.state == PlaybackStateCompat.STATE_PLAYING) {
                     mMediaController.sendCommand(MediaService.COMMAND_POSITION, null, mWeakResultReceiver!!.get())
@@ -829,7 +847,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
         val mediaController = MediaControllerCompat.getMediaController(this)
         if (mediaController != null) {
             mediaController.unregisterCallback(mControllerCallBack)
-            MediaControllerCompat.setMediaController(this,null)
+            MediaControllerCompat.setMediaController(this, null)
         }
         //停止进度更新
         stopLoop()

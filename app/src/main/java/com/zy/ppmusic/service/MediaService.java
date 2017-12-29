@@ -2,6 +2,9 @@ package com.zy.ppmusic.service;
 
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.app.job.JobWorkItem;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -36,9 +39,16 @@ import com.zy.ppmusic.utils.PlayBack;
 import com.zy.ppmusic.utils.PrintOut;
 import com.zy.ppmusic.utils.StringUtils;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author ZhiTouPC
@@ -116,6 +126,8 @@ public class MediaService extends MediaBrowserServiceCompat {
     private List<MediaBrowserCompat.MediaItem> mMediaItemList = new ArrayList<>();
     private List<MediaSessionCompat.QueueItem> mQueueItemList = new ArrayList<>();
     private CountDownTimer timer;
+    private ExecutorService executorService;
+    private UpdateRunnable mUpdateRunnable;
     /**
      * 错误曲目数量
      * 当无法播放曲目数量和列表数量相同时销毁播放器避免循环
@@ -181,6 +193,15 @@ public class MediaService extends MediaBrowserServiceCompat {
 
         mNotificationManager = NotificationManagerCompat.from(this);
         mAudioReceiver = new AudioBecomingNoisyReceiver(this);
+
+        executorService = new ThreadPoolExecutor(1, 1,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+            @Override
+            public Thread newThread(@NonNull Runnable r) {
+                return new Thread(r);
+            }
+        });
     }
 
     @Override
@@ -335,19 +356,46 @@ public class MediaService extends MediaBrowserServiceCompat {
             mAudioReceiver.unregister();
         }
     }
+    private static class UpdateRunnable implements Runnable{
+        private String mediaId;
+        private WeakReference<MediaSessionCompat> mWeakSessionCompat;
+
+        private UpdateRunnable(String mediaId, MediaSessionCompat sessionCompat) {
+            this.mediaId = mediaId;
+            this.mWeakSessionCompat = new WeakReference<>(sessionCompat);
+        }
+
+        private void setMediaId(String mediaId) {
+            this.mediaId = mediaId;
+        }
+
+        @Override
+        public void run() {
+            //设置媒体信息
+            MediaMetadataCompat track = DataTransform.getInstance().getMetadataCompatList().get(mediaId);
+            //触发MediaControllerCompat.Callback->onMetadataChanged方法
+            if (track != null && mWeakSessionCompat.get() != null) {
+                mWeakSessionCompat.get().setMetadata(track);
+            }
+        }
+    }
+
+
+
 
     /**
      * 播放曲目发生变化时
      *
      * @param mediaId 曲目id
      */
-    public void onMediaChange(String mediaId) {
+    public void onMediaChange(final String mediaId) {
         if (mediaId != null && !DataTransform.getInstance().getPathList().isEmpty()) {
-            //设置媒体信息
-            MediaMetadataCompat track = DataTransform.getInstance().getMetadataCompatList().get(mediaId);
-            if (track != null) {
-                mMediaSessionCompat.setMetadata(track);
+            if(mUpdateRunnable == null){
+                mUpdateRunnable = new UpdateRunnable(mediaId,mMediaSessionCompat);
+            }else{
+                mUpdateRunnable.setMediaId(mediaId);
             }
+            executorService.submit(mUpdateRunnable);
             Log.e(TAG, "onMediaChange:" + DataTransform.getInstance().toString());
             int index = DataTransform.getInstance().getMediaIndex(mediaId);
             Log.e(TAG, "onMediaChange: index=" + index);
