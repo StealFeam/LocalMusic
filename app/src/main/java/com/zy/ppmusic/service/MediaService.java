@@ -29,7 +29,6 @@ import android.view.KeyEvent;
 import com.zy.ppmusic.data.db.DBManager;
 import com.zy.ppmusic.entity.MusicDbEntity;
 import com.zy.ppmusic.mvp.view.MediaActivity;
-import com.zy.ppmusic.mvp.view.MediaActivityNewDesign;
 import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.FileUtils;
 import com.zy.ppmusic.utils.NotificationUtils;
@@ -40,42 +39,44 @@ import com.zy.ppmusic.utils.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-
 
 /**
  * @author ZhiTouPC
  */
 public class MediaService extends MediaBrowserServiceCompat {
-    private static final String TAG = "MediaService";
-    /*-------------------play action--------------------------*/
-    //播放指定id
+    /**
+     * 播放指定id
+     */
     public static final String ACTION_PLAY_WITH_ID = "PLAY_WITH_ID";
-    //缓冲指定id
+    /*-------------------play action--------------------------*/
+    /**
+     * 缓冲指定id
+     */
     public static final String ACTION_PREPARED_WITH_ID = "PREPARED_WITH_ID";
-    //初始化播放器
+    /**
+     * 初始化播放器
+     */
     public static final String ACTION_PLAY_INIT = "PLAY_INIT";
-    //快进
+    /**
+     * 快进
+     */
+
     public static final String ACTION_SEEK_TO = "SEEK_TO";
-
-    /*-------------------play action end--------------------------*/
-
     //获取参数
     public static final String ACTION_PARAM = "ACTION_PARAM";
+
+    /*-------------------play action end--------------------------*/
     //快进
     public static final String SEEK_TO_POSITION_PARAM = "SEEK_TO_POSITION_PARAM";
-
     /*-------------------command action--------------------------*/
     //获取播放位置
     public static final String COMMAND_POSITION = "COMMAND_POSITION";
     //获取播放位置 resultCode
     public static final int COMMAND_POSITION_CODE = 0x001;
-
     //更新播放列表
     public static final String COMMAND_UPDATE_QUEUE = "COMMAND_UPDATE_QUEUE";
     //更新播放列表resultCode
     public static final int COMMAND_UPDATE_QUEUE_CODE = 0x002;
-
     /*-------------------command action end--------------------------*/
     /*-------------------custom action start--------------------------*/
     //播放列表为空，本地未搜索到曲目
@@ -84,17 +85,22 @@ public class MediaService extends MediaBrowserServiceCompat {
     public static final String LOADING_QUEUE_EVENT = "LOADING_QUEUE_EVENT";
     //加载完成....
     public static final String LOAD_COMPLETE_EVENT = "LOAD_COMPLETE_EVENT";
+    //加载本地缓存位置
+    public static final String LOCAL_CACHE_POSITION_EVENT = "LOCAL_CACHE_POSITION_EVENT";
+
+
     //开始倒计时
     public static final String ACTION_COUNT_DOWN_TIME = "ACTION_COUNT_DOWN_TIME";
     //倒计时结束
     public static final String ACTION_COUNT_DOWN_END = "ACTION_COUNT_DOWN_END";
     //停止倒计时
     public static final String ACTION_STOP_COUNT_DOWN = "ACTION_STOP_COUNT_DOWN";
-    /*-------------------custom action end--------------------------*/
-
     //通知的id
     public static final int NOTIFY_ID = 412;
-
+    /**
+     * -------------------custom action end--------------------------
+     */
+    private static final String TAG = "MediaService";
     private MediaSessionCompat mMediaSessionCompat;
     private PlaybackStateCompat.Builder mPlayBackStateBuilder;
     private PlayBack mPlayBack;
@@ -200,10 +206,10 @@ public class MediaService extends MediaBrowserServiceCompat {
         if (s.equals(getPackageName())) {
             if (mMediaItemList.size() == 0) {
                 result.detach();
-                ArrayList<MediaBrowserCompat.MediaItem> list = getBrowserRootHints().getParcelableArrayList("queueList");
+                ArrayList<MediaBrowserCompat.MediaItem> list = DataTransform.getInstance().getMediaItemList();
                 if (list != null) {
                     mMediaItemList = list;
-                    PrintOut.print("load ... " + mMediaItemList.toString());
+                    PrintOut.print("load list size ... " + mMediaItemList.size());
                 }
                 result.sendResult(list);
             } else {
@@ -357,7 +363,7 @@ public class MediaService extends MediaBrowserServiceCompat {
      */
     private void updateQueue() {
         mMediaItemList = DataTransform.getInstance().getMediaItemList();
-        Log.e(TAG, "updateQueue: " + mMediaItemList.toString());
+        Log.e(TAG, "updateQueue: size ... " + mMediaItemList.size());
 
         mQueueItemList = DataTransform.getInstance().getQueueItemList();
         mPlayQueueMediaId = DataTransform.getInstance().getMediaIdList();
@@ -367,6 +373,100 @@ public class MediaService extends MediaBrowserServiceCompat {
         //覆盖本地缓存
         FileUtils.saveObject(DataTransform.getInstance().getMusicInfoEntities(),
                 getCacheDir().getAbsolutePath());
+    }
+
+    private void removeQueueItemByDes(MediaDescriptionCompat des) {
+        int index = getIndexByDes(des);
+        removeQueueItemAt(index);
+    }
+
+    private int getIndexByDes(MediaDescriptionCompat des) {
+        for (int i = 0; i < mQueueItemList.size(); i++) {
+            MediaSessionCompat.QueueItem queueItem = mQueueItemList.get(i);
+            if (queueItem != null && des != null) {
+                if (StringUtils.Companion.ifEquals(queueItem.getDescription().getMediaId(),
+                        des.getMediaId())) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 移除列表中的item
+     *
+     * @param removeIndex 要移除item的位置
+     */
+    public void removeQueueItemAt(int removeIndex) {
+        if (removeIndex == -1) {
+            Log.e(TAG, "removeQueueItemAt: the index is " + removeIndex);
+            return;
+        }
+        Log.e(TAG, "removeQueueItemAt: " + removeIndex);
+        int state = mPlayBack.getState();
+        if (mPlayBack.isPlaying()) {
+            mPlayBack.pause();
+        }
+        //如果删除的是当前播放的歌曲，则播放新的曲目
+        if (mPlayBack.getCurrentIndex() == removeIndex) {
+            DataTransform.getInstance().removeItem(getApplicationContext(), removeIndex);
+            updateQueue();
+            if (mPlayQueueMediaId.size() > 0) {
+                //删除的是前列表倒数第二个曲目的时候直接播放替代的曲目
+                if (removeIndex <= mPlayQueueMediaId.size() - 1) {
+                    onMediaChange(mPlayQueueMediaId.get(removeIndex));
+                } else {//删除的是前列表最后一个曲目播放列表的第一个曲目
+                    onMediaChange(mPlayQueueMediaId.get(0));
+                }
+                if (state == PlaybackStateCompat.STATE_PLAYING) {
+                    handlePlayOrPauseRequest();
+                }
+            } else {
+                mPlayBack.stopPlayer();
+            }
+        } else {//如果不是当前曲目，不能影响当前播放,记录下播放进度，更新列表后继续播放
+            int currentIndex = mPlayBack.getCurrentIndex();
+            int position = mPlayBack.getCurrentStreamPosition();
+            DataTransform.getInstance().removeItem(getApplicationContext(), removeIndex);
+            updateQueue();
+            if (currentIndex < removeIndex) {
+                onMediaChange(mPlayQueueMediaId.get(currentIndex));
+            } else {
+                onMediaChange(mPlayQueueMediaId.get(currentIndex - 1));
+            }
+            mPlayBack.seekTo(position, state == PlaybackStateCompat.STATE_PLAYING);
+        }
+    }
+
+    /**
+     * 处理播放或者暂停请求
+     */
+    public void handlePlayOrPauseRequest() {
+        if (mCurrentMedia == null) {
+            return;
+        }
+        mPlayBack.play();
+    }
+
+    @Override
+    public void unbindService(ServiceConnection conn) {
+        super.unbindService(conn);
+        Log.d(TAG, "unbindService() called with: conn = [" + conn + "]");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy() called");
+        mNotificationManager.cancelAll();
+        mAudioReceiver.unregister();
+        mMediaSessionCompat.release();
+        if(timer != null){
+            timer.cancel();
+        }
+        mPlayBack.stopPlayer();
+        mPlayBack = null;
     }
 
     /**
@@ -413,6 +513,9 @@ public class MediaService extends MediaBrowserServiceCompat {
                     if (entity.size() > 0) {
                         onMediaChange(entity.get(0).getLastMediaId());
                         mPlayBack.seekTo(entity.get(0).getLastPlayedPosition(), false);
+                        Bundle extra = new Bundle();
+                        extra.putInt(LOCAL_CACHE_POSITION_EVENT,entity.get(0).getLastPlayedPosition());
+                        mMediaSessionCompat.sendSessionEvent(LOCAL_CACHE_POSITION_EVENT,extra);
                     } else {
                         onMediaChange(mediaId);
                     }
@@ -575,80 +678,6 @@ public class MediaService extends MediaBrowserServiceCompat {
         }
     }
 
-    private void removeQueueItemByDes(MediaDescriptionCompat des) {
-        int index = getIndexByDes(des);
-        removeQueueItemAt(index);
-    }
-
-    private int getIndexByDes(MediaDescriptionCompat des) {
-        for (int i = 0; i < mQueueItemList.size(); i++) {
-            MediaSessionCompat.QueueItem queueItem = mQueueItemList.get(i);
-            if (queueItem != null && des != null) {
-                if (StringUtils.Companion.ifEquals(queueItem.getDescription().getMediaId(),
-                        des.getMediaId())) {
-                    return i;
-                }
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * 移除列表中的item
-     *
-     * @param removeIndex 要移除item的位置
-     */
-    public void removeQueueItemAt(int removeIndex) {
-        if (removeIndex == -1) {
-            Log.e(TAG, "removeQueueItemAt: the index is " + removeIndex);
-            return;
-        }
-        Log.e(TAG, "removeQueueItemAt: " + removeIndex);
-        int state = mPlayBack.getState();
-        if (mPlayBack.isPlaying()) {
-            mPlayBack.pause();
-        }
-        //如果删除的是当前播放的歌曲，则播放新的曲目
-        if (mPlayBack.getCurrentIndex() == removeIndex) {
-            DataTransform.getInstance().removeItem(getApplicationContext(), removeIndex);
-            updateQueue();
-            if (mPlayQueueMediaId.size() > 0) {
-                //删除的是前列表倒数第二个曲目的时候直接播放替代的曲目
-                if (removeIndex <= mPlayQueueMediaId.size() - 1) {
-                    onMediaChange(mPlayQueueMediaId.get(removeIndex));
-                } else {//删除的是前列表最后一个曲目播放列表的第一个曲目
-                    onMediaChange(mPlayQueueMediaId.get(0));
-                }
-                if (state == PlaybackStateCompat.STATE_PLAYING) {
-                    handlePlayOrPauseRequest();
-                }
-            } else {
-                mPlayBack.stopPlayer();
-            }
-        } else {//如果不是当前曲目，不能影响当前播放,记录下播放进度，更新列表后继续播放
-            int currentIndex = mPlayBack.getCurrentIndex();
-            int position = mPlayBack.getCurrentStreamPosition();
-            DataTransform.getInstance().removeItem(getApplicationContext(), removeIndex);
-            updateQueue();
-            if (currentIndex < removeIndex) {
-                onMediaChange(mPlayQueueMediaId.get(currentIndex));
-            } else {
-                onMediaChange(mPlayQueueMediaId.get(currentIndex - 1));
-            }
-            mPlayBack.seekTo(position, state == PlaybackStateCompat.STATE_PLAYING);
-        }
-    }
-
-    /**
-     * 处理播放或者暂停请求
-     */
-    public void handlePlayOrPauseRequest() {
-        if (mCurrentMedia == null) {
-            return;
-        }
-        mPlayBack.play();
-    }
-
     private class AudioBecomingNoisyReceiver extends BroadcastReceiver {
         private final Context context;
         private boolean mIsRegistered = false;
@@ -680,18 +709,5 @@ public class MediaService extends MediaBrowserServiceCompat {
                 handlePlayOrPauseRequest();
             }
         }
-    }
-
-    @Override
-    public void unbindService(ServiceConnection conn) {
-        super.unbindService(conn);
-        Log.d(TAG, "unbindService() called with: conn = [" + conn + "]");
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy() called");
-        mMediaSessionCompat.release();
     }
 }

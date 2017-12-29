@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.StrictMode;
 
 import com.zy.ppmusic.utils.CrashHandler;
 
@@ -21,6 +22,7 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        StrictMode.enableDefaults();
 //        CrashHandler handler = new CrashHandler(this);
     }
 
