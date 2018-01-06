@@ -3,6 +3,7 @@ package com.zy.ppmusic.utils;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.File;
@@ -10,23 +11,56 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
  * 扫描本地音乐文件
+ * @author lengs
  */
 public class ScanMusicFile {
     private static final String TAG = "ScanMusicFile";
-    private static final int COUNT_CHANGE = 0X001;//扫描的数量发生了变化
-    private static final int SCAN_COMPLETE = 0X000;//扫描完成
-
-    private String[] mSupportMedia = {".mp3",".MP3",".wav",".flac"};//所支持的音乐格式
-    private static ExecutorService executor = Executors.newSingleThreadExecutor();//单一线程池
-    private ArrayList<OnScanComplete> callBackList = new ArrayList<>();
-    private volatile ArrayList<String> mPathList = new ArrayList<>();//扫描到的音乐路径集合
-    private ScanHandler mHandler = new ScanHandler(this);//线程回调的handler
-    private String mInnerStoragePath;//内部存储路径
-    private String mExternalStoragePath;//外部存储路径
+    /**
+     * 扫描的数量发生了变化
+     */
+    private static final int COUNT_CHANGE = 0X001;
+    /**
+     * 扫描完成
+     */
+    private static final int SCAN_COMPLETE = 0X000;
+    /**
+     * 所支持的音乐格式
+     */
+    private String[] mSupportMedia = {".mp3",".MP3",".wav",".flac"};
+    /**
+     * 单一线程池
+     */
+    private static ExecutorService executor = new ThreadPoolExecutor(1, 1, 0L,
+            TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>(), new ThreadFactory() {
+        @Override
+        public Thread newThread(@NonNull Runnable r) {
+            return new Thread(r,TAG);
+        }
+    });
+    private ArrayList<AbstractOnScanComplete> callBackList = new ArrayList<>();
+    /**
+     * 扫描到的音乐路径集合
+     */
+    private volatile ArrayList<String> mPathList = new ArrayList<>();
+    /**
+     * 线程回调的handler
+     */
+    private ScanHandler mHandler = new ScanHandler(this);
+    /**
+     * 内部存储路径
+     */
+    private String mInnerStoragePath;
+    /**
+     * 外部存储路径
+     */
+    private String mExternalStoragePath;
     private Runnable mScanTask;
 
     private static class ScanInstance {
@@ -40,7 +74,7 @@ public class ScanMusicFile {
         return ScanInstance.scanMusicFile;
     }
 
-    public ScanMusicFile setOnScanComplete(OnScanComplete complete) {
+    public ScanMusicFile setOnScanComplete(AbstractOnScanComplete complete) {
         if (!callBackList.contains(complete)) {
             callBackList.add(complete);
         }
@@ -93,16 +127,16 @@ public class ScanMusicFile {
                     case SCAN_COMPLETE:
                         if (scanMusicFile.callBackList.size() > 0) {
                             for (int i = scanMusicFile.callBackList.size() - 1; i >= 0; i--) {
-                                OnScanComplete onScanComplete = scanMusicFile.callBackList.get(i);
-                                onScanComplete.onComplete(scanMusicFile.mPathList);
-                                scanMusicFile.callBackList.remove(onScanComplete);
+                                AbstractOnScanComplete callback = scanMusicFile.callBackList.get(i);
+                                callback.onComplete(scanMusicFile.mPathList);
+                                scanMusicFile.callBackList.remove(callback);
                             }
                         }
                         break;
                     case COUNT_CHANGE:
                         if (scanMusicFile.callBackList.size() > 0) {
-                            for (OnScanComplete onScanComplete : scanMusicFile.callBackList) {
-                                onScanComplete.onCountChange(scanMusicFile.mPathList.size());
+                            for (AbstractOnScanComplete callback : scanMusicFile.callBackList) {
+                                callback.onCountChange(scanMusicFile.mPathList.size());
                             }
                         }
                         break;
@@ -126,8 +160,9 @@ public class ScanMusicFile {
             }
             return;
         }
+        String dot = ".";
         //过滤没有后缀名的文件
-        if (!file.getName().contains(".")) {
+        if (!file.getName().contains(dot)) {
             return;
         }
         //判断文件的类型是否支持
@@ -145,7 +180,7 @@ public class ScanMusicFile {
         }
     }
 
-    public abstract static class OnScanComplete {
+    public abstract static class AbstractOnScanComplete {
         /**
          * 扫描完成
          * @param paths 路径集合

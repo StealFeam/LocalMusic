@@ -7,30 +7,29 @@ import android.util.Log;
 
 import com.zy.ppmusic.entity.MusicInfoEntity;
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract;
-import com.zy.ppmusic.mvp.model.MediaModelImpl;
+import com.zy.ppmusic.mvp.model.MediaMediaActivityModelImpl;
 import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.FileUtils;
 import com.zy.ppmusic.utils.ScanMusicFile;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author ZhiTouPC
  */
-public class MediaPresenterImpl implements IMediaActivityContract.IPresenter {
+public class MediaPresenterImpl implements IMediaActivityContract.IMediaActivityPresenter {
     private static final String TAG = "MediaPresenterImpl";
     private static final String CACHE_MODE_NAME = "CACHE_MODE";
     private static final String CACHE_MODE_KEY = "MODE_KEY";
-    private WeakReference<IMediaActivityContract.IView> mViewWeak;
-    private IMediaActivityContract.IModel mModel;
+    private IMediaActivityContract.IMediaActivityModel mModel;
+    private WeakReference<IMediaActivityContract.IMediaActivityView> mViewWeak;
     private SharedPreferences mModeCachePreference;
     private boolean isScanning = false;
 
-    public MediaPresenterImpl(IMediaActivityContract.IView mView) {
-        this.mViewWeak = new WeakReference<>(mView);
-        mModel = new MediaModelImpl();
+    public MediaPresenterImpl(IMediaActivityContract.IMediaActivityView mView) {
+        mViewWeak = new WeakReference<>(mView);
+        mModel = new MediaMediaActivityModelImpl();
     }
 
     @Override
@@ -84,7 +83,7 @@ public class MediaPresenterImpl implements IMediaActivityContract.IPresenter {
             return;
         }
         isScanning = true;
-        mModel.refreshQueue(context, new ScanMusicFile.OnScanComplete() {
+        mModel.refreshQueue(context, new ScanMusicFile.AbstractOnScanComplete() {
             @Override
             protected void onComplete(ArrayList<String> paths) {
                 isScanning = false;

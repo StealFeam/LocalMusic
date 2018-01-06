@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * @author ZhiTouPC
  */
 public interface IMediaActivityContract {
-    interface IView extends IBaseView {
+    interface IMediaActivityView extends IBaseView {
         /**
          * 加载完成
          */
@@ -38,7 +38,8 @@ public interface IMediaActivityContract {
         void hideLoading();
     }
 
-    interface IPresenter extends IBasePresenter {
+    interface IMediaActivityPresenter extends IBasePresenter {
+
         /**
          * 刷新列表
          *
@@ -61,7 +62,7 @@ public interface IMediaActivityContract {
          * @param c 环境
          * @return 本地数据
          */
-        int getLocalMode(Context c);
+         int getLocalMode(Context c);
 
         /**
          * 删除文件
@@ -72,13 +73,13 @@ public interface IMediaActivityContract {
         boolean deleteFile(String path);
     }
 
-    interface IModel extends IBaseModel {
+    interface IMediaActivityModel extends IBaseModel {
         /**
          * 刷新列表
          *
          * @param context 环境
          * @param l       监听回调
          */
-        void refreshQueue(Context context, ScanMusicFile.OnScanComplete l);
+        void refreshQueue(Context context, ScanMusicFile.AbstractOnScanComplete l);
     }
 }

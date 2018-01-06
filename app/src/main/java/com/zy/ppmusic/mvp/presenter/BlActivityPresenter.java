@@ -8,7 +8,7 @@ import android.content.Context;
 
 import com.zy.ppmusic.mvp.contract.IBLActivityContract;
 import com.zy.ppmusic.entity.ScanResultEntity;
-import com.zy.ppmusic.mvp.model.BLActivityModel;
+import com.zy.ppmusic.mvp.model.BLActivityModelImpl;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,18 +19,18 @@ import java.util.Set;
 /**
  * @author ZY
  */
-public class BlActivityPresenter implements IBLActivityContract.IPresenter {
+public class BlActivityPresenter implements IBLActivityContract.IBLActivityPresenter {
     private BluetoothAdapter mBlueAdapter;
     private BluetoothA2dp mBlueA2dp;
-    private IBLActivityContract.IModel mModel;
-    private WeakReference<IBLActivityContract.IView> mView;
+    private IBLActivityContract.IBLActivityModel mModel;
+    private WeakReference<IBLActivityContract.IBLActivityView> mView;
     private boolean isNeedRe = false;
     private Context context;
 
-    public BlActivityPresenter(IBLActivityContract.IView mView) {
+    public BlActivityPresenter(IBLActivityContract.IBLActivityView mView) {
         this.mView = new WeakReference<>(mView);
         context = mView.getContext();
-        mModel = new BLActivityModel();
+        mModel = new BLActivityModelImpl();
         mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 

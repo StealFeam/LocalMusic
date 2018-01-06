@@ -36,7 +36,7 @@ import java.util.*
 /**
  * @author ZY
  */
-class BlScanActivity : AppCompatActivity(), IBLActivityContract.IView, EasyPermissions.PermissionCallbacks {
+class BlScanActivity : AppCompatActivity(), IBLActivityContract.IBLActivityView, EasyPermissions.PermissionCallbacks {
     private val REQUEST_ENABLE_BL = 0x001
     private var mBlueToothOpenSwitch: SwitchCompat? = null//蓝牙开关
     private var mBlStateChangeReceiver: StatusChangeReceiver? = null

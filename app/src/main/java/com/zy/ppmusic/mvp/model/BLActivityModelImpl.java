@@ -18,9 +18,9 @@ import java.util.Set;
 /**
  * @author ZhiTouPC
  */
-public class BLActivityModel implements IBLActivityContract.IModel{
+public class BLActivityModelImpl implements IBLActivityContract.IBLActivityModel{
 
-    public BLActivityModel() {
+    public BLActivityModelImpl() {
     }
 
     @NotNull

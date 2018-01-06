@@ -52,7 +52,7 @@ import java.util.*
  *      1.MediaController.transportControls.playFromMediaId(String, Bundle);//只发送消息（最好与播放器状态相关）
  *      2.SessionCompat.sendCommand(String,Bundle,ResultReceiver);//需要获取结果
  */
-class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
+class MediaActivity : AppCompatActivity(), IMediaActivityContract.IMediaActivityView {
     private val TAG = "MediaActivity"
     private var mMediaBrowser: MediaBrowserCompat? = null
     private var mMediaBrowserParentId: String? = null
@@ -69,7 +69,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IView {
     private var mResultReceive: MediaResultReceive? = null//媒体播放进度处理
     private var mIsTrackingBar: Boolean? = false//是否正在拖动进度条
 
-    private var mPresenter: IMediaActivityContract.IPresenter? = null
+    private var mPresenter: IMediaActivityContract.IMediaActivityPresenter? = null
     private var mLoadingDialog: AppCompatDialog? = null//加载中的dialog
     private var mBottomLoopModePop: ListPopupWindow? = null//播放模式的dialog
 
