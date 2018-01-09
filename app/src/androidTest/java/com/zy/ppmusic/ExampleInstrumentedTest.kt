@@ -2,6 +2,7 @@ package com.zy.ppmusic
 
 import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4
+import com.zy.ppmusic.ui.SplashActivity
 import com.zy.ppmusic.utils.ScanMusicFile
 
 import org.junit.Test
@@ -19,5 +20,6 @@ class ExampleInstrumentedTest {
     @Test
     fun useAppContext() {
         // Context of the app under test.
+        val activity = SplashActivity()
     }
 }

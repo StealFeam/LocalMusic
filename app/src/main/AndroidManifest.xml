@@ -6,12 +6,11 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <!--<uses-permission android:name="android.permission.RECORD_AUDIO" />-->
 
     <application
         android:name=".App"
@@ -21,18 +20,17 @@
         android:roundIcon="@mipmap/ic_music_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <meta-data
+            android:name="asset_statements"
+            android:resource="@string/asset_statements" />
+
         <activity
             android:name=".mvp.view.BlScanActivity"
-            android:theme="@style/AppTheme.NoActionBar.Translate">
-            <!--<intent-filter>-->
-                <!--<action android:name="android.intent.action.MAIN" />-->
-                <!--<category android:name="android.intent.category.LAUNCHER" />-->
-            <!--</intent-filter>-->
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar.Translate"/>
 
         <service
             android:name=".service.MediaService"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
@@ -48,19 +46,26 @@
 
         <activity
             android:name=".mvp.view.MediaActivity"
-            android:launchMode="singleTop"/>
+            android:launchMode="singleTask" />
 
         <activity
-            android:name=".mvp.view.MediaActivityNewDesign"
-            android:launchMode="singleTop"/>
-
-        <activity android:name=".ui.SplashActivity"
+            android:name=".ui.SplashActivity"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="http"
+                    android:host="lovemusic.com"
+                    android:pathPattern="/open" />
             </intent-filter>
         </activity>
 

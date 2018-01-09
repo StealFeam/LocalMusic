@@ -8,6 +8,9 @@ import android.os.StrictMode;
 
 import com.zy.ppmusic.utils.CrashHandler;
 
+/**
+ * @author ZhiTouPC
+ */
 public class App extends Application {
     public static final String LOCAL_DATA_TABLE_NAME = "CACHE_PATH_LIST";
 

@@ -789,7 +789,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IMediaActivity
                 mLoopReceiver = LoopReceiver(mMediaController!!, mResultReceive!!)
             }
 
-            LocalBroadcastManager.getInstance(this).registerReceiver(mLoopReceiver, filter!!)
+            LocalBroadcastManager.getInstance(this).registerReceiver(mLoopReceiver!!, filter!!)
             startService(Intent(this, LoopService::class.java))
             isStarted = true
         }
@@ -797,7 +797,7 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IMediaActivity
 
     class LoopReceiver(controller: MediaControllerCompat, resultReceiver: ResultReceiver) : BroadcastReceiver() {
         companion object {
-            val ACTION = "com.zy.ppmusic.LoopReceiver"
+            val ACTION = this::class.java.name as String
         }
 
         private var mWeakController: WeakReference<MediaControllerCompat>? = null
@@ -816,12 +816,13 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IMediaActivity
                 }
             }
         }
-
     }
 
     private fun stopLoop() {
         if (isStarted) {
-            LocalBroadcastManager.getInstance(this).unregisterReceiver(mLoopReceiver)
+            if(mLoopReceiver!=null){
+                LocalBroadcastManager.getInstance(this).unregisterReceiver(mLoopReceiver!!)
+            }
             stopService(Intent(this, LoopService::class.java))
             isStarted = false
         }
@@ -853,7 +854,6 @@ class MediaActivity : AppCompatActivity(), IMediaActivityContract.IMediaActivity
         stopLoop()
         //取消播放状态监听
         if (mMediaBrowser != null) {
-
             if (mMediaBrowserParentId != null) {
                 mMediaBrowser?.unsubscribe(mMediaBrowserParentId!!, subscriptionCallBack)
             }

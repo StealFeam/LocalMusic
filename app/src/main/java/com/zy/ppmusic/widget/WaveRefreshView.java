@@ -42,7 +42,6 @@ public class WaveRefreshView extends View {
     private RectF[] lineRectF = new RectF[5];
     private float[] screenParams;
     private AnimatorHandler handler;
-    private float lastPercent;
 
     public WaveRefreshView(Context context) {
         this(context, null);

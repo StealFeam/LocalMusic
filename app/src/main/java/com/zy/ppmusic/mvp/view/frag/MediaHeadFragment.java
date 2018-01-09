@@ -17,6 +17,8 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.zy.ppmusic.R;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.ByteArrayOutputStream;
 
 /**
@@ -30,12 +32,11 @@ public class MediaHeadFragment extends Fragment {
     private RequestOptions mImageLoadOptions;
     private ByteArrayOutputStream bitmapByteOutStream;
 
-
     public MediaHeadFragment() {
-        this.mImageLoadOptions = new RequestOptions();
-        this.mImageLoadOptions.circleCrop();
-        this.mImageLoadOptions.skipMemoryCache(true);
-        this.mImageLoadOptions.diskCacheStrategy(DiskCacheStrategy.NONE);
+        this.mImageLoadOptions = new RequestOptions()
+                .circleCrop()
+                .skipMemoryCache(true)
+                .diskCacheStrategy(DiskCacheStrategy.NONE);
         this.bitmapByteOutStream = new ByteArrayOutputStream();
     }
 
@@ -50,12 +51,15 @@ public class MediaHeadFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NotNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_media_head, container, false);
         AppCompatImageView imageView = rootView.findViewById(R.id.iv_media_head);
         try {
             Bundle arguments = getArguments();
-            MediaMetadataCompat info = arguments.getParcelable(PARAM);
+            MediaMetadataCompat info = null;
+            if (arguments != null) {
+                info = arguments.getParcelable(PARAM);
+            }
             if (info != null) {
                 MediaDescriptionCompat description = info.getDescription();
                 Bitmap iconBitmap = description.getIconBitmap();

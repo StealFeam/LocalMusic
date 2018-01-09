@@ -54,4 +54,5 @@
     <string name="bluetooth_manager">蓝牙管理</string>
     <string name="time_to_close">定时关闭</string>
     <string name="show_name_and_author">%s-%s</string>
+    <string name="asset_statements" translatable="false">[{\n  \"relation\": [\"delegate_permission/common.handle_all_urls\"],\n  \"target\": {\n    \"namespace\": \"web\",\n    \"site\": \"https://lovemusic.com\",\n  }\n}]</string>
 </resources>

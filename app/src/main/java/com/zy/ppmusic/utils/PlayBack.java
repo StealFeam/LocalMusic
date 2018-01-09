@@ -266,6 +266,9 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
 
     public String onSkipToNext() {
         checkPlayQueue();
+        if(mPlayQueue.isEmpty()){
+            return null;
+        }
         int queueIndex = mPlayQueue.indexOf(mCurrentMediaId);
         if (queueIndex == (mPlayQueue.size() - 1)) {
             queueIndex = -1;
@@ -299,6 +302,9 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
     }
 
     public String onSkipToPrevious() {
+        if(mPlayQueue.isEmpty()){
+            return null;
+        }
         int queueIndex = mPlayQueue.indexOf(mCurrentMediaId);
         if (queueIndex == 0) {
             queueIndex = mPlayQueue.size();
