@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.zy.ppmusic.mvp.view.MediaActivity;
+import com.zy.ppmusic.receiver.LoopReceiver;
 import com.zy.ppmusic.utils.PrintOut;
 
 /**
@@ -16,6 +17,7 @@ import com.zy.ppmusic.utils.PrintOut;
 public class LoopService extends IntentService{
     private static final String TAG = "LoopService";
     public static final String ACTION = LoopService.class.getSimpleName();
+    private boolean loopStart = true;
 
     public LoopService() {
         super(TAG);
@@ -29,14 +31,17 @@ public class LoopService extends IntentService{
     @Override
     public void onStart(@Nullable Intent intent, int startId) {
         super.onStart(intent, startId);
+        loopStart = true;
         PrintOut.i("loop start ... ");
     }
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        for(;;){
+        while(loopStart){
+//            LocalBroadcastManager.getInstance(this).sendBroadcast(
+//                    new Intent(LoopReceiver.Companion.getACTION()));
             LocalBroadcastManager.getInstance(this).sendBroadcast(
-                    new Intent(MediaActivity.LoopReceiver.Companion.getACTION()));
+                    new Intent(ACTION));
             try {
                 Thread.sleep(1000);
             }catch (Exception e){
@@ -48,6 +53,7 @@ public class LoopService extends IntentService{
 
     @Override
     public boolean stopService(Intent name) {
+        loopStart = false;
         return super.stopService(name);
     }
 

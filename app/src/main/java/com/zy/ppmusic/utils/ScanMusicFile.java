@@ -2,6 +2,8 @@ package com.zy.ppmusic.utils;
 
 import android.content.Context;
 import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -9,6 +11,7 @@ import android.util.Log;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -18,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 扫描本地音乐文件
+ *
  * @author lengs
  */
 public class ScanMusicFile {
@@ -33,38 +37,42 @@ public class ScanMusicFile {
     /**
      * 所支持的音乐格式
      */
-    private String[] mSupportMedia = {".mp3",".MP3",".wav",".flac"};
+    private String[] mSupportMedia = {".mp3", ".MP3", ".wav", ".flac"};
     /**
      * 单一线程池
      */
-    private static ExecutorService executor = new ThreadPoolExecutor(1, 1, 0L,
+    private ExecutorService executor = new ThreadPoolExecutor(1, 1, 0L,
             TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>(), new ThreadFactory() {
         @Override
         public Thread newThread(@NonNull Runnable r) {
-            return new Thread(r,TAG);
+            return new Thread(r);
         }
     });
-    private ArrayList<AbstractOnScanComplete> callBackList = new ArrayList<>();
+    private volatile ArrayList<AbstractOnScanComplete> callBackList = new ArrayList<>();
     /**
      * 扫描到的音乐路径集合
      */
     private volatile ArrayList<String> mPathList = new ArrayList<>();
-    /**
-     * 线程回调的handler
-     */
-    private ScanHandler mHandler = new ScanHandler(this);
+
     /**
      * 内部存储路径
      */
-    private String mInnerStoragePath;
+    private volatile String mInnerStoragePath;
     /**
      * 外部存储路径
      */
-    private String mExternalStoragePath;
+    private volatile String mExternalStoragePath;
+    /**
+     * 线程回调的handler
+     */
+    private volatile ScanHandler mHandler;
+    /**
+     * 扫描任务
+     */
     private Runnable mScanTask;
 
     private static class ScanInstance {
-        private static ScanMusicFile scanMusicFile = new ScanMusicFile();
+        private volatile static ScanMusicFile scanMusicFile = new ScanMusicFile();
     }
 
     private ScanMusicFile() {
@@ -81,14 +89,15 @@ public class ScanMusicFile {
         return this;
     }
 
+
     public void scanMusicFile(final Context c) {
         final Context context = c.getApplicationContext();
         if (mInnerStoragePath == null) {
             mInnerStoragePath = FileUtils.getStoragePath(context, false);
             mExternalStoragePath = FileUtils.getStoragePath(context, true);
         }
-        synchronized (this) {
-            if (mScanTask == null) {
+        synchronized (this){
+            if(mScanTask == null){
                 mScanTask = new Runnable() {
                     @Override
                     public void run() {
@@ -106,8 +115,9 @@ public class ScanMusicFile {
                         mHandler.sendEmptyMessage(SCAN_COMPLETE);
                     }
                 };
+                mHandler = new ScanHandler(this);
             }
-            executor.submit(mScanTask);
+            executor.execute(mScanTask);
         }
     }
 
@@ -115,6 +125,7 @@ public class ScanMusicFile {
         private WeakReference<ScanMusicFile> weak;
 
         private ScanHandler(ScanMusicFile scanMusicFile) {
+            super(Looper.getMainLooper());
             this.weak = new WeakReference<>(scanMusicFile);
         }
 
@@ -171,7 +182,7 @@ public class ScanMusicFile {
                 // * 1L  1M的大小
                 long size = 1024L * 1024L;
                 if (size < file.length()) {
-                    Log.w(TAG, file.getAbsolutePath()+",length="+file.length());
+                    Log.w(TAG, file.getAbsolutePath() + ",length=" + file.length());
                     mPathList.add(file.getAbsolutePath());
                     mHandler.sendEmptyMessage(COUNT_CHANGE);
                 }
@@ -183,6 +194,7 @@ public class ScanMusicFile {
     public abstract static class AbstractOnScanComplete {
         /**
          * 扫描完成
+         *
          * @param paths 路径集合
          */
         protected abstract void onComplete(ArrayList<String> paths);

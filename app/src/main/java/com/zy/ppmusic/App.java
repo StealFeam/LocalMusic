@@ -6,6 +6,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.StrictMode;
 
+import com.squareup.leakcanary.LeakCanary;
 import com.zy.ppmusic.utils.CrashHandler;
 
 /**
@@ -26,6 +27,8 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         StrictMode.enableDefaults();
+        LeakCanary.install(this);
+
 //        CrashHandler handler = new CrashHandler(this);
     }
 

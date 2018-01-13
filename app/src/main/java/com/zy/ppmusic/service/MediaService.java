@@ -2,9 +2,6 @@ package com.zy.ppmusic.service;
 
 import android.app.Notification;
 import android.app.PendingIntent;
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
-import android.app.job.JobWorkItem;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -19,6 +16,7 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaBrowserServiceCompat;
 import android.support.v4.media.MediaDescriptionCompat;
@@ -32,6 +30,7 @@ import android.view.KeyEvent;
 import com.zy.ppmusic.data.db.DBManager;
 import com.zy.ppmusic.entity.MusicDbEntity;
 import com.zy.ppmusic.mvp.view.MediaActivity;
+import com.zy.ppmusic.receiver.LoopReceiver;
 import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.FileUtils;
 import com.zy.ppmusic.utils.NotificationUtils;
@@ -44,7 +43,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -79,6 +77,15 @@ public class MediaService extends MediaBrowserServiceCompat {
     //快进
     public static final String SEEK_TO_POSITION_PARAM = "SEEK_TO_POSITION_PARAM";
     /*-------------------command action--------------------------*/
+    /**
+     * 开启循环
+     */
+    public static final String COMMAND_START_LOOP = "COMMAND_START_LOOP";
+
+    /**
+     * 关闭循环
+     */
+    public static final String COMMAND_STOP_LOOP = "COMMAND_STOP_LOOP";
     //获取播放位置
     public static final String COMMAND_POSITION = "COMMAND_POSITION";
     //获取播放位置 resultCode
@@ -97,6 +104,8 @@ public class MediaService extends MediaBrowserServiceCompat {
     public static final String LOAD_COMPLETE_EVENT = "LOAD_COMPLETE_EVENT";
     //加载本地缓存位置
     public static final String LOCAL_CACHE_POSITION_EVENT = "LOCAL_CACHE_POSITION_EVENT";
+
+    public static final String UPDATE_POSITION_EVENT = "UPDATE_POSITION_EVENT";
 
 
     //开始倒计时
@@ -128,11 +137,14 @@ public class MediaService extends MediaBrowserServiceCompat {
     private CountDownTimer timer;
     private ExecutorService executorService;
     private UpdateRunnable mUpdateRunnable;
+    private UpdateQueueRunnable mUpdateQueueRunnable;
     /**
      * 错误曲目数量
      * 当无法播放曲目数量和列表数量相同时销毁播放器避免循环
      */
     private int mErrorTimes;
+    private IntentFilter filter = new IntentFilter(LoopService.ACTION);
+    private LoopReceiver receiver;
 
     @Override
     public void onCreate() {
@@ -194,12 +206,12 @@ public class MediaService extends MediaBrowserServiceCompat {
         mNotificationManager = NotificationManagerCompat.from(this);
         mAudioReceiver = new AudioBecomingNoisyReceiver(this);
 
-        executorService = new ThreadPoolExecutor(1, 1,
+        executorService = new ThreadPoolExecutor(2, 2,
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
             @Override
             public Thread newThread(@NonNull Runnable r) {
-                return new Thread(r);
+                return new Thread(r, TAG);
             }
         });
 
@@ -237,7 +249,10 @@ public class MediaService extends MediaBrowserServiceCompat {
             } else {
                 result.sendResult(mMediaItemList);
             }
-            updateQueue();
+            if (mUpdateQueueRunnable == null) {
+                mUpdateQueueRunnable = new UpdateQueueRunnable(this);
+            }
+            executorService.submit(mUpdateQueueRunnable);
         }
     }
 
@@ -357,43 +372,17 @@ public class MediaService extends MediaBrowserServiceCompat {
             mAudioReceiver.unregister();
         }
     }
-    private static class UpdateRunnable implements Runnable{
-        private String mediaId;
-        private WeakReference<MediaSessionCompat> mWeakSessionCompat;
-
-        private UpdateRunnable(String mediaId, MediaSessionCompat sessionCompat) {
-            this.mediaId = mediaId;
-            this.mWeakSessionCompat = new WeakReference<>(sessionCompat);
-        }
-
-        private void setMediaId(String mediaId) {
-            this.mediaId = mediaId;
-        }
-
-        @Override
-        public void run() {
-            //设置媒体信息
-            MediaMetadataCompat track = DataTransform.getInstance().getMetadataCompatList().get(mediaId);
-            //触发MediaControllerCompat.Callback->onMetadataChanged方法
-            if (track != null && mWeakSessionCompat.get() != null) {
-                mWeakSessionCompat.get().setMetadata(track);
-            }
-        }
-    }
-
-
-
 
     /**
      * 播放曲目发生变化时
      *
      * @param mediaId 曲目id
      */
-    public void onMediaChange(final String mediaId) {
+    public void onMediaChange(String mediaId) {
         if (mediaId != null && !DataTransform.getInstance().getPathList().isEmpty()) {
-            if(mUpdateRunnable == null){
-                mUpdateRunnable = new UpdateRunnable(mediaId,mMediaSessionCompat);
-            }else{
+            if (mUpdateRunnable == null) {
+                mUpdateRunnable = new UpdateRunnable(mediaId, mMediaSessionCompat);
+            } else {
                 mUpdateRunnable.setMediaId(mediaId);
             }
             executorService.submit(mUpdateRunnable);
@@ -405,23 +394,6 @@ public class MediaService extends MediaBrowserServiceCompat {
         } else {
             mPlayBack.stopPlayer();
         }
-    }
-
-    /**
-     * 更新列表
-     */
-    private void updateQueue() {
-        mMediaItemList = DataTransform.getInstance().getMediaItemList();
-        Log.e(TAG, "updateQueue: size ... " + mMediaItemList.size());
-
-        mQueueItemList = DataTransform.getInstance().getQueueItemList();
-        mPlayQueueMediaId = DataTransform.getInstance().getMediaIdList();
-        mPlayBack.setPlayQueue(mPlayQueueMediaId);
-        mMediaSessionCompat.setQueue(mQueueItemList);
-
-        //覆盖本地缓存
-        FileUtils.saveObject(DataTransform.getInstance().getMusicInfoEntities(),
-                getCacheDir().getAbsolutePath());
     }
 
     private void removeQueueItemByDes(MediaDescriptionCompat des) {
@@ -460,7 +432,7 @@ public class MediaService extends MediaBrowserServiceCompat {
         //如果删除的是当前播放的歌曲，则播放新的曲目
         if (mPlayBack.getCurrentIndex() == removeIndex) {
             DataTransform.getInstance().removeItem(getApplicationContext(), removeIndex);
-            updateQueue();
+            executorService.submit(mUpdateQueueRunnable);
             if (mPlayQueueMediaId.size() > 0) {
                 //删除的是前列表倒数第二个曲目的时候直接播放替代的曲目
                 if (removeIndex <= mPlayQueueMediaId.size() - 1) {
@@ -478,7 +450,7 @@ public class MediaService extends MediaBrowserServiceCompat {
             int currentIndex = mPlayBack.getCurrentIndex();
             int position = mPlayBack.getCurrentStreamPosition();
             DataTransform.getInstance().removeItem(getApplicationContext(), removeIndex);
-            updateQueue();
+            executorService.submit(mUpdateQueueRunnable);
             if (currentIndex < removeIndex) {
                 onMediaChange(mPlayQueueMediaId.get(currentIndex));
             } else {
@@ -511,11 +483,82 @@ public class MediaService extends MediaBrowserServiceCompat {
         mNotificationManager.cancelAll();
         mAudioReceiver.unregister();
         mMediaSessionCompat.release();
-        if(timer != null){
+        if (timer != null) {
             timer.cancel();
         }
         mPlayBack.stopPlayer();
         mPlayBack = null;
+    }
+
+    public void stopLoop() {
+        if (receiver != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
+        }
+        stopService(new Intent(this, LoopService.class));
+    }
+
+    private void startLoop() {
+        if (receiver == null) {
+            receiver = new LoopReceiver(this);
+        }
+        startService(new Intent(this, LoopService.class));
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, filter);
+    }
+
+    private static class UpdateRunnable implements Runnable {
+        private String mediaId;
+        private WeakReference<MediaSessionCompat> mWeakSessionCompat;
+
+        private UpdateRunnable(String mediaId, MediaSessionCompat sessionCompat) {
+            this.mediaId = mediaId;
+            this.mWeakSessionCompat = new WeakReference<>(sessionCompat);
+        }
+
+        private void setMediaId(String mediaId) {
+            this.mediaId = mediaId;
+        }
+
+        @Override
+        public void run() {
+            //设置媒体信息
+            MediaMetadataCompat track = DataTransform.getInstance().getMetadataCompatList().get(mediaId);
+            //触发MediaControllerCompat.Callback->onMetadataChanged方法
+            if (track != null && mWeakSessionCompat.get() != null) {
+                mWeakSessionCompat.get().setMetadata(track);
+            }
+        }
+    }
+
+    public static class UpdateQueueRunnable implements Runnable {
+        private WeakReference<MediaService> mWeakService;
+
+        private UpdateQueueRunnable(MediaService mWeakService) {
+            this.mWeakService = new WeakReference<>(mWeakService);
+        }
+
+        @Override
+        public void run() {
+            if (mWeakService.get() != null) {
+                updateQueue(mWeakService.get());
+            }
+        }
+
+        /**
+         * 更新列表
+         */
+        private void updateQueue(MediaService mService) {
+            mService.mMediaItemList = DataTransform.getInstance().getMediaItemList();
+            Log.e(TAG, "updateQueue: size ... " + mService.mMediaItemList.size());
+
+            mService.mQueueItemList = DataTransform.getInstance().getQueueItemList();
+            mService.mPlayQueueMediaId = DataTransform.getInstance().getMediaIdList();
+            mService.mPlayBack.setPlayQueue(mService.mPlayQueueMediaId);
+            mService.mMediaSessionCompat.setQueue(mService.mQueueItemList);
+
+            //覆盖本地缓存
+//            FileUtils.saveObject(DataTransform.getInstance().getMusicInfoEntities(),
+//                    mService.getCacheDir().getAbsolutePath());
+        }
     }
 
     /**
@@ -558,13 +601,14 @@ public class MediaService extends MediaBrowserServiceCompat {
                     handlePlayOrPauseRequest();
                     //初始化播放器，如果本地有播放记录，取播放记录，没有就初始化穿过来的media
                 } else if (ACTION_PLAY_INIT.equals(action)) {
-                    List<MusicDbEntity> entity = DBManager.getInstance().initDb(getApplicationContext()).getEntity();
-                    if (entity.size() > 0) {
-                        onMediaChange(entity.get(0).getLastMediaId());
-                        mPlayBack.seekTo(entity.get(0).getLastPlayedPosition(), false);
+                    List<MusicDbEntity> entityRecordList = DBManager.getInstance()
+                            .initDb(getApplicationContext()).getEntity();
+                    if (entityRecordList.size() > 0) {
+                        onMediaChange(entityRecordList.get(0).getLastMediaId());
+                        mPlayBack.seekTo(entityRecordList.get(0).getLastPlayedPosition(), false);
                         Bundle extra = new Bundle();
-                        extra.putInt(LOCAL_CACHE_POSITION_EVENT,entity.get(0).getLastPlayedPosition());
-                        mMediaSessionCompat.sendSessionEvent(LOCAL_CACHE_POSITION_EVENT,extra);
+                        extra.putInt(LOCAL_CACHE_POSITION_EVENT, entityRecordList.get(0).getLastPlayedPosition());
+                        mMediaSessionCompat.sendSessionEvent(LOCAL_CACHE_POSITION_EVENT, extra);
                     } else {
                         onMediaChange(mediaId);
                     }
@@ -576,11 +620,6 @@ public class MediaService extends MediaBrowserServiceCompat {
 //                    onMediaChange(mediaId);
                 }
             }
-        }
-
-        @Override
-        public void onPrepare() {
-            super.onPrepare();
         }
 
         @Override
@@ -602,6 +641,18 @@ public class MediaService extends MediaBrowserServiceCompat {
         public void onStop() {
             super.onStop();
             handleStopRequest(true);
+        }
+
+        @Override
+        public void onSkipToQueueItem(long id) {
+            super.onSkipToQueueItem(id);
+            try {
+                String mediaId = DataTransform.getInstance().getMediaIdList().get((int) id);
+                onMediaChange(mediaId);
+                handlePlayOrPauseRequest();
+            } catch (Exception e) {
+                Log.e(TAG, e.getMessage());
+            }
         }
 
         @Override
@@ -654,10 +705,10 @@ public class MediaService extends MediaBrowserServiceCompat {
                         cb.send(COMMAND_POSITION_CODE, resultExtra);
                     }
                     break;
-                //如果本地有记录，读取记录，没有就初始化第一个媒体
+                //TODO 如果本地有记录，读取记录，没有就初始化第一个媒体
                 case COMMAND_UPDATE_QUEUE:
                     savePlayingRecord();
-                    updateQueue();
+                    executorService.submit(mUpdateQueueRunnable);
                     List<MusicDbEntity> entity = DBManager.getInstance()
                             .initDb(getApplicationContext()).getEntity();
                     if (entity.size() > 0) {
@@ -669,6 +720,14 @@ public class MediaService extends MediaBrowserServiceCompat {
                     if (cb != null) {
                         cb.send(COMMAND_UPDATE_QUEUE_CODE, resultExtra);
                     }
+                    break;
+                //TODO 开始循环获取当前播放位置
+                case COMMAND_START_LOOP:
+                    startLoop();
+                    break;
+                //TODO 结束获取当前播放位置
+                case COMMAND_STOP_LOOP:
+                    stopLoop();
                     break;
                 default:
                     PrintOut.print("onCommand no match");
@@ -702,14 +761,18 @@ public class MediaService extends MediaBrowserServiceCompat {
                     timer = new CountDownTimer(extras.getLong(ACTION_COUNT_DOWN_TIME), 1000) {
                         @Override
                         public void onTick(long millisUntilFinished) {
-                            Bundle bundle = new Bundle();
-                            bundle.putLong(ACTION_COUNT_DOWN_TIME, millisUntilFinished);
-                            mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_TIME, bundle);
+                            if (mMediaSessionCompat.getController() != null) {
+                                Bundle bundle = new Bundle();
+                                bundle.putLong(ACTION_COUNT_DOWN_TIME, millisUntilFinished);
+                                mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_TIME, bundle);
+                            }
                         }
 
                         @Override
                         public void onFinish() {
-                            mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_END, null);
+                            if (mMediaSessionCompat.getController() != null) {
+                                mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_END, null);
+                            }
                             handleStopRequest(true);
                         }
                     };
@@ -724,6 +787,20 @@ public class MediaService extends MediaBrowserServiceCompat {
                 default:
                     break;
             }
+        }
+    }
+
+    public void updatePositionToSession(){
+        try {
+            if (mMediaSessionCompat.getController() == null) {
+                stopLoop();
+                return;
+            }
+            Bundle bundle = new Bundle();
+            bundle.putInt(MediaService.UPDATE_POSITION_EVENT, mPlayBack.getCurrentStreamPosition());
+            mMediaSessionCompat.sendSessionEvent(MediaService.UPDATE_POSITION_EVENT, bundle);
+        }catch (Exception e){
+            stopLoop();
         }
     }
 

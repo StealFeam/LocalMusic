@@ -10,6 +10,7 @@ import android.graphics.RectF;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -21,6 +22,12 @@ import android.view.WindowManager;
 import com.zy.ppmusic.utils.PrintOut;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author ZhiTouPC
@@ -38,10 +45,9 @@ public class WaveRefreshView extends View {
     private float lineWidth;
     private float whiteWidth;
     private int maxChange;
-    private ArrayList<Animator> mAnimatorList = new ArrayList<>();
+    private volatile ArrayList<Animator> mAnimatorList = new ArrayList<>();
     private RectF[] lineRectF = new RectF[5];
     private float[] screenParams;
-    private AnimatorHandler handler;
 
     public WaveRefreshView(Context context) {
         this(context, null);
@@ -120,6 +126,9 @@ public class WaveRefreshView extends View {
         return screenParams[posi];
     }
 
+
+    private DelayHandler mDelayHandler;
+
     public void startAnim() {
         for (Animator animator : mAnimatorList) {
             animator.cancel();
@@ -128,12 +137,15 @@ public class WaveRefreshView extends View {
         for (int i = 0; i < lineRectF.length; i++) {
             final int index = i;
             ValueAnimator animator = ValueAnimator.ofInt(0, maxChange);
-            animator.setDuration(lineRectF.length * 100);
+            animator.setDuration(1000);
             animator.setRepeatMode(ValueAnimator.REVERSE);
             animator.setRepeatCount(-1);
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 @Override
                 public void onAnimationUpdate(ValueAnimator animation) {
+                    if(lineRectF[index] == null){
+                        return;
+                    }
                     float percent = animation.getAnimatedFraction();
                     lineRectF[index].top = maxChange * percent;
                     lineRectF[index].bottom = getMeasuredHeight() - maxChange * percent;
@@ -142,30 +154,69 @@ public class WaveRefreshView extends View {
             });
             mAnimatorList.add(animator);
         }
-        if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
-        } else {
-            handler = new AnimatorHandler(Looper.getMainLooper(), mAnimatorList);
+        if (mDelayHandler == null) {
+            mDelayHandler = new DelayHandler(mAnimatorList);
         }
-        for (int i = 0; i < mAnimatorList.size(); i++) {
-            handler.sendEmptyMessageDelayed(i, (i + 1) * 80);
-        }
+        mDelayHandler.removeCallbacksAndMessages(null);
+        post(new Runnable() {
+            @Override
+            public void run() {
+                int count = mAnimatorList.size();
+                int end = 0;
+                while(end < count){
+                    mDelayHandler.sendEmptyMessage(end);
+                    try {
+                        Thread.sleep((end + 1) * 80);
+                    } catch (InterruptedException e) {
+                        Log.e(TAG,"thread is interupted"+this.getClass().getName());
+                        break;
+                    }
+                    end ++ ;
+                }
+            }
+        });
     }
 
-    private static class AnimatorHandler extends Handler {
-        private ArrayList<Animator> animatorArrayList;
 
-        private AnimatorHandler(Looper looper, ArrayList<Animator> animatorArrayList) {
-            super(looper);
-            this.animatorArrayList = animatorArrayList;
+    public void stopAnim(){
+        if(mDelayHandler != null){
+            mDelayHandler.sendEmptyMessage(-1);
+            mDelayHandler.removeCallbacksAndMessages(null);
+        }
+        mAnimatorList.clear();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mDelayHandler.sendEmptyMessage(-1);
+        mDelayHandler.removeCallbacksAndMessages(null);
+        mDelayHandler = null;
+        mAnimatorList.clear();
+    }
+
+    private static class DelayHandler extends Handler{
+        private List<Animator> animators;
+
+        private DelayHandler(List<Animator> list){
+            super(Looper.getMainLooper());
+            this.animators = list;
         }
 
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             int currentStartIndex = msg.what;
-            if (animatorArrayList != null && currentStartIndex < animatorArrayList.size()) {
-                Animator animator = animatorArrayList.get(currentStartIndex);
+            if(currentStartIndex == -1){
+                if (animators != null){
+                    for (Animator animator : animators) {
+                        animator.cancel();
+                    }
+                }
+                return;
+            }
+            if (animators != null && currentStartIndex < animators.size()) {
+                Animator animator = animators.get(currentStartIndex);
                 animator.start();
             }
         }

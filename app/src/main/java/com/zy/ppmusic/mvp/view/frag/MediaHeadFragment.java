@@ -25,19 +25,16 @@ import java.io.ByteArrayOutputStream;
  * @author ZhiTouPC
  * @date 2017/12/26
  */
-
 public class MediaHeadFragment extends Fragment {
     private static final String TAG = "MediaHeadFragment";
     private static final String PARAM = "PARAM";
     private RequestOptions mImageLoadOptions;
-    private ByteArrayOutputStream bitmapByteOutStream;
 
     public MediaHeadFragment() {
         this.mImageLoadOptions = new RequestOptions()
-                .circleCrop()
-                .skipMemoryCache(true)
-                .diskCacheStrategy(DiskCacheStrategy.NONE);
-        this.bitmapByteOutStream = new ByteArrayOutputStream();
+                //不能指定其他缓存
+                //glide加载bitmap无法缓存
+                .circleCrop();
     }
 
     public static MediaHeadFragment createInstance(MediaMetadataCompat info) {
@@ -47,7 +44,6 @@ public class MediaHeadFragment extends Fragment {
         fragment.setArguments(extra);
         return fragment;
     }
-
 
     @Nullable
     @Override
@@ -64,8 +60,11 @@ public class MediaHeadFragment extends Fragment {
                 MediaDescriptionCompat description = info.getDescription();
                 Bitmap iconBitmap = description.getIconBitmap();
                 if (iconBitmap != null) {
-                    iconBitmap.compress(Bitmap.CompressFormat.PNG, 50, bitmapByteOutStream);
-                    Glide.with(this).load(bitmapByteOutStream.toByteArray()).apply(mImageLoadOptions).into(imageView);
+                    try {
+                        Glide.with(this).load(iconBitmap).apply(mImageLoadOptions).into(imageView);
+                    }catch (Exception e){
+                        imageView.setImageResource(R.mipmap.ic_music_launcher_round);
+                    }
                 } else {
                     imageView.setImageResource(R.mipmap.ic_music_launcher_round);
                 }

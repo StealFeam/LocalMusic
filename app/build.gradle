@@ -10,8 +10,8 @@ android {
         applicationId "com.zy.ppmusic"
         minSdkVersion 15
         targetSdkVersion 27
-        versionCode 3
-        versionName "1.0.4"
+        versionCode 4
+        versionName "1.0.6"
         resConfigs 'zh'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -24,26 +24,13 @@ android {
     }
     sourceSets {
         main {
-            java.srcDirs = ['src/main/java', 'src/main/aidl']
+            java.srcDirs = ['src/main/java']
         }
     }
     greendao {
         schemaVersion 1
         daoPackage 'com.zy.ppmusic.data.db.dao'
         targetGenDir 'src/main/java'
-    }
-    flavorDimensions "debug","release"
-
-    productFlavors{
-        demo1{
-            dimension "debug"
-        }
-        demo2{
-            dimension "debug"
-        }
-        demo3{
-            dimension "release"
-        }
     }
 }
 
@@ -52,35 +39,32 @@ dependencies {
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-//    java测试库
+    //    java测试库
     testImplementation 'junit:junit:4.12'
-//    系统库
+    //    系统库
     implementation 'com.android.support:design:27.0.2'
     implementation 'com.android.support:cardview-v7:27.0.2'
-//    Glide相关
+    implementation 'com.android.support:support-v4:27.0.2'
+    implementation 'com.android.support:appcompat-v7:27.0.2'
+    //    Glide相关
     implementation 'com.github.bumptech.glide:glide:4.5.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.5.0'
     implementation 'jp.wasabeef:glide-transformations:2.0.2'
-//  kotlin支持
+    //  kotlin支持
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-//    constraint库
+    //    constraint库
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
-
-//    greendao数据库
+    //    greendao数据库
     implementation 'org.greenrobot:greendao:3.2.2'
-//    本地存储库
-    implementation 'com.jakewharton:disklrucache:2.0.2'
-//    权限申请库
+    //    权限申请库
     implementation project(':easypermissions')
-
-//    显示软件运行状态（fps，cpu占用等）
-    debugImplementation 'com.sw.debug.view:debug-view:1.0.0'
-    releaseImplementation 'com.sw.debug.view:debug-view-no-op:1.0.0'
-    testImplementation 'com.sw.debug.view:debug-view-no-op:1.0.0'
-
     //ViewModel and LiveData
-    implementation "android.arch.lifecycle:extensions:1.0.0"
+    implementation 'android.arch.lifecycle:extensions:1.0.0'
     annotationProcessor "android.arch.lifecycle:compiler:1.0.0"
+    //leak检测
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'
+    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
+
 }
 
 buildscript {

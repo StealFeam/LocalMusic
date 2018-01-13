@@ -12,26 +12,27 @@ import com.zy.ppmusic.mvp.model.BLActivityModelImpl;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Set;
 
 /**
  * @author ZY
  */
-public class BlActivityPresenter implements IBLActivityContract.IBLActivityPresenter {
+public class BlActivityPresenter extends IBLActivityContract.AbstractBLActivityPresenter {
     private BluetoothAdapter mBlueAdapter;
     private BluetoothA2dp mBlueA2dp;
-    private IBLActivityContract.IBLActivityModel mModel;
-    private WeakReference<IBLActivityContract.IBLActivityView> mView;
     private boolean isNeedRe = false;
     private Context context;
 
     public BlActivityPresenter(IBLActivityContract.IBLActivityView mView) {
-        this.mView = new WeakReference<>(mView);
+        super(mView);
         context = mView.getContext();
-        mModel = new BLActivityModelImpl();
         mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
+    }
+
+    @Override
+    protected IBLActivityContract.IBLActivityModel createModel() {
+        return new BLActivityModelImpl();
     }
 
     private void initBlueA2dp() {
@@ -131,7 +132,8 @@ public class BlActivityPresenter implements IBLActivityContract.IBLActivityPrese
     }
 
     @Override
-    public void destroyView() {
+    public void detachViewAndModel() {
+        super.detachViewAndModel();
         if (mBlueAdapter == null) {
             return;
         }

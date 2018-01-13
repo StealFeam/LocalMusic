@@ -9,8 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
-import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SwitchCompat
@@ -23,8 +21,9 @@ import android.view.animation.RotateAnimation
 import android.widget.Toast
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.ScanResultAdapter
-import com.zy.ppmusic.mvp.contract.IBLActivityContract
 import com.zy.ppmusic.entity.ScanResultEntity
+import com.zy.ppmusic.mvp.base.AbstractBaseActivity
+import com.zy.ppmusic.mvp.contract.IBLActivityContract
 import com.zy.ppmusic.mvp.presenter.BlActivityPresenter
 import com.zy.ppmusic.receiver.DeviceFoundReceiver
 import com.zy.ppmusic.receiver.StatusChangeReceiver
@@ -33,10 +32,15 @@ import kotlinx.android.synthetic.main.activity_bl_scan.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import java.util.*
+
 /**
  * @author ZY
  */
-class BlScanActivity : AppCompatActivity(), IBLActivityContract.IBLActivityView, EasyPermissions.PermissionCallbacks {
+class BlScanActivity : AbstractBaseActivity<BlActivityPresenter>(), IBLActivityContract.IBLActivityView, EasyPermissions.PermissionCallbacks {
+    override fun getContentViewId(): Int = R.layout.activity_bl_scan
+
+    override fun createPresenter(): BlActivityPresenter = BlActivityPresenter(this)
+
     private val REQUEST_ENABLE_BL = 0x001
     private var mBlueToothOpenSwitch: SwitchCompat? = null//蓝牙开关
     private var mBlStateChangeReceiver: StatusChangeReceiver? = null
@@ -44,17 +48,13 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IBLActivityView,
     private var mScanResultRecycler: RecyclerView? = null
     private var mScanResultAdapter: ScanResultAdapter? = null
     private var mDeviceFoundReceiver: DeviceFoundReceiver? = null
-    private var mPresenter: BlActivityPresenter? = null
     private var mLoadingAnim: RotateAnimation? = null
     private var mToolBar: Toolbar? = null
     private var mRefreshScanMenu: View? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_bl_scan)
+    override fun initViews() {
         mToolBar = findViewById<Toolbar>(R.id.toolbar_bl) as Toolbar
 
-        mPresenter = BlActivityPresenter(this)
         mScanResultRecycler = findViewById<RecyclerView>(R.id.show_device_recycler) as RecyclerView
         if (mPresenter!!.isSupportBl().not()) {
             Toast.makeText(this, "您的设备不支持蓝牙", Toast.LENGTH_SHORT).show()
@@ -458,8 +458,4 @@ class BlScanActivity : AppCompatActivity(), IBLActivityContract.IBLActivityView,
 
     fun showToast(msg: String) = EasyTintView.makeText(mScanResultRecycler!!, msg, EasyTintView.TINT_SHORT).show()
 
-    override fun onDestroy() {
-        super.onDestroy()
-        mPresenter!!.destroyView()
-    }
 }

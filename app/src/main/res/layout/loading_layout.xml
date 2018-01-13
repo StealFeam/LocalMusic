@@ -2,12 +2,18 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:background="@android:color/transparent"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:gravity="center"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <com.zy.ppmusic.widget.WaveRefreshView
+    <!--<com.zy.ppmusic.widget.WaveRefreshView-->
+        <!--android:id="@+id/v_loading"-->
+        <!--android:layout_gravity="center"-->
+        <!--android:layout_width="@dimen/dp40"-->
+        <!--android:layout_height="@dimen/dp40" />-->
+    <android.support.v4.widget.ContentLoadingProgressBar
         android:layout_gravity="center"
-        android:layout_width="@dimen/dp40"
-        android:layout_height="@dimen/dp40" />
-
+        style="@style/Widget.AppCompat.ProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 </LinearLayout>

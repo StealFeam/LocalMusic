@@ -3,13 +3,19 @@ package com.zy.ppmusic.mvp.presenter;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.ResultReceiver;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.util.Log;
 
 import com.zy.ppmusic.entity.MusicInfoEntity;
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract;
-import com.zy.ppmusic.mvp.model.MediaMediaActivityModelImpl;
+import com.zy.ppmusic.mvp.model.MediaActivityModelImpl;
 import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.FileUtils;
+import com.zy.ppmusic.utils.PrintOut;
 import com.zy.ppmusic.utils.ScanMusicFile;
 
 import java.lang.ref.WeakReference;
@@ -18,37 +24,53 @@ import java.util.ArrayList;
 /**
  * @author ZhiTouPC
  */
-public class MediaPresenterImpl implements IMediaActivityContract.IMediaActivityPresenter {
+public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActivityPresenter {
     private static final String TAG = "MediaPresenterImpl";
     private static final String CACHE_MODE_NAME = "CACHE_MODE";
     private static final String CACHE_MODE_KEY = "MODE_KEY";
-    private IMediaActivityContract.IMediaActivityModel mModel;
-    private WeakReference<IMediaActivityContract.IMediaActivityView> mViewWeak;
     private SharedPreferences mModeCachePreference;
     private boolean isScanning = false;
+    private volatile Handler mMainHandler = new Handler(Looper.getMainLooper());
 
     public MediaPresenterImpl(IMediaActivityContract.IMediaActivityView mView) {
-        mViewWeak = new WeakReference<>(mView);
-        mModel = new MediaMediaActivityModelImpl();
+        super(mView);
     }
 
     @Override
-    public void refreshQueue(Context context, boolean isRefresh) {
-        mViewWeak.get().showLoading();
+    protected IMediaActivityContract.IMediaActivityModel createModel() {
+        return new MediaActivityModelImpl();
+    }
+
+    @Override
+    public void refreshQueue(final Context context, boolean isRefresh) {
+        mView.get().showLoading();
+        PrintOut.d("---start----"+isRefresh);
         if (isRefresh) {
             refresh(context, true);
         } else {
-            Object localData = FileUtils.readObject(context.getCacheDir().getAbsolutePath());
-            if (localData != null) {
-                TransFormTask.Builder builder = new TransFormTask.Builder();
-                builder.listener = finishedListener;
-                builder.isRefresh = false;
-                builder.musicInfoEntities = (ArrayList<MusicInfoEntity>) localData;
-                builder.context = context;
-                builder.executeTask();
-            } else {
-                refresh(context, false);
-            }
+            mModel.loadLocalData(context.getCacheDir().getAbsolutePath(), new
+                    IMediaActivityContract.IMediaActivityModel.IOnLocalDataLoadFinished() {
+                @Override
+                public void callBack(Object data) {
+                    if (data != null) {
+                        TransFormTask.Builder builder = new TransFormTask.Builder();
+                        builder.listener = finishedListener;
+                        builder.isRefresh = false;
+                        builder.musicInfoEntities = (ArrayList<MusicInfoEntity>) data;
+                        builder.context = context;
+                        builder.executeTask();
+                    } else {
+                        //回到主线程
+                        mMainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                refresh(context, false);
+                            }
+                        });
+                    }
+                }
+            });
+
         }
     }
 
@@ -78,6 +100,42 @@ public class MediaPresenterImpl implements IMediaActivityContract.IMediaActivity
         return FileUtils.deleteFile(path);
     }
 
+    @Override
+    public void sendCommand(MediaControllerCompat controller, String method, Bundle params, ResultReceiver resultReceiver) {
+        mModel.postSendCommand(controller, method, params, resultReceiver);
+    }
+
+    @Override
+    public void playWithId(MediaControllerCompat controller,String mediaId, Bundle extra) {
+        mModel.postPlayWithId(controller, mediaId, extra);
+    }
+
+    @Override
+    public void sendCustomAction(MediaControllerCompat controller, String action, Bundle extra) {
+        mModel.postSendCustomAction(controller, action, extra);
+    }
+
+    @Override
+    public void setRepeatMode(Context context, MediaControllerCompat controller, int mode) {
+        mModel.postSetRepeatMode(controller, mode);
+        changeMode(context,mode);
+    }
+
+    @Override
+    public void skipNext(MediaControllerCompat controller) {
+        mModel.postSkipNext(controller);
+    }
+
+    @Override
+    public void skipToPosition(MediaControllerCompat controller, Long id) {
+        mModel.postSkipToPosition(controller, id);
+    }
+
+    @Override
+    public void skipPrevious(MediaControllerCompat controller) {
+        mModel.postSkipPrevious(controller);
+    }
+
     private void refresh(final Context context, final boolean isRefresh) {
         if (isScanning) {
             return;
@@ -101,17 +159,17 @@ public class MediaPresenterImpl implements IMediaActivityContract.IMediaActivity
     private OnTaskFinishedListener finishedListener = new OnTaskFinishedListener() {
         @Override
         public void onRefreshQueue(ArrayList<String> paths) {
-            if (mViewWeak.get() != null) {
-                mViewWeak.get().refreshQueue(paths, true);
-                mViewWeak.get().hideLoading();
+            if (mView.get() != null) {
+                mView.get().refreshQueue(paths, true);
+                mView.get().hideLoading();
             }
         }
 
         @Override
         public void loadFinished() {
-            if (mViewWeak.get() != null) {
-                mViewWeak.get().loadFinished();
-                mViewWeak.get().hideLoading();
+            if (mView.get() != null) {
+                mView.get().loadFinished();
+                mView.get().hideLoading();
             }
         }
     };
@@ -131,8 +189,10 @@ public class MediaPresenterImpl implements IMediaActivityContract.IMediaActivity
         void loadFinished();
     }
 
-
-    private static class TransFormTask extends AsyncTask<Void, Void, ArrayList<String>> {
+    /**
+     * 负责将本地数据或者扫描到的数据数据转换
+     */
+    private static class TransFormTask extends AsyncTask<String, Void, ArrayList<String>> {
         private WeakReference<Context> mContextWeak;
         private ArrayList<String> mPaths;
         private ArrayList<MusicInfoEntity> entities;
@@ -148,7 +208,7 @@ public class MediaPresenterImpl implements IMediaActivityContract.IMediaActivity
         }
 
         @Override
-        protected ArrayList<String> doInBackground(Void... voids) {
+        protected ArrayList<String> doInBackground(String... paths) {
             if(mPaths == null){
                 DataTransform.getInstance().transFormData(entities);
             }else{
@@ -176,31 +236,6 @@ public class MediaPresenterImpl implements IMediaActivityContract.IMediaActivity
             private ArrayList<MusicInfoEntity> musicInfoEntities;
             private OnTaskFinishedListener listener;
 
-            public Builder setContextWeak(Context context) {
-                this.context = context;
-                return this;
-            }
-
-            public Builder setPaths(ArrayList<String> mPaths) {
-                this.mPaths = mPaths;
-                return this;
-            }
-
-            public Builder setRefresh(boolean refresh) {
-                isRefresh = refresh;
-                return this;
-            }
-
-            public Builder setMusicInfoEntities(ArrayList<MusicInfoEntity> musicInfoEntities) {
-                this.musicInfoEntities = musicInfoEntities;
-                return this;
-            }
-
-            public Builder setListener(OnTaskFinishedListener listener) {
-                this.listener = listener;
-                return this;
-            }
-
             private void executeTask() {
                 TransFormTask task = new TransFormTask(this);
                 task.execute();
@@ -209,9 +244,10 @@ public class MediaPresenterImpl implements IMediaActivityContract.IMediaActivity
     }
 
     @Override
-    public void destroyView() {
-        mViewWeak.clear();
-        mViewWeak = null;
+    public void detachViewAndModel() {
+        super.detachViewAndModel();
+        mModel.shutdown();
         mModel = null;
     }
+
 }

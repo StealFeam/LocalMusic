@@ -1,213 +1,220 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.LinearLayoutCompat
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/media_content_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:clipChildren="false"
-    android:fitsSystemWindows="true"
-    android:orientation="vertical"
-    tools:context="com.zy.ppmusic.mvp.view.MediaActivity">
+    android:layout_height="match_parent"/>
+<!--<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+    <!--xmlns:app="http://schemas.android.com/apk/res-auto"-->
+    <!--xmlns:tools="http://schemas.android.com/tools"-->
+    <!--android:id="@+id/media_content_root"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="match_parent"-->
+    <!--android:clipChildren="false"-->
+    <!--android:fitsSystemWindows="true"-->
+    <!--android:orientation="vertical"-->
+    <!--tools:context="com.zy.ppmusic.mvp.view.MediaActivity">-->
 
-    <View
-        android:id="@+id/media_title_tint"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/dp30"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <!--<View-->
+        <!--android:id="@+id/media_title_tint"-->
+        <!--android:layout_width="0dp"-->
+        <!--android:layout_height="@dimen/dp30"-->
+        <!--app:layout_constraintHorizontal_bias="0.0"-->
+        <!--app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--app:layout_constraintRight_toRightOf="parent"-->
+        <!--app:layout_constraintTop_toTopOf="parent" />-->
 
-    <android.support.v4.view.ViewPager
-        android:id="@+id/vp_show_media_head"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/iv_bl_manage"
-        app:layout_constraintTop_toBottomOf="@+id/media_title_tint" />
+    <!--<android.support.v4.view.ViewPager-->
+        <!--android:id="@+id/vp_show_media_head"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="0dp"-->
+        <!--app:layout_constraintBottom_toTopOf="@+id/iv_bl_manage"-->
+        <!--app:layout_constraintTop_toBottomOf="@+id/media_title_tint" />-->
 
-    <android.support.v7.widget.AppCompatImageView
-        android:id="@+id/iv_search_media"
-        android:layout_width="@dimen/dp40"
-        android:layout_height="@dimen/dp40"
-        android:padding="@dimen/dp5"
-        android:background="?android:attr/selectableItemBackground"
-        android:layout_marginBottom="@dimen/dp20"
-        app:layout_constraintBottom_toTopOf="@+id/control_display_sub_title"
-        app:layout_constraintEnd_toStartOf="@+id/iv_bl_manage"
-        app:layout_constraintStart_toStartOf="parent"
-        app:srcCompat="@drawable/ic_search_music" />
+    <!--<android.support.v7.widget.AppCompatImageView-->
+        <!--android:id="@+id/iv_search_media"-->
+        <!--android:layout_width="@dimen/dp40"-->
+        <!--android:layout_height="@dimen/dp40"-->
+        <!--android:padding="@dimen/dp5"-->
+        <!--android:background="?android:attr/selectableItemBackground"-->
+        <!--android:layout_marginBottom="@dimen/dp20"-->
+        <!--app:layout_constraintBottom_toTopOf="@+id/control_display_sub_title"-->
+        <!--app:layout_constraintEnd_toStartOf="@+id/iv_bl_manage"-->
+        <!--app:layout_constraintStart_toStartOf="parent"-->
+        <!--app:srcCompat="@drawable/ic_search_music" />-->
 
-    <android.support.v7.widget.AppCompatImageView
-        android:id="@+id/iv_bl_manage"
-        android:layout_width="@dimen/dp40"
-        android:layout_height="@dimen/dp40"
-        android:padding="@dimen/dp5"
-        android:background="?android:attr/selectableItemBackground"
-        app:layout_constraintBottom_toBottomOf="@+id/iv_search_media"
-        app:layout_constraintEnd_toStartOf="@+id/iv_time_clock"
-        app:layout_constraintStart_toEndOf="@+id/iv_search_media"
-        app:layout_constraintTop_toTopOf="@+id/iv_search_media"
-        app:srcCompat="@drawable/ic_bl_manager" />
+    <!--<android.support.v7.widget.AppCompatImageView-->
+        <!--android:id="@+id/iv_bl_manage"-->
+        <!--android:layout_width="@dimen/dp40"-->
+        <!--android:layout_height="@dimen/dp40"-->
+        <!--android:padding="@dimen/dp5"-->
+        <!--android:background="?android:attr/selectableItemBackground"-->
+        <!--app:layout_constraintBottom_toBottomOf="@+id/iv_search_media"-->
+        <!--app:layout_constraintEnd_toStartOf="@+id/iv_time_clock"-->
+        <!--app:layout_constraintStart_toEndOf="@+id/iv_search_media"-->
+        <!--app:layout_constraintTop_toTopOf="@+id/iv_search_media"-->
+        <!--app:srcCompat="@drawable/ic_bl_manager" />-->
 
-    <android.support.v7.widget.AppCompatImageView
-        android:id="@+id/iv_time_clock"
-        android:layout_width="@dimen/dp40"
-        android:layout_height="@dimen/dp40"
-        android:padding="@dimen/dp5"
-        android:background="?android:attr/selectableItemBackground"
-        app:layout_constraintBottom_toBottomOf="@+id/iv_bl_manage"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/iv_bl_manage"
-        app:layout_constraintTop_toTopOf="@+id/iv_bl_manage"
-        app:srcCompat="@drawable/ic_time_clock" />
+    <!--<android.support.v7.widget.AppCompatImageView-->
+        <!--android:id="@+id/iv_time_clock"-->
+        <!--android:layout_width="@dimen/dp40"-->
+        <!--android:layout_height="@dimen/dp40"-->
+        <!--android:padding="@dimen/dp5"-->
+        <!--android:background="?android:attr/selectableItemBackground"-->
+        <!--app:layout_constraintBottom_toBottomOf="@+id/iv_bl_manage"-->
+        <!--app:layout_constraintEnd_toEndOf="parent"-->
+        <!--app:layout_constraintStart_toEndOf="@+id/iv_bl_manage"-->
+        <!--app:layout_constraintTop_toTopOf="@+id/iv_bl_manage"-->
+        <!--app:srcCompat="@drawable/ic_time_clock" />-->
 
-    <SeekBar
-        android:id="@+id/control_display_progress"
-        style="@style/SelfSeekBarStyle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/dp5"
-        android:layout_marginLeft="@dimen/dp5"
-        android:layout_marginRight="@dimen/dp5"
-        android:layout_marginStart="@dimen/dp5"
-        android:max="100"
-        android:progress="0"
-        app:layout_constraintBottom_toBottomOf="@+id/control_display_duration_tv"
-        app:layout_constraintLeft_toRightOf="@+id/control_display_time_tv"
-        app:layout_constraintRight_toLeftOf="@+id/control_display_duration_tv"
-        app:layout_constraintTop_toTopOf="@+id/control_display_duration_tv" />
+    <!--<SeekBar-->
+        <!--android:id="@+id/control_display_progress"-->
+        <!--style="@style/SelfSeekBarStyle"-->
+        <!--android:layout_width="0dp"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_marginEnd="@dimen/dp5"-->
+        <!--android:layout_marginLeft="@dimen/dp5"-->
+        <!--android:layout_marginRight="@dimen/dp5"-->
+        <!--android:layout_marginStart="@dimen/dp5"-->
+        <!--android:max="100"-->
+        <!--android:progress="0"-->
+        <!--app:layout_constraintBottom_toBottomOf="@+id/control_display_duration_tv"-->
+        <!--app:layout_constraintLeft_toRightOf="@+id/control_display_time_tv"-->
+        <!--app:layout_constraintRight_toLeftOf="@+id/control_display_duration_tv"-->
+        <!--app:layout_constraintTop_toTopOf="@+id/control_display_duration_tv" />-->
 
-    <TextView
-        android:id="@+id/control_display_title"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/dp10"
-        android:ellipsize="marquee"
-        android:gravity="center"
-        android:singleLine="true"
-        android:text="@string/normal_text"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/control_display_sub_title"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+    <!--<TextView-->
+        <!--android:id="@+id/control_display_title"-->
+        <!--android:layout_width="0dp"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_margin="@dimen/dp10"-->
+        <!--android:ellipsize="marquee"-->
+        <!--android:gravity="center"-->
+        <!--android:singleLine="true"-->
+        <!--android:text="@string/normal_text"-->
+        <!--android:visibility="gone"-->
+        <!--app:layout_constraintBottom_toTopOf="@+id/control_display_sub_title"-->
+        <!--app:layout_constraintEnd_toEndOf="parent"-->
+        <!--app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--app:layout_constraintRight_toRightOf="parent"-->
+        <!--app:layout_constraintStart_toStartOf="parent" />-->
 
-    <TextView
-        android:id="@+id/control_display_sub_title"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/dp10"
-        android:ellipsize="end"
-        android:gravity="center"
-        android:lines="1"
-        android:text="@string/normal_text"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/control_display_progress"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+    <!--<TextView-->
+        <!--android:id="@+id/control_display_sub_title"-->
+        <!--android:layout_width="0dp"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_margin="@dimen/dp10"-->
+        <!--android:ellipsize="end"-->
+        <!--android:gravity="center"-->
+        <!--android:lines="1"-->
+        <!--android:text="@string/normal_text"-->
+        <!--android:visibility="gone"-->
+        <!--app:layout_constraintBottom_toTopOf="@+id/control_display_progress"-->
+        <!--app:layout_constraintEnd_toEndOf="parent"-->
+        <!--app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--app:layout_constraintRight_toRightOf="parent"-->
+        <!--app:layout_constraintStart_toStartOf="parent" />-->
 
-    <android.support.v7.widget.AppCompatImageView
-        android:id="@+id/control_action_show_queue"
-        android:layout_width="@dimen/dp40"
-        android:layout_height="@dimen/dp40"
-        android:background="?android:attr/selectableItemBackground"
-        android:contentDescription="@string/action_close_notify"
-        android:padding="@dimen/dp5"
-        android:src="@drawable/ic_menu"
-        app:layout_constraintBottom_toBottomOf="@+id/control_action_next"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/control_action_next"
-        app:layout_constraintTop_toTopOf="@+id/control_action_next" />
+    <!--<android.support.v7.widget.AppCompatImageView-->
+        <!--android:id="@+id/control_action_show_queue"-->
+        <!--android:layout_width="@dimen/dp40"-->
+        <!--android:layout_height="@dimen/dp40"-->
+        <!--android:background="?android:attr/selectableItemBackground"-->
+        <!--android:contentDescription="@string/action_close_notify"-->
+        <!--android:padding="@dimen/dp5"-->
+        <!--android:src="@drawable/ic_menu"-->
+        <!--app:layout_constraintBottom_toBottomOf="@+id/control_action_next"-->
+        <!--app:layout_constraintEnd_toEndOf="parent"-->
+        <!--app:layout_constraintStart_toEndOf="@+id/control_action_next"-->
+        <!--app:layout_constraintTop_toTopOf="@+id/control_action_next" />-->
 
-    <android.support.v7.widget.AppCompatImageView
-        android:id="@+id/control_action_previous"
-        android:layout_width="@dimen/dp40"
-        android:layout_height="@dimen/dp40"
-        android:background="?android:attr/selectableItemBackground"
-        android:contentDescription="@string/action_previous"
-        android:src="@mipmap/ic_black_previous"
-        app:layout_constraintEnd_toStartOf="@+id/control_action_play_pause"
-        app:layout_constraintStart_toEndOf="@+id/control_action_loop_model"
-        app:layout_constraintTop_toTopOf="@+id/control_action_play_pause" />
+    <!--<android.support.v7.widget.AppCompatImageView-->
+        <!--android:id="@+id/control_action_previous"-->
+        <!--android:layout_width="@dimen/dp40"-->
+        <!--android:layout_height="@dimen/dp40"-->
+        <!--android:background="?android:attr/selectableItemBackground"-->
+        <!--android:contentDescription="@string/action_previous"-->
+        <!--android:src="@mipmap/ic_black_previous"-->
+        <!--app:layout_constraintEnd_toStartOf="@+id/control_action_play_pause"-->
+        <!--app:layout_constraintStart_toEndOf="@+id/control_action_loop_model"-->
+        <!--app:layout_constraintTop_toTopOf="@+id/control_action_play_pause" />-->
 
-    <android.support.v7.widget.AppCompatImageView
-        android:id="@+id/control_action_next"
-        android:layout_width="@dimen/dp40"
-        android:layout_height="@dimen/dp40"
-        android:background="?android:attr/selectableItemBackground"
-        android:contentDescription="@string/action_next"
-        android:src="@mipmap/ic_black_next"
-        app:layout_constraintBottom_toBottomOf="@+id/control_action_play_pause"
-        app:layout_constraintEnd_toStartOf="@+id/control_action_show_queue"
-        app:layout_constraintStart_toEndOf="@+id/control_action_play_pause"
-        app:layout_constraintTop_toTopOf="@+id/control_action_play_pause" />
+    <!--<android.support.v7.widget.AppCompatImageView-->
+        <!--android:id="@+id/control_action_next"-->
+        <!--android:layout_width="@dimen/dp40"-->
+        <!--android:layout_height="@dimen/dp40"-->
+        <!--android:background="?android:attr/selectableItemBackground"-->
+        <!--android:contentDescription="@string/action_next"-->
+        <!--android:src="@mipmap/ic_black_next"-->
+        <!--app:layout_constraintBottom_toBottomOf="@+id/control_action_play_pause"-->
+        <!--app:layout_constraintEnd_toStartOf="@+id/control_action_show_queue"-->
+        <!--app:layout_constraintStart_toEndOf="@+id/control_action_play_pause"-->
+        <!--app:layout_constraintTop_toTopOf="@+id/control_action_play_pause" />-->
 
-    <android.support.constraint.Guideline
-        android:id="@+id/vertical_guideline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.5" />
+    <!--<android.support.constraint.Guideline-->
+        <!--android:id="@+id/vertical_guideline"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:orientation="vertical"-->
+        <!--app:layout_constraintGuide_percent="0.5" />-->
 
-    <android.support.v7.widget.AppCompatImageView
-        android:id="@+id/control_action_play_pause"
-        android:layout_width="@dimen/dp40"
-        android:layout_height="@dimen/dp40"
-        android:background="?android:attr/selectableItemBackground"
-        android:contentDescription="@string/action_start_pause"
-        android:src="@drawable/ic_black_play"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/vertical_guideline"
-        app:layout_constraintStart_toStartOf="@+id/vertical_guideline"
-        app:layout_constraintTop_toTopOf="@+id/horizontal_guideline" />
+    <!--<android.support.v7.widget.AppCompatImageView-->
+        <!--android:id="@+id/control_action_play_pause"-->
+        <!--android:layout_width="@dimen/dp40"-->
+        <!--android:layout_height="@dimen/dp40"-->
+        <!--android:background="?android:attr/selectableItemBackground"-->
+        <!--android:contentDescription="@string/action_start_pause"-->
+        <!--android:src="@drawable/ic_black_play"-->
+        <!--app:layout_constraintBottom_toBottomOf="parent"-->
+        <!--app:layout_constraintEnd_toStartOf="@+id/vertical_guideline"-->
+        <!--app:layout_constraintStart_toStartOf="@+id/vertical_guideline"-->
+        <!--app:layout_constraintTop_toTopOf="@+id/horizontal_guideline" />-->
 
-    <android.support.constraint.Guideline
-        android:id="@+id/horizontal_guideline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.85" />
+    <!--<android.support.constraint.Guideline-->
+        <!--android:id="@+id/horizontal_guideline"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:orientation="horizontal"-->
+        <!--app:layout_constraintGuide_percent="0.85" />-->
 
-    <android.support.v7.widget.AppCompatImageView
-        android:id="@+id/control_action_loop_model"
-        android:layout_width="@dimen/dp40"
-        android:layout_height="@dimen/dp40"
-        android:background="?android:attr/selectableItemBackground"
-        android:contentDescription="@string/string_loop_mode"
-        android:padding="@dimen/dp10"
-        android:src="@drawable/ic_loop_model_normal"
-        app:layout_constraintBottom_toBottomOf="@+id/control_action_previous"
-        app:layout_constraintEnd_toStartOf="@+id/control_action_previous"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/control_action_previous"
-        app:layout_constraintVertical_bias="1.0" />
+    <!--<android.support.v7.widget.AppCompatImageView-->
+        <!--android:id="@+id/control_action_loop_model"-->
+        <!--android:layout_width="@dimen/dp40"-->
+        <!--android:layout_height="@dimen/dp40"-->
+        <!--android:background="?android:attr/selectableItemBackground"-->
+        <!--android:contentDescription="@string/string_loop_mode"-->
+        <!--android:padding="@dimen/dp10"-->
+        <!--android:src="@drawable/ic_loop_model_normal"-->
+        <!--app:layout_constraintBottom_toBottomOf="@+id/control_action_previous"-->
+        <!--app:layout_constraintEnd_toStartOf="@+id/control_action_previous"-->
+        <!--app:layout_constraintStart_toStartOf="parent"-->
+        <!--app:layout_constraintTop_toTopOf="@+id/control_action_previous"-->
+        <!--app:layout_constraintVertical_bias="1.0" />-->
 
-    <TextView
-        android:id="@+id/control_display_duration_tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/dp5"
-        android:layout_marginRight="@dimen/dp5"
-        android:text="@string/string_time_init"
-        android:textSize="@dimen/sp10"
-        app:layout_constraintBottom_toTopOf="@+id/horizontal_guideline"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/control_display_sub_title" />
+    <!--<TextView-->
+        <!--android:id="@+id/control_display_duration_tv"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_marginEnd="@dimen/dp5"-->
+        <!--android:layout_marginRight="@dimen/dp5"-->
+        <!--android:text="@string/string_time_init"-->
+        <!--android:textSize="@dimen/sp10"-->
+        <!--app:layout_constraintBottom_toTopOf="@+id/horizontal_guideline"-->
+        <!--app:layout_constraintEnd_toEndOf="parent"-->
+        <!--app:layout_constraintTop_toBottomOf="@+id/control_display_sub_title" />-->
 
-    <TextView
-        android:id="@+id/control_display_time_tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/dp5"
-        android:layout_marginStart="@dimen/dp5"
-        android:text="@string/string_time_init"
-        android:textSize="@dimen/sp10"
-        app:layout_constraintBaseline_toBaselineOf="@+id/control_display_duration_tv"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+    <!--<TextView-->
+        <!--android:id="@+id/control_display_time_tv"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_marginLeft="@dimen/dp5"-->
+        <!--android:layout_marginStart="@dimen/dp5"-->
+        <!--android:text="@string/string_time_init"-->
+        <!--android:textSize="@dimen/sp10"-->
+        <!--app:layout_constraintBaseline_toBaselineOf="@+id/control_display_duration_tv"-->
+        <!--app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--app:layout_constraintStart_toStartOf="parent" />-->
 
-</android.support.constraint.ConstraintLayout>
+<!--</android.support.constraint.ConstraintLayout>-->

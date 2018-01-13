@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/media_content_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context="com.zy.ppmusic.mvp.view.MediaActivity">
+
+    <View
+        android:id="@+id/media_title_tint"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp30" />
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/vp_show_media_head"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <android.support.v7.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/iv_search_media"
+            android:layout_width="@dimen/dp40"
+            android:layout_height="@dimen/dp40"
+            android:layout_marginBottom="@dimen/dp20"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:padding="@dimen/dp5"
+            app:srcCompat="@drawable/ic_search_music" />
+
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/iv_bl_manage"
+            android:layout_width="@dimen/dp40"
+            android:layout_height="@dimen/dp40"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:padding="@dimen/dp5"
+            app:srcCompat="@drawable/ic_bl_manager" />
+
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/iv_time_clock"
+            android:layout_width="@dimen/dp40"
+            android:layout_height="@dimen/dp40"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:padding="@dimen/dp5"
+            app:srcCompat="@drawable/ic_time_clock" />
+    </android.support.v7.widget.LinearLayoutCompat>
+
+
+    <android.support.v7.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/control_display_time_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/dp10"
+            android:layout_marginLeft="@dimen/dp5"
+            android:layout_marginRight="@dimen/dp10"
+            android:layout_marginStart="@dimen/dp5"
+            android:text="@string/string_time_init"
+            android:textSize="@dimen/sp10" />
+
+        <SeekBar
+            android:id="@+id/control_display_progress"
+            style="@style/SelfSeekBarStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:max="100"
+            android:progress="0" />
+
+        <TextView
+            android:id="@+id/control_display_duration_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/dp5"
+            android:layout_marginLeft="@dimen/dp10"
+            android:layout_marginRight="@dimen/dp5"
+            android:layout_marginStart="@dimen/dp10"
+            android:text="@string/string_time_init"
+            android:textSize="@dimen/sp10" />
+
+    </android.support.v7.widget.LinearLayoutCompat>
+
+    <android.support.v7.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/dp20"
+        android:layout_marginTop="@dimen/dp20"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/control_action_loop_model"
+            android:layout_width="@dimen/dp40"
+            android:layout_height="@dimen/dp40"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:contentDescription="@string/string_loop_mode"
+            android:padding="@dimen/dp10"
+            android:src="@drawable/ic_loop_model_normal" />
+
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/control_action_previous"
+            android:layout_width="@dimen/dp40"
+            android:layout_height="@dimen/dp40"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:contentDescription="@string/action_previous"
+            android:src="@mipmap/ic_black_previous" />
+
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/control_action_play_pause"
+            android:layout_width="@dimen/dp40"
+            android:layout_height="@dimen/dp40"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:contentDescription="@string/action_start_pause"
+            android:src="@drawable/ic_black_play" />
+
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/control_action_next"
+            android:layout_width="@dimen/dp40"
+            android:layout_height="@dimen/dp40"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:contentDescription="@string/action_next"
+            android:src="@mipmap/ic_black_next" />
+
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/control_action_show_queue"
+            android:layout_width="@dimen/dp40"
+            android:layout_height="@dimen/dp40"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            android:contentDescription="@string/action_close_notify"
+            android:padding="@dimen/dp5"
+            android:src="@drawable/ic_menu" />
+    </android.support.v7.widget.LinearLayoutCompat>
+
+
+</android.support.v7.widget.LinearLayoutCompat>
