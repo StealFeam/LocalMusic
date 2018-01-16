@@ -1,17 +1,20 @@
 package com.zy.ppmusic.utils;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.media.AudioManager;
+import android.net.Uri;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -23,12 +26,20 @@ import com.zy.ppmusic.service.MediaService;
  */
 public class NotificationUtils {
     private static final String TAG = "NotificationUtils";
+    /**
+     * 通知的id
+     */
+    public static final int NOTIFY_ID = 40012;
 
-    public static Notification postNotify(Context c, MediaSessionCompat mediaSession, boolean isPlaying) {
+    public static Notification createNotify(Context c, MediaSessionCompat mediaSession, boolean isPlaying) {
         Context context = c.getApplicationContext();
-        NotificationManager manager = (NotificationManager) context.getApplicationContext()
-                .getSystemService(Context.NOTIFICATION_SERVICE);
-        Notification notification;
+        NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(
+                Context.NOTIFICATION_SERVICE);
+
+        if (mNotificationManager == null) {
+            return null;
+        }
+
         //获取媒体控制器
         MediaControllerCompat controller = mediaSession.getController();
         //media信息
@@ -77,8 +88,20 @@ public class NotificationUtils {
                 buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_SKIP_TO_NEXT));
         contentView.setOnClickPendingIntent(R.id.notify_action_close, MediaButtonReceiver.
                 buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_STOP));
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, String.valueOf(MediaService.NOTIFY_ID));
+        NotificationCompat.Builder builder;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            //获取通道
+            NotificationChannel notificationChannel = mNotificationManager.getNotificationChannel(TAG);
+            if (notificationChannel == null) {
+                notificationChannel = new NotificationChannel(TAG,
+                        context.getPackageName(), NotificationManager.IMPORTANCE_DEFAULT);
+                mNotificationManager.createNotificationChannel(notificationChannel);
+            }
+            builder = new NotificationCompat.Builder(context,notificationChannel.getId());
+        }else{
+            builder = new NotificationCompat.Builder(context,
+                    String.valueOf(NOTIFY_ID));
+        }
         builder.setSmallIcon(R.drawable.ic_small_notify);
         builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         builder.setCustomContentView(contentView);
@@ -86,13 +109,20 @@ public class NotificationUtils {
 
         builder.setContentIntent(mediaSession.getController().getSessionActivity());
 
-        notification = builder.build();
+        Notification notification = builder.build();
+
         notification.flags |= Notification.FLAG_NO_CLEAR;
-        if (manager != null) {
-            manager.notify(MediaService.NOTIFY_ID, notification);
-        }
+
         return notification;
     }
 
+    public static void cancelNotify(Context context,int notifyId){
+        NotificationManagerCompat managerCompat = NotificationManagerCompat.from(context);
+        managerCompat.cancel(notifyId);
+    }
 
+    public static void cancelAllNotify(Context context){
+        NotificationManagerCompat managerCompat = NotificationManagerCompat.from(context);
+        managerCompat.cancelAll();
+    }
 }

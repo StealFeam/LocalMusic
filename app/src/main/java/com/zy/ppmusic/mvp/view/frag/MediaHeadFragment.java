@@ -16,6 +16,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.zy.ppmusic.R;
+import com.zy.ppmusic.utils.PrintOut;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -50,6 +51,7 @@ public class MediaHeadFragment extends Fragment {
     public View onCreateView(@NotNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_media_head, container, false);
         AppCompatImageView imageView = rootView.findViewById(R.id.iv_media_head);
+
         try {
             Bundle arguments = getArguments();
             MediaMetadataCompat info = null;

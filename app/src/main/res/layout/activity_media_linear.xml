@@ -15,6 +15,13 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp30" />
 
+    <!--<ViewStub-->
+        <!--android:id="@+id/stub_loading_layout"-->
+        <!--android:layout="@layout/loading_layout"-->
+        <!--android:visibility="visible"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent" />-->
+
     <android.support.v4.view.ViewPager
         android:id="@+id/vp_show_media_head"
         android:layout_width="match_parent"

@@ -93,4 +93,6 @@ public class TimBackGroundDrawable extends Drawable {
         }
         return PixelFormat.TRANSLUCENT;
     }
+
+
 }

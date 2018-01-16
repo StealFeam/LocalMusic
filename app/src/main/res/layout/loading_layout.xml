@@ -6,14 +6,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!--<com.zy.ppmusic.widget.WaveRefreshView-->
-        <!--android:id="@+id/v_loading"-->
-        <!--android:layout_gravity="center"-->
-        <!--android:layout_width="@dimen/dp40"-->
-        <!--android:layout_height="@dimen/dp40" />-->
-    <android.support.v4.widget.ContentLoadingProgressBar
-        android:layout_gravity="center"
-        style="@style/Widget.AppCompat.ProgressBar"
+    <android.support.v7.widget.AppCompatTextView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="loading..."
+        android:textColor="@color/colorWhite"
+        android:textSize="@dimen/sp18"
+        android:textStyle="bold" />
+
 </LinearLayout>

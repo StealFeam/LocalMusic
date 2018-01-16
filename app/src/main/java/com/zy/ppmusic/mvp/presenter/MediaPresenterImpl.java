@@ -44,7 +44,6 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
     @Override
     public void refreshQueue(final Context context, boolean isRefresh) {
         mView.get().showLoading();
-        PrintOut.d("---start----"+isRefresh);
         if (isRefresh) {
             refresh(context, true);
         } else {
@@ -70,7 +69,6 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
                     }
                 }
             });
-
         }
     }
 

@@ -17,14 +17,10 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v4.view.ViewCompat
 import android.support.v4.view.ViewPager
 import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.ListPopupWindow
 import android.support.v7.widget.RecyclerView
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.FrameLayout
 import android.widget.SeekBar
 import android.widget.TextView
@@ -50,8 +46,6 @@ import java.util.*
  *      2.SessionCompat.sendCommand(String,Bundle,ResultReceiver);//需要获取结果
  */
 class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivityContract.IMediaActivityView {
-
-
     private val TAG = "MediaActivity"
     private var mMediaBrowser: MediaBrowserCompat? = null
     private var mMediaBrowserParentId: String? = null
@@ -130,12 +124,15 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
         if (supportActionBar != null) {
             supportActionBar?.elevation = 0f
         }
-
+        //斜边View的背景
         val drawable = TimBackGroundDrawable()
         drawable.setDrawableColor(ContextCompat.getColor(this, R.color.colorTheme))
         drawable.setPercent(TimBackGroundDrawable.TOP)
-
         ViewCompat.setBackground(media_title_tint, drawable)
+        //专辑图片的圆形背景
+        val dp2px = UIUtils.dp2px(this, 110)
+        val vpDrawable = RoundDrawable(dp2px, ContextCompat.getColor(this,R.color.colorGray))
+        ViewCompat.setBackground(vp_show_media_head,vpDrawable)
 
         //刷新播放列表
         iv_search_media.setOnClickListener {
@@ -144,7 +141,7 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
         }
         //蓝牙管理
         iv_bl_manage.setOnClickListener {
-            val intent = Intent(this@MediaActivity, BlScanActivity::class.java)
+            val intent = Intent(applicationContext, BlScanActivity::class.java)
             startActivity(intent)
         }
         //定时关闭
@@ -202,9 +199,8 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
             createBottomQueueDialog()
         })
     }
-
+    /*专辑图片位置改变监听*/
     private val mHeadChangeListener = object : ViewPager.OnPageChangeListener {
-
         private var selectedPosition = 0
 
         override fun onPageScrollStateChanged(state: Int) {
@@ -497,14 +493,22 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
         vp_show_media_head.postDelayed({
             mPresenter?.refreshQueue(this, false)
         }, 100)
-
     }
 
+    private var mLoadingDialog:LoadingDialog ?= null
+
     override fun showLoading() {
+        if(mLoadingDialog == null){
+            mLoadingDialog = LoadingDialog(this)
+        }
+        mLoadingDialog!!.show()
         showMsg("加载中....")
     }
 
     override fun hideLoading() {
+        if(mLoadingDialog!=null){
+            mLoadingDialog!!.hide()
+        }
         showMsg("加载完成")
     }
 
@@ -560,7 +564,6 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
                 control_action_loop_model.setImageResource(R.drawable.ic_loop_mode_list)
             }
         }
-
         mPresenter?.setRepeatMode(this, mMediaController, mode)
     }
 
@@ -842,6 +845,12 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
     override fun onDestroy() {
         super.onDestroy()
         PrintOut.print("MediaActivity is destroy")
+        ViewCompat.setBackground(media_title_tint, null)
+        ViewCompat.setBackground(vp_show_media_head,null)
+        if(mLoadingDialog!=null){
+            mLoadingDialog!!.cancel()
+            mLoadingDialog = null
+        }
         //释放播放列表弹窗
         if (mBottomQueueDialog != null) {
             if (mBottomQueueDialog!!.isShowing) {

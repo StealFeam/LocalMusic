@@ -1,6 +1,5 @@
 package com.zy.ppmusic.widget;
 
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Handler;
@@ -18,7 +17,6 @@ import android.widget.FrameLayout;
 import com.zy.ppmusic.R;
 
 import org.jetbrains.annotations.NotNull;
-
 
 /**
  * @author ZhiTouPC
@@ -106,10 +104,10 @@ public class TintView extends AppCompatTextView {
 
     public void hide() {
         Animation animation = getAnimation();
-        if(animation != null){
+        if (animation != null) {
             animation.cancel();
         }
-        animation = new AlphaAnimation(1,0);
+        animation = new AlphaAnimation(1, 0);
         animation.setDuration(showDuration);
         animation.setFillAfter(true);
         this.startAnimation(animation);

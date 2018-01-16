@@ -18,7 +18,6 @@ import pub.devrel.easypermissions.EasyPermissions
 class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     val REQUEST_CODE = 0x010
     private val PREFERENCE_NAME = "SPLASH"
-    var permissionDesDialog:PermissionDialog?=null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,26 +43,26 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
                             , getString(R.string.string_write_external))) {
                         actionToMain()
                     } else {
-                        val builder = PermissionDialog.Builder()
-                        val simpleList = ArrayList<String>()
-                        simpleList.add("访问本地文件")
-                        builder.setPermissions(simpleList)
-                        builder.setTitle("我正常启动需要以下权限")
-                        builder.setSureTitle("知道了")
-                        permissionDesDialog = builder.build()
-                        permissionDesDialog!!.show(this@SplashActivity,listener)
+                        EasyPermissions.requestPermissions(this@SplashActivity, getString(R.string.string_permission_read)
+                                , REQUEST_CODE, getString(R.string.string_read_external)
+                                , getString(R.string.string_write_external))
+//                        val builder = PermissionDialog.Builder()
+//                        val simpleList = ArrayList<String>()
+//                        simpleList.add("访问本地文件")
+//                        builder.setPermissions(simpleList)
+//                        builder.setTitle("我正常启动需要以下权限")
+//                        builder.setSureTitle("知道了")
+//                        permissionDesDialog = builder.build()
+//                        permissionDesDialog!!.show(this@SplashActivity,listener)
                     }
         })
-
-
     }
 
-    private val listener = View.OnClickListener {
-        EasyPermissions.requestPermissions(this@SplashActivity, getString(R.string.string_permission_read)
-                , REQUEST_CODE, getString(R.string.string_read_external)
-                , getString(R.string.string_write_external))
-    }
-
+//    private val listener = View.OnClickListener {
+//        EasyPermissions.requestPermissions(this@SplashActivity, getString(R.string.string_permission_read)
+//                , REQUEST_CODE, getString(R.string.string_read_external)
+//                , getString(R.string.string_write_external))
+//    }
 
     fun actionToMain() {
         val mediaIntent = Intent(this, MediaActivity::class.java)
@@ -123,13 +122,6 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
 
     override fun onPermissionsGranted(requestCode: Int, perms: List<String>?) {
         actionToMain()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        if(permissionDesDialog != null){
-            permissionDesDialog!!.cancelDialog()
-        }
     }
 
 }
