@@ -11,6 +11,9 @@ import org.greenrobot.greendao.identityscope.IdentityScopeType;
 
 import java.util.List;
 
+/**
+ * @author ZhiTouPC
+ */
 public class DBManager {
     private static final String TABLE_NAME = "local_db";
     private DaoMaster mMaster;

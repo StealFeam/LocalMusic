@@ -49,7 +49,7 @@
             android:launchMode="singleTask" />
 
         <activity
-            android:name=".ui.SplashActivity"
+            android:name=".mvp.view.SplashActivity"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.SplashTheme">
             <intent-filter>

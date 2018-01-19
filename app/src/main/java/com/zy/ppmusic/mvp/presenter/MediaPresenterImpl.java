@@ -47,11 +47,13 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
         if (isRefresh) {
             refresh(context, true);
         } else {
+            PrintOut.i("开始读取本地数据");
             mModel.loadLocalData(context.getCacheDir().getAbsolutePath(), new
                     IMediaActivityContract.IMediaActivityModel.IOnLocalDataLoadFinished() {
                 @Override
                 public void callBack(Object data) {
                     if (data != null) {
+                        PrintOut.i("读取本地数据 ----- 有值的");
                         TransFormTask.Builder builder = new TransFormTask.Builder();
                         builder.listener = finishedListener;
                         builder.isRefresh = false;
@@ -63,6 +65,7 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
                         mMainHandler.post(new Runnable() {
                             @Override
                             public void run() {
+                                PrintOut.i("读取本地数据 ----- 没值的");
                                 refresh(context, false);
                             }
                         });
@@ -138,6 +141,7 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
         if (isScanning) {
             return;
         }
+        PrintOut.i("开始扫描本地媒体。。。。。。");
         isScanning = true;
         mModel.refreshQueue(context, new ScanMusicFile.AbstractOnScanComplete() {
             @Override

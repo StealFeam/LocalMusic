@@ -2,15 +2,11 @@ package com.zy.ppmusic.service;
 
 import android.app.Notification;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.ResultReceiver;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
@@ -26,15 +22,20 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 
+import com.zy.ppmusic.callback.AudioNoisyCallBack;
+import com.zy.ppmusic.callback.TimeTikCallBack;
 import com.zy.ppmusic.data.db.DBManager;
 import com.zy.ppmusic.entity.MusicDbEntity;
 import com.zy.ppmusic.mvp.view.MediaActivity;
+import com.zy.ppmusic.receiver.AudioBecomingNoisyReceiver;
 import com.zy.ppmusic.receiver.LoopReceiver;
 import com.zy.ppmusic.utils.DataTransform;
+import com.zy.ppmusic.utils.FileUtils;
 import com.zy.ppmusic.utils.NotificationUtils;
 import com.zy.ppmusic.utils.PlayBack;
 import com.zy.ppmusic.utils.PrintOut;
 import com.zy.ppmusic.utils.StringUtils;
+import com.zy.ppmusic.utils.TimerUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -172,7 +173,7 @@ public class MediaService extends MediaBrowserServiceCompat {
     /**
      * 倒计时
      */
-    private CountDownTimer timer;
+    private TimerUtils mCountDownTimer;
     /**
      * 线程池
      */
@@ -192,6 +193,34 @@ public class MediaService extends MediaBrowserServiceCompat {
     private int mErrorTimes;
     private IntentFilter filter = new IntentFilter(LoopService.ACTION);
     private LoopReceiver receiver;
+
+    private AudioNoisyCallBack audioCallBack = new AudioNoisyCallBack() {
+        @Override
+        public void comingNoisy() {
+            handlePlayOrPauseRequest();
+        }
+    };
+    /**
+     * 倒计时监听
+     */
+    private TimeTikCallBack timeTikCallBack = new TimeTikCallBack() {
+        @Override
+        public void onTik(long mis) {
+            //如果页面绑定时
+            if (mMediaSessionCompat.getController() != null) {
+                if (mis != 0) {
+                    Bundle bundle = new Bundle();
+                    bundle.putLong(ACTION_COUNT_DOWN_TIME, mis);
+                    mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_TIME, bundle);
+                } else {
+                    if (mMediaSessionCompat.getController() != null) {
+                        mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_END, null);
+                    }
+                    handleStopRequest(true);
+                }
+            }
+        }
+    };
 
     @Override
     public void onCreate() {
@@ -223,7 +252,8 @@ public class MediaService extends MediaBrowserServiceCompat {
 
         Intent it = new Intent(getBaseContext(), MediaActivity.class);
         it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 1, it, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 1, it,
+                PendingIntent.FLAG_UPDATE_CURRENT);
         mMediaSessionCompat.setSessionActivity(pendingIntent);
 
         mPlayBack = new PlayBack(this);
@@ -313,6 +343,7 @@ public class MediaService extends MediaBrowserServiceCompat {
             changeMediaByMode(true, true);
         } else {
             savePlayingRecord();
+            executorService.submit(mUpdateQueueRunnable);
             NotificationUtils.cancelNotify(this, NotificationUtils.NOTIFY_ID);
             mMediaSessionCompat.setActive(false);
             stopForeground(true);
@@ -370,20 +401,20 @@ public class MediaService extends MediaBrowserServiceCompat {
         if (mCurrentMedia == null) {
             return;
         }
-        MusicDbEntity dbEntity = new MusicDbEntity();
-        dbEntity.setLastMediaId(mPlayBack.getCurrentMediaId());
+        MusicDbEntity cacheEntity = new MusicDbEntity();
+        cacheEntity.setLastMediaId(mPlayBack.getCurrentMediaId());
         if (mCurrentMedia != null && mCurrentMedia.getDescription() != null) {
-            if(mCurrentMedia.getDescription().getMediaUri() != null){
-                dbEntity.setLastMediaPath(mCurrentMedia.getDescription().getMediaUri().getPath());
+            if (mCurrentMedia.getDescription().getMediaUri() != null) {
+                cacheEntity.setLastMediaPath(mCurrentMedia.getDescription().getMediaUri().getPath());
             }
-            dbEntity.setLastPlayAuthor(String.valueOf(mCurrentMedia.getDescription().getSubtitle()));
-            dbEntity.setLastPlayName(String.valueOf(mCurrentMedia.getDescription().getTitle()));
+            cacheEntity.setLastPlayAuthor(String.valueOf(mCurrentMedia.getDescription().getSubtitle()));
+            cacheEntity.setLastPlayName(String.valueOf(mCurrentMedia.getDescription().getTitle()));
         }
-        dbEntity.setLastPlayedPosition(mPlayBack.getCurrentStreamPosition());
-        dbEntity.setLastPlayIndex(mPlayQueueMediaId.indexOf(mPlayBack.getCurrentMediaId()));
-
+        cacheEntity.setLastPlayedPosition(mPlayBack.getCurrentStreamPosition());
+        cacheEntity.setLastPlayIndex(mPlayQueueMediaId.indexOf(mPlayBack.getCurrentMediaId()));
+        //删除已有的记录
         DBManager.getInstance().initDb(getApplicationContext()).deleteAll();
-        DBManager.getInstance().insetEntity(dbEntity);
+        DBManager.getInstance().insetEntity(cacheEntity);
     }
 
     /**
@@ -415,7 +446,7 @@ public class MediaService extends MediaBrowserServiceCompat {
             startForeground(NOTIFY_ID, notification);
         }
         if (state == PlaybackStateCompat.STATE_PLAYING) {
-            mAudioReceiver.register();
+            mAudioReceiver.register(audioCallBack);
         } else {
             mAudioReceiver.unregister();
         }
@@ -531,8 +562,9 @@ public class MediaService extends MediaBrowserServiceCompat {
         NotificationUtils.cancelAllNotify(this);
         mAudioReceiver.unregister();
         mMediaSessionCompat.release();
-        if (timer != null) {
-            timer.cancel();
+        if (mCountDownTimer != null) {
+            mCountDownTimer.stopTik();
+            mCountDownTimer = null;
         }
         mPlayBack.stopPlayer();
         mPlayBack = null;
@@ -553,6 +585,9 @@ public class MediaService extends MediaBrowserServiceCompat {
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver, filter);
     }
 
+    /**
+     * 进度更新到界面
+     */
     public void updatePositionToSession() {
         try {
             if (mMediaSessionCompat.getController() == null) {
@@ -618,8 +653,8 @@ public class MediaService extends MediaBrowserServiceCompat {
             mService.mMediaSessionCompat.setQueue(mService.mQueueItemList);
 
             //覆盖本地缓存
-//            FileUtils.saveObject(DataTransform.getInstance().getMusicInfoEntities(),
-//                    mService.getCacheDir().getAbsolutePath());
+            FileUtils.saveObject(DataTransform.getInstance().getMusicInfoEntities(),
+                    mService.getCacheDir().getAbsolutePath());
         }
     }
 
@@ -678,7 +713,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                     int seekPosition = extras.getInt(SEEK_TO_POSITION_PARAM);
                     mPlayBack.seekTo(seekPosition, true);
                     Log.e(TAG, "onPlayFromMediaId: " + seekPosition);
-                }else{
+                } else {
                     PrintOut.i("unknown event");
                 }
             }
@@ -767,15 +802,19 @@ public class MediaService extends MediaBrowserServiceCompat {
                         cb.send(COMMAND_POSITION_CODE, resultExtra);
                     }
                     break;
-                //TODO 如果本地有记录，读取记录，没有就初始化第一个媒体
                 case COMMAND_UPDATE_QUEUE:
                     savePlayingRecord();
                     executorService.submit(mUpdateQueueRunnable);
                     List<MusicDbEntity> entity = DBManager.getInstance()
                             .initDb(getApplicationContext()).getEntity();
                     if (entity.size() > 0) {
-                        onMediaChange(entity.get(0).getLastMediaId());
-                        mPlayBack.seekTo(entity.get(0).getLastPlayedPosition(), false);
+                        String lastMediaId = entity.get(0).getLastMediaId();
+                        if(!DataTransform.getInstance().getMediaIdList().contains(lastMediaId)){
+                            onMediaChange(mPlayQueueMediaId.get(0));
+                        }else{
+                            onMediaChange(lastMediaId);
+                            mPlayBack.seekTo(entity.get(0).getLastPlayedPosition(), false);
+                        }
                     } else {
                         onMediaChange(mPlayQueueMediaId.get(0));
                     }
@@ -815,35 +854,20 @@ public class MediaService extends MediaBrowserServiceCompat {
         public void onCustomAction(String action, Bundle extras) {
             super.onCustomAction(action, extras);
             switch (action) {
+                //开始倒计时
                 case ACTION_COUNT_DOWN_TIME:
-                    if (timer != null) {
-                        timer.cancel();
-                        timer = null;
+                    if (mCountDownTimer != null) {
+                        mCountDownTimer.stopTik();
+                        mCountDownTimer = null;
                     }
-                    timer = new CountDownTimer(extras.getLong(ACTION_COUNT_DOWN_TIME), 1000) {
-                        @Override
-                        public void onTick(long millisUntilFinished) {
-                            if (mMediaSessionCompat.getController() != null) {
-                                Bundle bundle = new Bundle();
-                                bundle.putLong(ACTION_COUNT_DOWN_TIME, millisUntilFinished);
-                                mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_TIME, bundle);
-                            }
-                        }
-
-                        @Override
-                        public void onFinish() {
-                            if (mMediaSessionCompat.getController() != null) {
-                                mMediaSessionCompat.sendSessionEvent(ACTION_COUNT_DOWN_END, null);
-                            }
-                            handleStopRequest(true);
-                        }
-                    };
-                    timer.start();
+                    mCountDownTimer = new TimerUtils(extras.getLong(ACTION_COUNT_DOWN_TIME), 1000);
+                    mCountDownTimer.startTik(timeTikCallBack);
                     break;
+                //结束倒计时
                 case ACTION_STOP_COUNT_DOWN:
-                    if (timer != null) {
-                        timer.cancel();
-                        timer = null;
+                    if (mCountDownTimer != null) {
+                        mCountDownTimer.stopTik();
+                        mCountDownTimer = null;
                     }
                     break;
                 default:
@@ -852,36 +876,5 @@ public class MediaService extends MediaBrowserServiceCompat {
         }
     }
 
-    private class AudioBecomingNoisyReceiver extends BroadcastReceiver {
-        private final Context context;
-        private boolean mIsRegistered = false;
-        private IntentFilter mAudioNoisyIntentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
 
-        private AudioBecomingNoisyReceiver(Context context) {
-            this.context = context.getApplicationContext();
-        }
-
-        public void register() {
-            if (!mIsRegistered) {
-                context.registerReceiver(this, mAudioNoisyIntentFilter);
-                mIsRegistered = true;
-            }
-        }
-
-        public void unregister() {
-            if (mIsRegistered) {
-                context.unregisterReceiver(this);
-                mIsRegistered = false;
-            }
-        }
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            //当收到耳机被拔出时暂停播放
-            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
-                Log.e(TAG, "拔出耳机了");
-                handlePlayOrPauseRequest();
-            }
-        }
-    }
 }

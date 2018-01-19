@@ -1,16 +1,13 @@
-package com.zy.ppmusic.ui
+package com.zy.ppmusic.mvp.view
 
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import com.zy.ppmusic.R
-import com.zy.ppmusic.mvp.view.MediaActivity
-import com.zy.ppmusic.widget.PermissionDialog
 import kotlinx.android.synthetic.main.activity_splash.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions

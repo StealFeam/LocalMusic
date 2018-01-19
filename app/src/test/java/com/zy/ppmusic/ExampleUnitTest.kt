@@ -43,4 +43,8 @@ class ExampleUnitTest {
             return if ((currentPosition - 1) < 0) index - 1 else --currentPosition
         }
     }
+
+    @Test
+    fun testSign(){
+    }
 }

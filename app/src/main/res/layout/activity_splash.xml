@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorTheme"
-    tools:context="com.zy.ppmusic.ui.SplashActivity">
+    tools:context="com.zy.ppmusic.mvp.view.SplashActivity">
 
     <TextView
         android:id="@+id/tv_splash_open"

@@ -20,7 +20,10 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.ListPopupWindow
 import android.support.v7.widget.RecyclerView
-import android.view.*
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.SeekBar
 import android.widget.TextView
@@ -131,8 +134,8 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
         ViewCompat.setBackground(media_title_tint, drawable)
         //专辑图片的圆形背景
         val dp2px = UIUtils.dp2px(this, 110)
-        val vpDrawable = RoundDrawable(dp2px, ContextCompat.getColor(this,R.color.colorGray))
-        ViewCompat.setBackground(vp_show_media_head,vpDrawable)
+        val vpDrawable = RoundDrawable(dp2px, ContextCompat.getColor(this, R.color.colorGray))
+        ViewCompat.setBackground(vp_show_media_head, vpDrawable)
 
         //刷新播放列表
         iv_search_media.setOnClickListener {
@@ -199,6 +202,7 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
             createBottomQueueDialog()
         })
     }
+
     /*专辑图片位置改变监听*/
     private val mHeadChangeListener = object : ViewPager.OnPageChangeListener {
         private var selectedPosition = 0
@@ -495,10 +499,10 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
         }, 100)
     }
 
-    private var mLoadingDialog:LoadingDialog ?= null
+    private var mLoadingDialog: LoadingDialog? = null
 
     override fun showLoading() {
-        if(mLoadingDialog == null){
+        if (mLoadingDialog == null) {
             mLoadingDialog = LoadingDialog(this)
         }
         mLoadingDialog!!.show()
@@ -506,7 +510,7 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
     }
 
     override fun hideLoading() {
-        if(mLoadingDialog!=null){
+        if (mLoadingDialog != null) {
             mLoadingDialog!!.hide()
         }
         showMsg("加载完成")
@@ -708,8 +712,10 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
             when (event) {
                 MediaService.LOCAL_CACHE_POSITION_EVENT -> {
                     val lastPosition = extras?.getInt(MediaService.LOCAL_CACHE_POSITION_EVENT) as Int
-                    control_display_progress.progress = (lastPosition * 100 / endPosition).toInt()
-                    PrintOut.d("得到的缓存position=" + (lastPosition * 100 / endPosition).toInt())
+                    if(endPosition != 0L){
+                        control_display_progress.progress = (lastPosition * 100 / endPosition).toInt()
+                        PrintOut.d("得到的缓存position=" + (lastPosition * 100 / endPosition).toInt())
+                    }
                 }
                 MediaService.ERROR_PLAY_QUEUE_EVENT -> {
                     showMsg(getString(R.string.empty_play_queue))
@@ -846,8 +852,8 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
         super.onDestroy()
         PrintOut.print("MediaActivity is destroy")
         ViewCompat.setBackground(media_title_tint, null)
-        ViewCompat.setBackground(vp_show_media_head,null)
-        if(mLoadingDialog!=null){
+        ViewCompat.setBackground(vp_show_media_head, null)
+        if (mLoadingDialog != null) {
             mLoadingDialog!!.cancel()
             mLoadingDialog = null
         }

@@ -1,14 +1,10 @@
 package com.zy.ppmusic
 
-import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4
-import com.zy.ppmusic.ui.SplashActivity
-import com.zy.ppmusic.utils.ScanMusicFile
+import com.zy.ppmusic.mvp.view.SplashActivity
 
 import org.junit.Test
 import org.junit.runner.RunWith
-
-import org.junit.Assert.*
 
 /**
  * Instrumented test, which will execute on an Android device.

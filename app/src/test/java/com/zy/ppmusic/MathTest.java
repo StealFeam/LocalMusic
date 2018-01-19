@@ -117,9 +117,13 @@ public class MathTest {
 
         PrintOut.print(reverseNumIsEqual(75614));
         PrintOut.print(reverseNumIsEqualTwo(1234321));
+    }
 
-
-
+    @Test
+    public void testSign(){
+        int code = 10;
+        int srCode = 10;
+        System.out.println((code & srCode));
     }
 
     private void printIntArray(int[] array) {
