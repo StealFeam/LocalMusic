@@ -168,11 +168,11 @@ public class FileUtils {
             PrintOut.print("read object success");
             return inputStream.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            PrintOut.e("read cache has a error :"+e.getMessage());
+            return null;
         } finally {
             StreamUtils.closeIo(inputStream);
         }
-        return null;
     }
 
 

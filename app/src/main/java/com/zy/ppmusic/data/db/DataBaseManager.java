@@ -7,32 +7,34 @@ import com.zy.ppmusic.data.db.dao.DaoSession;
 import com.zy.ppmusic.data.db.dao.MusicDbEntityDao;
 import com.zy.ppmusic.entity.MusicDbEntity;
 
-import org.greenrobot.greendao.identityscope.IdentityScopeType;
-
 import java.util.List;
 
 /**
  * @author ZhiTouPC
  */
-public class DBManager {
+public class DataBaseManager {
     private static final String TABLE_NAME = "local_db";
+    private static volatile DataBaseManager manager = new DataBaseManager();
     private DaoMaster mMaster;
     private DaoMaster.DevOpenHelper mOpenHelper;
     private DaoSession mSession;
 
-    private static volatile DBManager manager = new DBManager();
+    private DataBaseManager() {
 
-    public static DBManager getInstance() {
+    }
+
+    public static DataBaseManager getInstance() {
         return manager;
     }
 
-    private DBManager() {
-
-    }
-
-    public DBManager initDb(Context context) {
-        mOpenHelper = new DaoMaster.DevOpenHelper(context, TABLE_NAME);
-        mMaster = new DaoMaster(mOpenHelper.getWritableDb());
+    public DataBaseManager initDb(Context context) {
+        if (mOpenHelper == null) {
+            mOpenHelper = new DaoMaster.DevOpenHelper(context, TABLE_NAME);
+            mMaster = new DaoMaster(mOpenHelper.getWritableDb());
+        }
+        if (mSession != null) {
+            mSession.clear();
+        }
         mSession = mMaster.newSession();
         return this;
     }
@@ -54,12 +56,15 @@ public class DBManager {
         musicDbEntityDao.deleteAll();
     }
 
-    private void checkSession(){
+    private void checkSession() {
         if (mSession == null) {
             System.err.println("please call initDb first...");
             throw new NullPointerException("please call initDb first...");
         }
     }
 
-
+    public void closeConn() {
+        mOpenHelper.close();
+        mOpenHelper = null;
+    }
 }

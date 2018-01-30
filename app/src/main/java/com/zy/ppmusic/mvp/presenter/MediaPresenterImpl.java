@@ -48,8 +48,8 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
             refresh(context, true);
         } else {
             PrintOut.i("开始读取本地数据");
-            mModel.loadLocalData(context.getCacheDir().getAbsolutePath(), new
-                    IMediaActivityContract.IMediaActivityModel.IOnLocalDataLoadFinished() {
+            mModel.loadLocalData(context.getCacheDir().getAbsolutePath(), new IMediaActivityContract
+                    .IMediaActivityModel.IOnLocalDataLoadFinished() {
                 @Override
                 public void callBack(Object data) {
                     if (data != null) {

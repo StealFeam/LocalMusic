@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.AnimationSet
+import com.zy.ppmusic.App
 import com.zy.ppmusic.R
 import kotlinx.android.synthetic.main.activity_splash.*
 import pub.devrel.easypermissions.AppSettingsDialog
@@ -19,6 +20,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
+        App.getInstance().createActivity(this)
 
         val animation = AnimationSet(true)
         val alphaAnim = AlphaAnimation(0f, 1f)
@@ -43,23 +45,9 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
                         EasyPermissions.requestPermissions(this@SplashActivity, getString(R.string.string_permission_read)
                                 , REQUEST_CODE, getString(R.string.string_read_external)
                                 , getString(R.string.string_write_external))
-//                        val builder = PermissionDialog.Builder()
-//                        val simpleList = ArrayList<String>()
-//                        simpleList.add("访问本地文件")
-//                        builder.setPermissions(simpleList)
-//                        builder.setTitle("我正常启动需要以下权限")
-//                        builder.setSureTitle("知道了")
-//                        permissionDesDialog = builder.build()
-//                        permissionDesDialog!!.show(this@SplashActivity,listener)
                     }
         })
     }
-
-//    private val listener = View.OnClickListener {
-//        EasyPermissions.requestPermissions(this@SplashActivity, getString(R.string.string_permission_read)
-//                , REQUEST_CODE, getString(R.string.string_read_external)
-//                , getString(R.string.string_write_external))
-//    }
 
     fun actionToMain() {
         val mediaIntent = Intent(this, MediaActivity::class.java)
@@ -119,6 +107,23 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
 
     override fun onPermissionsGranted(requestCode: Int, perms: List<String>?) {
         actionToMain()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if(tv_splash_open.animation != null){
+            tv_splash_open.animation.cancel()
+            tv_splash_open.animation = null
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        App.getInstance().destroyActivity(this)
+        if(tv_splash_open.animation != null) {
+            tv_splash_open.animation.cancel()
+            tv_splash_open.animation = null
+        }
     }
 
 }

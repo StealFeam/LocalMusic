@@ -4,17 +4,20 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
+import com.zy.ppmusic.App;
+
 /**
  * @author ZhiTouPC
  * @date 2018/1/12
  */
 
-public abstract class AbstractBaseActivity<P extends AbstractBasePresenter> extends AppCompatActivity{
+public abstract class AbstractBaseMvpActivity<P extends AbstractBasePresenter> extends AppCompatActivity{
     protected P mPresenter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        App.getInstance().createActivity(this);
         featureBeforeCreate();
         setContentView(getContentViewId());
         mPresenter = createPresenter();
@@ -27,6 +30,7 @@ public abstract class AbstractBaseActivity<P extends AbstractBasePresenter> exte
         if (mPresenter != null) {
             mPresenter.detachViewAndModel();
         }
+        App.getInstance().destroyActivity(this);
     }
 
     /**

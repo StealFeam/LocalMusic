@@ -22,7 +22,7 @@ import android.widget.Toast
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.ScanResultAdapter
 import com.zy.ppmusic.entity.ScanResultEntity
-import com.zy.ppmusic.mvp.base.AbstractBaseActivity
+import com.zy.ppmusic.mvp.base.AbstractBaseMvpActivity
 import com.zy.ppmusic.mvp.contract.IBLActivityContract
 import com.zy.ppmusic.mvp.presenter.BlActivityPresenter
 import com.zy.ppmusic.receiver.DeviceFoundReceiver
@@ -36,7 +36,7 @@ import java.util.*
 /**
  * @author ZY
  */
-class BlScanActivity : AbstractBaseActivity<BlActivityPresenter>(), IBLActivityContract.IBLActivityView, EasyPermissions.PermissionCallbacks {
+class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivityContract.IBLActivityView, EasyPermissions.PermissionCallbacks {
     override fun getContentViewId(): Int = R.layout.activity_bl_scan
 
     override fun createPresenter(): BlActivityPresenter = BlActivityPresenter(this)

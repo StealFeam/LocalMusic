@@ -18,10 +18,6 @@ public class RoundDrawable extends Drawable{
     private Paint mPaint;
     private int mRadius;
 
-    public RoundDrawable() {
-       initPaint();
-    }
-
     public RoundDrawable(int mRadius,int color) {
         this.mRadius = mRadius;
         initPaint();
@@ -63,7 +59,8 @@ public class RoundDrawable extends Drawable{
 
     @Override
     public int getOpacity() {
-        if (mPaint.getAlpha() == 255) {
+        int maxAlpha = 255;
+        if (mPaint.getAlpha() == maxAlpha) {
             return PixelFormat.OPAQUE;
         }
         return PixelFormat.TRANSLUCENT;

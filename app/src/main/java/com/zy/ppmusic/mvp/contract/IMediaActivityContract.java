@@ -31,6 +31,11 @@ public interface IMediaActivityContract {
         void refreshQueue(ArrayList<String> mPathList, boolean isRefresh);
 
         /**
+         * 检查服务连接
+         */
+        void checkConnection();
+
+        /**
          * 显示LoadingDialog
          */
         void showLoading();

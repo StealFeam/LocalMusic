@@ -20,10 +20,6 @@
         android:roundIcon="@mipmap/ic_music_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <meta-data
-            android:name="asset_statements"
-            android:resource="@string/asset_statements" />
-
         <activity
             android:name=".mvp.view.BlScanActivity"
             android:theme="@style/AppTheme.NoActionBar.Translate"/>

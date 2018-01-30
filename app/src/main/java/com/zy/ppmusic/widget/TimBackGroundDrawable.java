@@ -88,7 +88,8 @@ public class TimBackGroundDrawable extends Drawable {
 
     @Override
     public int getOpacity() {
-        if (mPaint.getAlpha() == 255) {
+        int maxAlpha = 255;
+        if (mPaint.getAlpha() == maxAlpha) {
             return PixelFormat.OPAQUE;
         }
         return PixelFormat.TRANSLUCENT;

@@ -2,6 +2,10 @@ package com.zy.ppmusic.widget;
 
 import android.animation.Animator;
 import android.animation.ValueAnimator;
+import android.app.Activity;
+import android.arch.lifecycle.Lifecycle;
+import android.arch.lifecycle.LifecycleObserver;
+import android.arch.lifecycle.OnLifecycleEvent;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -11,6 +15,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentActivity;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -26,7 +31,7 @@ import java.util.List;
 /**
  * @author ZhiTouPC
  */
-public class WaveRefreshView extends View {
+public class WaveRefreshView extends View implements LifecycleObserver {
     private static final String TAG = "WaveRefreshView";
     private final float LINE_AREA = 3f / 5f;
     private final float OTHER_AREA = 2f / 5f;
@@ -71,6 +76,7 @@ public class WaveRefreshView extends View {
 
     public WaveRefreshView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        ((FragmentActivity)context).getLifecycle().addObserver(this);
         mCirclePaint = new Paint();
         mCirclePaint.setColor(Color.WHITE);
         mCirclePaint.setAntiAlias(true);
@@ -99,6 +105,13 @@ public class WaveRefreshView extends View {
             Log.w(TAG, "onSizeChanged: " + lineRectF[i].toString());
         }
         startAnim();
+    }
+
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    public void onActivityStop(){
+        stopAnim();
+        clearReference();
     }
 
     @Override

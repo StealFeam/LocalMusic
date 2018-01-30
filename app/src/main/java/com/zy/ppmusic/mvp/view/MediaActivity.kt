@@ -32,7 +32,7 @@ import com.zy.ppmusic.adapter.MediaHeadAdapter
 import com.zy.ppmusic.adapter.MenuAdapter
 import com.zy.ppmusic.adapter.PlayQueueAdapter
 import com.zy.ppmusic.adapter.TimeClockAdapter
-import com.zy.ppmusic.mvp.base.AbstractBaseActivity
+import com.zy.ppmusic.mvp.base.AbstractBaseMvpActivity
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract
 import com.zy.ppmusic.mvp.presenter.MediaPresenterImpl
 import com.zy.ppmusic.service.MediaService
@@ -48,8 +48,9 @@ import java.util.*
  *      1.MediaController.transportControls.playFromMediaId(String, Bundle);//只发送消息（最好与播放器状态相关）
  *      2.SessionCompat.sendCommand(String,Bundle,ResultReceiver);//需要获取结果
  */
-class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivityContract.IMediaActivityView {
-    private val TAG = "MediaActivity"
+class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActivityContract.IMediaActivityView {
+
+
     private var mMediaBrowser: MediaBrowserCompat? = null
     private var mMediaBrowserParentId: String? = null
     private var mMediaController: MediaControllerCompat? = null//媒体控制器
@@ -259,8 +260,7 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
             }
         }
         if (mBottomQueueContentView == null) {
-            mBottomQueueContentView = LayoutInflater.from(this).
-                    inflate(R.layout.play_queue_layout, null)
+            mBottomQueueContentView = LayoutInflater.from(this).inflate(R.layout.play_queue_layout, null)
             mQueueRecycler = mBottomQueueContentView?.findViewById(R.id.control_queue_recycle)
             mQueueCountTv = mBottomQueueContentView?.findViewById(R.id.control_queue_count)
         } else {
@@ -357,8 +357,7 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
      */
     private fun createTimeClockDialog() {
         mTimeClockDialog = BottomSheetDialog(this)
-        mTimeContentView = LayoutInflater.from(this).
-                inflate(R.layout.layout_time_lock, null)
+        mTimeContentView = LayoutInflater.from(this).inflate(R.layout.layout_time_lock, null)
         mTimeClockRecycler = mTimeContentView?.findViewById(R.id.time_selector_recycler)
         mTimeClockRecycler?.layoutManager = LinearLayoutManager(this)
         mTimeClockAdapter = TimeClockAdapter()
@@ -437,6 +436,12 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
             }
         } else {
             mTimeClockAdapter!!.getItem(position)
+        }
+    }
+
+    override fun checkConnection() {
+        if(mMediaBrowser?.isConnected!!.not()){
+            mMediaBrowser?.connect()
         }
     }
 
@@ -546,7 +551,6 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
         override fun onConnectionFailed() {
             super.onConnectionFailed()
             PrintOut.print("onConnectionFailed.....")
-            mMediaBrowser?.connect()
         }
     }
 
@@ -712,7 +716,7 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
             when (event) {
                 MediaService.LOCAL_CACHE_POSITION_EVENT -> {
                     val lastPosition = extras?.getInt(MediaService.LOCAL_CACHE_POSITION_EVENT) as Int
-                    if(endPosition != 0L){
+                    if (endPosition != 0L) {
                         control_display_progress.progress = (lastPosition * 100 / endPosition).toInt()
                         PrintOut.d("得到的缓存position=" + (lastPosition * 100 / endPosition).toInt())
                     }
@@ -733,18 +737,8 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
                     if (mBorderTextView == null) {
                         mBorderTextView = BorderTextView(this@MediaActivity)
                     }
-                    val h = mis / (60L * 60L * 1000L)
-                    val m = (mis / (60L * 1000L)) - h * 60L
-                    val s = (mis % (60L * 1000L)) / 1000L
-                    val formatStr: String
-                    if (h > 0) {
-                        formatStr = getString(R.string.format_string_time_count_down_with_hour)
-                        mBorderTextView?.show(control_action_next, String.format(Locale.CHINA, formatStr, h, m, s))
-                    } else {
-                        formatStr = getString(R.string.format_string_time_count_down_no_hour)
-                        mBorderTextView?.show(control_action_next, String.format(Locale.CHINA, formatStr, m, s))
-                    }
 
+                    mBorderTextView?.show(control_action_next, DateUtil.getInstance().getTime(mis))
                 }
                 MediaService.ACTION_COUNT_DOWN_END -> {
                     if (mBorderTextView != null) {
@@ -768,10 +762,6 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
             }
         }
 
-        override fun onExtrasChanged(extras: Bundle?) {
-            super.onExtrasChanged(extras)
-            PrintOut.print("onExtrasChanged.....")
-        }
     }
 
     /**
@@ -807,14 +797,14 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
         }
     }
 
-    fun showMsg(msg: String) {
+    private fun showMsg(msg: String) {
         EasyTintView.makeText(control_action_next, msg, EasyTintView.TINT_SHORT).show()
     }
 
     /**
      * 更新媒体信息
      */
-    fun setMediaInfo(displayTitle: String?, subTitle: String?) {
+    private fun setMediaInfo(displayTitle: String?, subTitle: String?) {
         supportActionBar?.title = displayTitle
         supportActionBar?.subtitle = subTitle
     }
@@ -822,7 +812,7 @@ class MediaActivity : AbstractBaseActivity<MediaPresenterImpl>(), IMediaActivity
     /**
      * 断开媒体服务
      */
-    fun disConnectService() {
+    private fun disConnectService() {
         //释放控制器
         if (mMediaController != null) {
             mMediaController!!.unregisterCallback(mControllerCallBack)
