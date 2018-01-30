@@ -128,10 +128,10 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
                 mIsPauseCauseAudio = true;
             }
         } else {
-            if (mAudioFocus == AUDIO_NO_FOCUS_CAN_DUCK) {
-                mMediaPlayer.setVolume(0.2f, 0.2f);
-            } else {
-                if (mMediaPlayer != null) {
+            if (mMediaPlayer != null) {
+                if (mAudioFocus == AUDIO_NO_FOCUS_CAN_DUCK) {
+                    mMediaPlayer.setVolume(0.2f, 0.2f);
+                } else {
                     mMediaPlayer.setVolume(1.0f, 1.0f);
                 }
             }

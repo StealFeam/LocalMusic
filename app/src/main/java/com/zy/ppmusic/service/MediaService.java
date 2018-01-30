@@ -364,6 +364,7 @@ public class MediaService extends MediaBrowserServiceCompat {
             NotificationUtils.cancelNotify(this, NotificationUtils.NOTIFY_ID);
             mMediaSessionCompat.setActive(false);
             mMediaSessionCompat.release();
+            mAudioReceiver.unregister();
             stopForeground(true);
             stopSelf();
         }
@@ -565,7 +566,9 @@ public class MediaService extends MediaBrowserServiceCompat {
         if (mCurrentMedia == null) {
             return;
         }
-        mPlayBack.play();
+        if(mPlayBack != null){
+            mPlayBack.play();
+        }
     }
 
     @Override

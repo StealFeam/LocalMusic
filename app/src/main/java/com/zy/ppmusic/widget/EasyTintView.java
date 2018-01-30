@@ -26,11 +26,13 @@ import java.util.Locale;
 
 /**
  * @author ZhiTouPC
+ *         问题1:创建多个实例
+ *         问题2：每次都要寻找ViewGroup
  */
 public class EasyTintView extends AppCompatTextView {
-    private static final String TAG = "EasyTintView";
     public static final int TINT_LONG = 3000;
     public static final int TINT_SHORT = 1000;
+    private static final String TAG = "EasyTintView";
     private Handler mDelayHandler;
     private int delayDuration;
     private int showGravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
@@ -50,30 +52,30 @@ public class EasyTintView extends AppCompatTextView {
 
     public static EasyTintView makeText(@NonNull View anchorView, String msg, int duration) {
         ViewGroup parent = findSuitableParent(anchorView);
-        View tagView = null;
-        int topMargin = 0;
-        if (parent != null) {
-            tagView = parent.findViewWithTag(TAG);
-            Rect rect = new Rect();
-            //获取android.R.id.content根布局的内容区域
-            parent.getGlobalVisibleRect(rect);
-            //有Toolbar和状态栏高度
-            int topWithToolBar = rect.top;
+        if (parent == null) {
+            throw new NullPointerException("cannot find the suitable parent");
+        }
+        int topMargin;
+        View tagView = parent.findViewWithTag(TAG);
+        Rect rect = new Rect();
+        //获取android.R.id.content根布局的内容区域
+        parent.getGlobalVisibleRect(rect);
+        //有Toolbar和状态栏高度
+        int topWithToolBar = rect.top;
 
-            anchorView.getWindowVisibleDisplayFrame(rect);
-            //只有状态栏高度
-            int topWithTranslateBar = rect.top;
-            if (topWithToolBar > 0) {
-                topMargin = 0;
-            } else {
-                topMargin = topWithTranslateBar;
-            }
+        anchorView.getWindowVisibleDisplayFrame(rect);
+        //只有状态栏高度
+        int topWithTranslateBar = rect.top;
+        if (topWithToolBar > 0) {
+            topMargin = 0;
+        } else {
+            topMargin = topWithTranslateBar;
         }
         EasyTintView tintView;
         if (tagView != null) {
             tintView = (EasyTintView) tagView;
         } else {
-            tintView = new EasyTintView(anchorView.getContext());
+            tintView = new EasyTintView(parent.getContext());
         }
         tintView.setText(String.valueOf(msg));
         tintView.topMargin = topMargin;
@@ -82,9 +84,19 @@ public class EasyTintView extends AppCompatTextView {
         return tintView;
     }
 
-    @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        super.onSizeChanged(w, h, oldw, oldh);
+    private static ViewGroup findSuitableParent(View view) {
+        do {
+            if (view instanceof FrameLayout) {
+                if (view.getId() == android.R.id.content) {
+                    return (ViewGroup) view;
+                }
+            }
+            if (view != null) {
+                ViewParent parent = view.getParent();
+                view = parent instanceof View ? (View) parent : null;
+            }
+        } while (view != null);
+        return null;
     }
 
     @Override
@@ -215,28 +227,12 @@ public class EasyTintView extends AppCompatTextView {
                 }
             });
         }
-
     }
 
     private void removeFromParent() {
         if (parent != null && this.getParent() != null) {
             parent.removeView(this);
         }
-    }
-
-    private static ViewGroup findSuitableParent(View view) {
-        do {
-            if (view instanceof FrameLayout) {
-                if (view.getId() == android.R.id.content) {
-                    return (ViewGroup) view;
-                }
-            }
-            if (view != null) {
-                ViewParent parent = view.getParent();
-                view = parent instanceof View ? (View) parent : null;
-            }
-        } while (view != null);
-        return null;
     }
 
     @Override

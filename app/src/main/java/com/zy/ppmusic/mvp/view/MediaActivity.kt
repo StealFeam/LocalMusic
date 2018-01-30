@@ -49,8 +49,6 @@ import java.util.*
  *      2.SessionCompat.sendCommand(String,Bundle,ResultReceiver);//需要获取结果
  */
 class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActivityContract.IMediaActivityView {
-
-
     private var mMediaBrowser: MediaBrowserCompat? = null
     private var mMediaBrowserParentId: String? = null
     private var mMediaController: MediaControllerCompat? = null//媒体控制器
