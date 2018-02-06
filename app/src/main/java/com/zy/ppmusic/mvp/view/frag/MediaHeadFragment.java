@@ -13,14 +13,10 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.zy.ppmusic.R;
-import com.zy.ppmusic.utils.PrintOut;
 
 import org.jetbrains.annotations.NotNull;
-
-import java.io.ByteArrayOutputStream;
 
 /**
  * @author ZhiTouPC
@@ -29,7 +25,7 @@ import java.io.ByteArrayOutputStream;
 public class MediaHeadFragment extends Fragment {
     private static final String TAG = "MediaHeadFragment";
     private static final String PARAM = "PARAM";
-    private RequestOptions mImageLoadOptions;
+    private final RequestOptions mImageLoadOptions;
 
     public MediaHeadFragment() {
         this.mImageLoadOptions = new RequestOptions()

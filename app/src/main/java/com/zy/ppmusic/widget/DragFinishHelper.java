@@ -11,7 +11,10 @@ import android.view.animation.LinearInterpolator;
 
 import java.lang.ref.WeakReference;
 
-public class DragFinishHelper {
+/**
+ * @author ZhiTouPC
+ */
+class DragFinishHelper {
     private static final String TAG = "DragFinishHelper";
     private WeakReference<ViewGroup> mWeakRootView;
     private DragFinishListener listener;
@@ -78,12 +81,14 @@ public class DragFinishHelper {
                     ViewGroup root = mWeakRootView.get();
                     if (isDrag) {
                         mXVelocity.computeCurrentVelocity(1000);
-                        if (mXVelocity.getXVelocity() > (minXVelocity * 22)) {
+                        int xRatio = 22;
+                        if (mXVelocity.getXVelocity() > (minXVelocity * xRatio)) {
                             scrollTo(root.getRootView().getMeasuredWidth());
                             mXVelocity.recycle();
                             return true;
                         }
-                        if (root.getRootView().getTranslationX() < root.getRootView().getMeasuredWidth() / 3) {
+                        int equal = 3;
+                        if (root.getRootView().getTranslationX() < root.getRootView().getMeasuredWidth() / equal) {
                             scrollToStart();
                         } else {
                             scrollTo(root.getRootView().getMeasuredWidth());
@@ -142,6 +147,9 @@ public class DragFinishHelper {
     }
 
     public interface DragFinishListener {
+        /**
+         * 滑动到右边界
+         */
         void scrollToRightBorder();
     }
 }

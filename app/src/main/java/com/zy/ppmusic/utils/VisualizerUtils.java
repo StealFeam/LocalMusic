@@ -10,7 +10,6 @@ import android.media.audiofx.Visualizer;
 
 public class VisualizerUtils {
     private static VisualizerUtils instance = new VisualizerUtils();
-    private MediaPlayer mediaPlayer;
     private Visualizer visualizer;
 
     public VisualizerUtils() {
@@ -21,7 +20,6 @@ public class VisualizerUtils {
     }
 
     private void attachPlayer(MediaPlayer mediaPlayer) {
-        this.mediaPlayer = mediaPlayer;
         try {
             visualizer = new Visualizer(mediaPlayer.getAudioSessionId());
         } catch (Exception e) {

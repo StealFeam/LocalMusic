@@ -97,7 +97,6 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
         private TextView tvSubTitle;
         private TextView tvPosition;
         private ImageView ivDel;
-//        private ImageView ivPlayingFlag;
         private View vLine;
         private OnQueueItemClickListener onQueueItemClickListener;
         private OnQueueItemLongClickListener longClickListener;
@@ -113,7 +112,6 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
             tvTitle = itemView.findViewById(R.id.queue_item_display_title);
             tvPosition = itemView.findViewById(R.id.queue_item_position);
             ivDel = itemView.findViewById(R.id.queue_item_del);
-//            ivPlayingFlag = itemView.findViewById(R.id.queue_item_playing_flag_iv);
             vLine = itemView.findViewById(R.id.queue_item_selected_line);
             ivDel.setOnClickListener(this);
         }

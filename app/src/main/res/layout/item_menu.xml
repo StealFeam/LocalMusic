@@ -8,6 +8,7 @@
 
     <ImageView
         android:id="@+id/item_menu_icon"
+        android:contentDescription="@string/itemImgDes"
         android:layout_width="@dimen/dp20"
         android:layout_height="@dimen/dp20" />
 

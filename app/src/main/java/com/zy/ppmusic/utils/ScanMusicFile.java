@@ -2,7 +2,6 @@ package com.zy.ppmusic.utils;
 
 import android.content.Context;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
@@ -11,9 +10,7 @@ import android.util.Log;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -199,7 +196,7 @@ public class ScanMusicFile {
          */
         protected abstract void onComplete(ArrayList<String> paths);
 
-        protected void onCountChange(int size) {
+        public void onCountChange(int size) {
 
         }
     }

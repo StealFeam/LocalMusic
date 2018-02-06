@@ -5,8 +5,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.media.AudioManager;
-import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.MediaDescriptionCompat;
@@ -19,7 +17,6 @@ import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.zy.ppmusic.R;
-import com.zy.ppmusic.service.MediaService;
 
 /**
  * @author ZhiTouPC

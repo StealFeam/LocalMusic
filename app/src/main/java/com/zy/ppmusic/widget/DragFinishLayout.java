@@ -5,9 +5,12 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.LinearLayout;
 
+/**
+ * @author ZhiTouPC
+ */
 public class DragFinishLayout extends LinearLayout {
     private static final String TAG = "DragFinishLayout";
-    private DragFinishHelper helper;
+    private final DragFinishHelper helper;
 
     public DragFinishLayout(Context context) {
         this(context,null);

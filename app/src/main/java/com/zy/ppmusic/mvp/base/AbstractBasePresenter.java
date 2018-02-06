@@ -8,11 +8,11 @@ import java.lang.ref.WeakReference;
  */
 
 public abstract class AbstractBasePresenter<V extends IBaseView,M extends IBaseModel> {
-    protected WeakReference<V> mView;
-    protected M mModel;
+    protected final WeakReference<V> mView;
+    protected final M mModel;
 
     public AbstractBasePresenter(V v) {
-        this.mView = new WeakReference<V>(v);
+        this.mView = new WeakReference<>(v);
         this.mModel = createModel();
     }
 

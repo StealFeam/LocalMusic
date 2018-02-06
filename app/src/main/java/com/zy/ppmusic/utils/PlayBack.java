@@ -7,21 +7,17 @@ import android.media.MediaPlayer;
 import android.os.PowerManager;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.zy.ppmusic.service.MediaService;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Random;
 
 /**
  * @author ZhiTouPC
  */
 public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnCompletionListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnSeekCompleteListener {
-    private static final String TAG = "PlayBack";
-
     /**
      * we don't have audio focus, and can't duck (play at a low volume)
      */
@@ -42,7 +38,6 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
     private volatile List<String> mPlayQueue;
     private volatile int mCurrentPosition;
     private volatile String mCurrentMediaId;
-    private int mCurrentIndex;
     private CallBack mCallBack;
     private AudioManager audioManager;
     private int mAudioFocus = AUDIO_NO_FOCUS_NO_DUCK;
@@ -59,7 +54,6 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
 
     private boolean mPlayOnFocusGain;
     private int mState = PlaybackStateCompat.STATE_NONE;
-    private Random mRandom;
 
     public PlayBack(MediaService mMediaService) {
         this.mMediaService = mMediaService;
@@ -260,10 +254,6 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
         return mPlayQueue.indexOf(mCurrentMediaId);
     }
 
-    public int getMediaIndex(String mediaId) {
-        return mPlayQueue.indexOf(mediaId);
-    }
-
     public String onSkipToNext() {
         checkPlayQueue();
         if(mPlayQueue.isEmpty()){
@@ -276,23 +266,6 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
         String nextMediaId = mPlayQueue.get(++queueIndex);
         PrintOut.d("onSkipToNext() called..." + queueIndex);
         return nextMediaId;
-    }
-
-    public String randomIndex() {
-        checkPlayQueue();
-        if (mRandom == null) {
-            mRandom = new Random();
-        }
-        mCurrentIndex = mPlayQueue.indexOf(mCurrentMediaId);
-        int index;
-        while (true) {
-            index = mRandom.nextInt(mPlayQueue.size());
-            if (index >= 0 && index < mPlayQueue.size() && index != mCurrentIndex) {
-                break;
-            }
-        }
-        PrintOut.w("randomIndex: " + index);
-        return mPlayQueue.get(index);
     }
 
     private void checkPlayQueue() {

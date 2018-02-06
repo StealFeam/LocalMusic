@@ -68,7 +68,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
         }
         return false
     }
-
+    @SuppressWarnings("unused")
     fun deviceDisappeared(device: BluetoothDevice) {
         mScanDevices.forEachIndexed { index, scanResultEntity ->
             if (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -131,7 +131,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
 
         }
     }
-
+    @SuppressWarnings("unused")
     private fun isTitlePosition(position: Int): Boolean {
         if (position == 0 || position == mBondDevices.size - 1) {
             return true
@@ -144,7 +144,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
     class TitleHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var title: TextView? = null
         init {
-            title = itemView.findViewById<TextView>(R.id.tv_scan_result_title)
+            title = itemView.findViewById(R.id.tv_scan_result_title)
         }
     }
 

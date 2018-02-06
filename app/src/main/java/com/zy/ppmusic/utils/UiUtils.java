@@ -1,16 +1,13 @@
 package com.zy.ppmusic.utils;
 
 import android.content.Context;
-import android.support.v4.content.ContextCompat;
-
-import com.zy.ppmusic.App;
 
 /**
  * @author ZhiTouPC
  * @date 2017/10/19
  */
 
-public class UIUtils {
+public class UiUtils {
     public static int dp2px(Context context,int dp) {
         float density = context.getResources().getDisplayMetrics().density;
         return (int) (dp * density + 0.5f);

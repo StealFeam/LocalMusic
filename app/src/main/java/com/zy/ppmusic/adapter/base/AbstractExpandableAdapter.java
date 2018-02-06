@@ -49,13 +49,14 @@ public abstract class AbstractExpandableAdapter extends
     public abstract int itemCount();
 
     protected static class ExpandableViewHolder extends RecyclerView.ViewHolder {
-        private SparseArrayCompat<View> mItemViews;
+        private final SparseArrayCompat<View> mItemViews;
 
         protected ExpandableViewHolder(View itemView) {
             super(itemView);
             mItemViews = new SparseArrayCompat<>();
         }
 
+        @SuppressWarnings("unchecked")
         public <T extends View> T getView(int id) {
             if (mItemViews.get(id) != null) {
                 return (T) mItemViews.get(id);

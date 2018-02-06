@@ -9,4 +9,5 @@
 .externalNativeBuild
 /easypermissions/build
 app/app-release.apk
+app/release/output.json
 /bugreport.txt

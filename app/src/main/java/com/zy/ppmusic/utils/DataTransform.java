@@ -32,20 +32,20 @@ public class DataTransform {
      * 可存放本地的数据
      */
     private volatile List<MusicInfoEntity> musicInfoEntities;
-    private volatile List<MediaSessionCompat.QueueItem> queueItemList;
-    private volatile ArrayList<MediaBrowserCompat.MediaItem> mediaItemList;
-    private volatile ArrayMap<String, MediaMetadataCompat> mapMetadataArray;
+    private final List<MediaSessionCompat.QueueItem> queueItemList;
+    private final ArrayList<MediaBrowserCompat.MediaItem> mediaItemList;
+    private final ArrayMap<String, MediaMetadataCompat> mapMetadataArray;
     /**
      * 扫描到的路径
      */
-    private volatile ArrayList<String> pathList;
+    private final ArrayList<String> pathList;
     /**
      * 用于获取mediaid的位置
      */
-    private volatile List<String> mediaIdList;
+    private final List<String> mediaIdList;
 
     private static class Inner {
-        private static DataTransform transform = new DataTransform();
+        private static final DataTransform INSTANCE = new DataTransform();
     }
 
     private DataTransform() {
@@ -58,7 +58,7 @@ public class DataTransform {
     }
 
     public static DataTransform getInstance() {
-        return Inner.transform;
+        return Inner.INSTANCE;
     }
 
     /**
@@ -110,7 +110,6 @@ public class DataTransform {
                 } else {
                     //遍历得到内部或者外部存储的所有媒体文件的信息
                     while (query.moveToNext()) {
-                        String name = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
                         String title = query.getString(query.getColumnIndex(MediaStore.Audio.Media.TITLE));
                         String artist = query.getString(query.getColumnIndex(MediaStore.Audio.Media.ARTIST));
                         long duration = query.getLong(query.getColumnIndex(MediaStore.Audio.Media.DURATION));
@@ -128,11 +127,10 @@ public class DataTransform {
                         if (duration < 20 * 1000) {
                             continue;
                         }
-
+                        //过滤本地不存在的媒体文件
                         if (!isExits(queryPath)) {
                             continue;
                         }
-
                         builder = new MediaMetadataCompat.Builder();
                         //唯一id
                         builder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, String.valueOf(queryPath.hashCode()));
@@ -194,10 +192,8 @@ public class DataTransform {
         return new File(path).exists();
     }
 
-
     /**
      * 重新对数据遍历，筛选出系统ContentProvider中不存在的媒体
-     *
      * @param list 扫描到的数据列表
      */
     private void reQueryList(List<String> list) {
@@ -227,7 +223,6 @@ public class DataTransform {
                 byte[] embeddedPicture = retriever.getEmbeddedPicture();
                 Bitmap bitmap = null;
                 if (embeddedPicture != null) {
-                    PrintOut.print("获取媒体专辑图片数据。。。。" + embeddedPicture.length);
                     bitmap = BitmapFactory.decodeByteArray(embeddedPicture, 0, embeddedPicture.length);
                 }
 
@@ -267,7 +262,7 @@ public class DataTransform {
     /**
      * 从本地缓存得到的数据转换
      *
-     * @param localList
+     * @param localList 本地缓存数据
      */
     public void transFormData(List<MusicInfoEntity> localList) {
         clearData();
@@ -277,6 +272,8 @@ public class DataTransform {
             MusicInfoEntity itemEntity = musicInfoEntities.get(i);
             pathList.add(itemEntity.getQueryPath());
             mediaIdList.add(itemEntity.getMediaId());
+
+            itemEntity.setExits(isExits(itemEntity.getQueryPath()));
 
             MediaMetadataCompat.Builder itemBuilder = new MediaMetadataCompat.Builder();
             //唯一id
@@ -327,6 +324,11 @@ public class DataTransform {
         mediaItemList.remove(index);
     }
 
+    /**
+     * 获取文件媒体名称，仅在媒体文件中信息丢失时使用
+     * @param path 文件路径
+     * @return 媒体显示名称
+     */
     private String getMusicName(String path) {
         if (path != null) {
             return path.substring((path.lastIndexOf("/") + 1), path.lastIndexOf("."));

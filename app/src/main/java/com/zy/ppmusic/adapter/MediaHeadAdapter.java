@@ -17,7 +17,7 @@ import java.util.List;
  */
 
 public class MediaHeadAdapter extends FragmentStatePagerAdapter {
-    private List<String> mPathList;
+    private final List<String> mPathList;
 
     public MediaHeadAdapter(FragmentManager fm, List<String> pathList) {
         super(fm);

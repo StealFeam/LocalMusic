@@ -1,5 +1,6 @@
 package com.zy.ppmusic.mvp.view
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
@@ -81,7 +82,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         private var mWeakView: WeakReference<MediaActivity>? = null
 
         init {
-            this.mWeakView = WeakReference<MediaActivity>(activity)
+            this.mWeakView = WeakReference(activity)
         }
 
         override fun onReceiveResult(resultCode: Int, resultData: Bundle) {
@@ -132,7 +133,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         drawable.setPercent(TimBackGroundDrawable.TOP)
         ViewCompat.setBackground(media_title_tint, drawable)
         //专辑图片的圆形背景
-        val dp2px = UIUtils.dp2px(this, 110)
+        val dp2px = UiUtils.dp2px(this, 110)
         val vpDrawable = RoundDrawable(dp2px, ContextCompat.getColor(this, R.color.colorGray))
         ViewCompat.setBackground(vp_show_media_head, vpDrawable)
 
@@ -230,6 +231,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     /**
      * 创建播放列表
      */
+    @SuppressLint("InflateParams")
     private fun createBottomQueueDialog() {
         mBottomQueueDialog = BottomSheetDialog(this)
         if (mBottomQueueAdapter == null) {
@@ -275,7 +277,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         mQueueRecycler?.adapter = mBottomQueueAdapter
         mQueueRecycler?.layoutManager = LinearLayoutManager(this)
         mQueueRecycler?.addItemDecoration(RecycleViewDecoration(this, LinearLayoutManager.VERTICAL,
-                R.drawable.recyclerview_vertical_line, UIUtils.dp2px(this, 25)))
+                R.drawable.recyclerview_vertical_line, UiUtils.dp2px(this, 25)))
         mBottomQueueAdapter?.setData(mPlayQueueList)
         mBottomQueueDialog?.show()
     }
@@ -308,8 +310,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         val dialog = AlertDialog.Builder(this)
         dialog.setTitle(getString(R.string.string_sure_del))
         val delContentView = LayoutInflater.from(this).inflate(R.layout.dl_content_del_item, null)
-        delContentView.setPadding(UIUtils.dp2px(this, 20), UIUtils.dp2px(this, 20),
-                UIUtils.dp2px(this, 10), UIUtils.dp2px(this, 10))
+        delContentView.setPadding(UiUtils.dp2px(this, 20), UiUtils.dp2px(this, 20),
+                UiUtils.dp2px(this, 10), UiUtils.dp2px(this, 10))
         dialog.setView(delContentView)
         dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
             if (delContentView.checkbox_dl_content_message.isChecked) {
@@ -340,7 +342,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             mBottomLoopModePop?.anchorView = control_action_loop_model
             mBottomLoopModePop?.setDropDownGravity(Gravity.TOP and Gravity.END)
             mBottomLoopModePop?.setAdapter(MenuAdapter(this))
-            mBottomLoopModePop?.setContentWidth(UIUtils.dp2px(this, 110))
+            mBottomLoopModePop?.setContentWidth(UiUtils.dp2px(this, 110))
             mBottomLoopModePop?.horizontalOffset = control_action_loop_model.measuredWidth
             mBottomLoopModePop?.setOnItemClickListener { _, _, position, _ ->
                 setPlayMode(position)
@@ -474,7 +476,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     override fun onSaveInstanceState(outState: Bundle?) {
         //清除状态缓存，避免出现异常，界面刷新由onStart方法中完成
         //猜测是由于fragment数据大小超出限制
-        outState?.clear()
+//        outState?.clear()
         super.onSaveInstanceState(Bundle())
         println("onSaveInstanceState............................." + outState?.toString())
     }
@@ -508,6 +510,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         if (mLoadingDialog == null) {
             mLoadingDialog = LoadingDialog(this)
         }
+        mLoadingDialog?.setCancelable(false)
         mLoadingDialog!!.show()
         showMsg("加载中....")
     }
@@ -735,7 +738,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                     if (mBorderTextView == null) {
                         mBorderTextView = BorderTextView(this@MediaActivity)
                     }
-
                     mBorderTextView?.show(control_action_next, DateUtil.getInstance().getTime(mis))
                 }
                 MediaService.ACTION_COUNT_DOWN_END -> {

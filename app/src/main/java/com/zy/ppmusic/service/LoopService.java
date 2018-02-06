@@ -5,8 +5,6 @@ import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.zy.ppmusic.mvp.view.MediaActivity;
-import com.zy.ppmusic.receiver.LoopReceiver;
 import com.zy.ppmusic.utils.PrintOut;
 
 /**
@@ -38,8 +36,6 @@ public class LoopService extends IntentService{
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         while(loopStart){
-//            LocalBroadcastManager.getInstance(this).sendBroadcast(
-//                    new Intent(LoopReceiver.Companion.getACTION()));
             LocalBroadcastManager.getInstance(this).sendBroadcast(
                     new Intent(ACTION));
             try {

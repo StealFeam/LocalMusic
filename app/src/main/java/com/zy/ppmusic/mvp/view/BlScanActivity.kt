@@ -41,7 +41,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
 
     override fun createPresenter(): BlActivityPresenter = BlActivityPresenter(this)
 
-    private val REQUEST_ENABLE_BL = 0x001
+    private val blEnableRequestCode = 0x001
     private var mBlueToothOpenSwitch: SwitchCompat? = null//蓝牙开关
     private var mBlStateChangeReceiver: StatusChangeReceiver? = null
     private var mScanDeviceList: ArrayList<ScanResultEntity>? = null
@@ -53,16 +53,16 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
     private var mRefreshScanMenu: View? = null
 
     override fun initViews() {
-        mToolBar = findViewById<Toolbar>(R.id.toolbar_bl) as Toolbar
+        mToolBar = findViewById(R.id.toolbar_bl)
 
-        mScanResultRecycler = findViewById<RecyclerView>(R.id.show_device_recycler) as RecyclerView
+        mScanResultRecycler = findViewById(R.id.show_device_recycler)
         if (mPresenter!!.isSupportBl().not()) {
             Toast.makeText(this, "您的设备不支持蓝牙", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
         mScanDeviceList = ArrayList()
-        mBlueToothOpenSwitch = findViewById<SwitchCompat>(R.id.switch_bl) as SwitchCompat
+        mBlueToothOpenSwitch = findViewById(R.id.switch_bl)
         mToolBar!!.title = if (mPresenter!!.isEnable()) {
             mBlueToothOpenSwitch!!.isChecked = true
             mPresenter!!.getExitsDevices()
@@ -81,7 +81,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
                     val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
                     // 设置蓝牙可见性，最多300秒
                     intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
-                    startActivityForResult(intent, REQUEST_ENABLE_BL)
+                    startActivityForResult(intent, blEnableRequestCode)
                 }
             } else {
                 mPresenter!!.disable()
@@ -443,7 +443,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == this.REQUEST_ENABLE_BL && resultCode == Activity.RESULT_OK) {
+        if (requestCode == this.blEnableRequestCode && resultCode == Activity.RESULT_OK) {
             mPresenter!!.getExitsDevices()
             mPresenter!!.startDiscovery()
             onBLStateChange(BluetoothAdapter.STATE_ON)

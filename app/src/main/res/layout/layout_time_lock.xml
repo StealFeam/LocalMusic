@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="@dimen/dp10"
@@ -58,7 +57,7 @@
         android:visibility="invisible"
         android:padding="@dimen/dp2"
         android:gravity="center"
-        android:text="hint"
+        android:text="@string/app_name"
         android:textColor="@color/colorWhite"
         android:background="@drawable/progress_tint_shape"
         android:textSize="@dimen/sp12"

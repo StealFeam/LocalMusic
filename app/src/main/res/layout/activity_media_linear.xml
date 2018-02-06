@@ -158,5 +158,4 @@
             android:src="@drawable/ic_menu" />
     </android.support.v7.widget.LinearLayoutCompat>
 
-
 </android.support.v7.widget.LinearLayoutCompat>

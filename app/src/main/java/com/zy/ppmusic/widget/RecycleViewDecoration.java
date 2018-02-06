@@ -21,7 +21,7 @@ public class RecycleViewDecoration extends RecyclerView.ItemDecoration {
     private Drawable mDivider;
     private int[] padding;
 
-    public RecycleViewDecoration(Context context, int orientation, int dividerDrawable) {
+    private RecycleViewDecoration(Context context, int orientation, int dividerDrawable) {
         mDivider = ContextCompat.getDrawable(context, dividerDrawable);
         if (orientation != LinearLayoutManager.HORIZONTAL &&
                 orientation != LinearLayoutManager.VERTICAL) {
@@ -38,9 +38,6 @@ public class RecycleViewDecoration extends RecyclerView.ItemDecoration {
      */
     public RecycleViewDecoration(Context context, int orientation, int dividerDrawable, int... padding) {
         this(context, orientation, dividerDrawable);
-        this.padding = new int[4];
-        System.arraycopy(padding, 0, this.padding, 0, padding.length);
-        Log.e(TAG, "RecycleViewDecoration: " + padding.length + ":" + (padding.length > 3 ? padding[3] : 0));
         this.padding = padding;
     }
 

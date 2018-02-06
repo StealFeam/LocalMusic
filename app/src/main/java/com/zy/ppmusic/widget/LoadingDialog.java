@@ -1,7 +1,6 @@
 package com.zy.ppmusic.widget;
 
 import android.content.Context;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDialog;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,7 +15,7 @@ import java.lang.ref.WeakReference;
  */
 public class LoadingDialog extends AppCompatDialog{
     private View mContentView;
-    private WeakReference<Context> mContextWeak;
+    private final WeakReference<Context> mContextWeak;
 
     public LoadingDialog(Context context) {
         super(context, R.style.TransDialog);

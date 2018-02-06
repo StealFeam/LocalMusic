@@ -14,8 +14,8 @@ import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 
 class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
-    val REQUEST_CODE = 0x010
-    private val PREFERENCE_NAME = "SPLASH"
+    val requestCode = 0x010
+    private val mPreferenceName = "SPLASH"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +43,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
                         actionToMain()
                     } else {
                         EasyPermissions.requestPermissions(this@SplashActivity, getString(R.string.string_permission_read)
-                                , REQUEST_CODE, getString(R.string.string_read_external)
+                                , requestCode, getString(R.string.string_read_external)
                                 , getString(R.string.string_write_external))
                     }
         })
@@ -72,11 +72,11 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
             dialog.setNegativeButton(R.string.exit)
             dialog.build().show()
         } else {
-            val preference = getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
+            val preference = getSharedPreferences(mPreferenceName, Context.MODE_PRIVATE)
             val isInit = preference.getBoolean("isInitPermission", false)
             if (!isInit) {
                 EasyPermissions.requestPermissions(this, getString(R.string.string_permission_read)
-                        , REQUEST_CODE, getString(R.string.string_read_external)
+                        , this.requestCode, getString(R.string.string_read_external)
                         , getString(R.string.string_write_external))
                 preference.edit().putBoolean("isInitPermission", true).apply()
             } else {
@@ -98,7 +98,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
                     actionToMain()
                 } else {
                     EasyPermissions.requestPermissions(this, getString(R.string.string_permission_read)
-                            , REQUEST_CODE, getString(R.string.string_read_external)
+                            , this.requestCode, getString(R.string.string_read_external)
                             , getString(R.string.string_write_external))
                 }
             }

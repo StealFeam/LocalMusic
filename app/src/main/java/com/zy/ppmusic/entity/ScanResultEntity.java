@@ -7,8 +7,14 @@ import android.bluetooth.BluetoothDevice;
  * @author ZhiTouPC
  */
 public class ScanResultEntity {
-    private int type;//布局的id
-    private String title;//头布局的标题
+    /**
+     * 布局的id
+     */
+    private int type;
+    /**
+     * 头布局的标题
+     */
+    private String title;
     private String state;
     private BluetoothDevice device;
 

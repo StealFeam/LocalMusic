@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class MainMenuAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final String TAG = "MainMenuAdapter";
-    private List<MainMenuEntity> mDataList;
+    private final List<MainMenuEntity> mDataList;
     private OnRecycleItemClickListener listener;
     private Context mContext;
 
@@ -70,7 +70,7 @@ public class MainMenuAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     private static class MenuHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        private TextView menuTitle;
+        private final TextView menuTitle;
         private WeakReference<OnRecycleItemClickListener> weakReference;
 
         private MenuHolder(View itemView,OnRecycleItemClickListener l) {

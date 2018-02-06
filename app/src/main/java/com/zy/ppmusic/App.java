@@ -4,43 +4,27 @@ import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
-import android.system.Os;
 
 import com.squareup.leakcanary.LeakCanary;
-import com.zy.ppmusic.utils.CrashHandler;
 import com.zy.ppmusic.utils.PrintOut;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 
 /**
  * @author ZhiTouPC
  */
 public class App extends Application {
     public static final String LOCAL_DATA_TABLE_NAME = "CACHE_PATH_LIST";
+    private static LinkedHashMap<String, WeakReference<AppCompatActivity>> mActivityLists;
 
-    public static class SingleInstance{
-        public static App app = new App();
-    }
-
-    private static LinkedHashMap<String,WeakReference<AppCompatActivity>> mActivityLists;
-
-    public static App getInstance(){
+    public static App getInstance() {
         mActivityLists = new LinkedHashMap<>();
-        return SingleInstance.app;
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        StrictMode.enableDefaults();
-        LeakCanary.install(this);
+        return SingleInstance.INSTANCE;
     }
 
     public static int getAppVersion(Context context) {
@@ -53,30 +37,35 @@ public class App extends Application {
         return 1;
     }
 
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        StrictMode.enableDefaults();
+        LeakCanary.install(this);
+    }
 
-    public Context getContext(){
+    public Context getContext() {
         return this.getApplicationContext();
     }
 
-
-    public void createActivity(AppCompatActivity activity){
-        mActivityLists.put(activity.getLocalClassName(),new WeakReference<>(activity));
+    public void createActivity(AppCompatActivity activity) {
+        mActivityLists.put(activity.getLocalClassName(), new WeakReference<>(activity));
     }
 
-    public void destroyActivity(AppCompatActivity activity){
-        if(!mActivityLists.containsKey(activity.getLocalClassName())){
-            PrintOut.e("not found this activity "+activity.getLocalClassName());
+    public void destroyActivity(AppCompatActivity activity) {
+        if (!mActivityLists.containsKey(activity.getLocalClassName())) {
+            PrintOut.e("not found this activity " + activity.getLocalClassName());
             return;
         }
         WeakReference<AppCompatActivity> activityWeakReference = mActivityLists.get(activity.getLocalClassName());
-        if(activityWeakReference.get() != null){
+        if (activityWeakReference.get() != null) {
             activityWeakReference.clear();
         }
     }
 
-    public void killSelf(){
+    public void killSelf() {
         Iterator<WeakReference<AppCompatActivity>> iterator = mActivityLists.values().iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             WeakReference<AppCompatActivity> activityWeakReference = iterator.next();
             if (activityWeakReference.get() != null) {
                 activityWeakReference.get().finish();
@@ -86,11 +75,15 @@ public class App extends Application {
         }
         int pid = android.os.Process.myPid();
         android.os.Process.killProcess(pid);
-        String command = "kill -9 "+ pid;
+        String command = "kill -9 " + pid;
         try {
             Runtime.getRuntime().exec(command);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static class SingleInstance {
+        private static final App INSTANCE = new App();
     }
 }

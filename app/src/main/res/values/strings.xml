@@ -52,5 +52,6 @@
     <string name="bluetooth_manager">蓝牙管理</string>
     <string name="time_to_close">定时关闭</string>
     <string name="show_name_and_author">%s-%s</string>
-    <string name="loading">loading...</string>
+    <string name="loading">loading…</string>
+    <string name="normal_image_des">simple_image</string>
 </resources>

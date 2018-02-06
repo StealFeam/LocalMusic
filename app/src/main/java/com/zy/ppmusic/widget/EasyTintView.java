@@ -33,7 +33,7 @@ public class EasyTintView extends AppCompatTextView {
     public static final int TINT_LONG = 3000;
     public static final int TINT_SHORT = 1000;
     private static final String TAG = "EasyTintView";
-    private Handler mDelayHandler;
+    private final Handler mDelayHandler;
     private int delayDuration;
     private int showGravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
     private boolean isVisible = false;
@@ -110,8 +110,14 @@ public class EasyTintView extends AppCompatTextView {
         setMeasuredDimension(width, height);
     }
 
-    private float getScreenParams(int posi) {
-        if (posi < 0 || posi > 2) {
+    private boolean checkPositionRange(int pos){
+        int minPos = 0;
+        int maxPos = 2;
+        return pos < minPos || pos > maxPos;
+    }
+
+    private float getScreenParams(int pos) {
+        if (checkPositionRange(pos)) {
             return 0;
         }
         if (screenParams == null) {
@@ -130,7 +136,7 @@ public class EasyTintView extends AppCompatTextView {
                 return 0;
             }
         }
-        return screenParams[posi];
+        return screenParams[pos];
     }
 
     private void setShowGravity(int gravity) {

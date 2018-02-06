@@ -25,10 +25,13 @@ public class MusicInfoEntity implements Serializable{
      */
     private byte[] iconData;
 
+    private boolean isExits;
+
     public MusicInfoEntity() {
     }
 
-    public MusicInfoEntity(String mediaId, String musicName, String artist, String queryPath, long size, long duration, byte[] iconData) {
+    public MusicInfoEntity(String mediaId, String musicName, String artist, String queryPath,
+                           long size, long duration, byte[] iconData) {
         this.mediaId = mediaId;
         this.musicName = musicName;
         this.artist = artist;
@@ -36,6 +39,14 @@ public class MusicInfoEntity implements Serializable{
         this.size = size;
         this.duration = duration;
         this.iconData = iconData;
+    }
+
+    public boolean isExits() {
+        return isExits;
+    }
+
+    public void setExits(boolean exits) {
+        isExits = exits;
     }
 
     public byte[] getIconData() {

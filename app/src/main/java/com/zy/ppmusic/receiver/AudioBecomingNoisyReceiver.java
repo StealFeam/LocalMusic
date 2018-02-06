@@ -17,7 +17,7 @@ public class AudioBecomingNoisyReceiver extends BroadcastReceiver {
     private static final String TAG = "AudioBecomingRecei";
     private final Context context;
     private boolean mIsRegistered = false;
-    private IntentFilter mAudioNoisyIntentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+    private final IntentFilter mAudioNoisyIntentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
     private AudioNoisyCallBack mCallBack;
 
     public AudioBecomingNoisyReceiver(Context context) {

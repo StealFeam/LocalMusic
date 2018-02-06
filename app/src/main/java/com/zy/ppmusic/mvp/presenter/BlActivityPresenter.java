@@ -6,9 +6,9 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 
-import com.zy.ppmusic.mvp.contract.IBLActivityContract;
 import com.zy.ppmusic.entity.ScanResultEntity;
-import com.zy.ppmusic.mvp.model.BLActivityModelImpl;
+import com.zy.ppmusic.mvp.contract.IBLActivityContract;
+import com.zy.ppmusic.mvp.model.BlActivityModelImpl;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,10 +19,10 @@ import java.util.Set;
  * @author ZY
  */
 public class BlActivityPresenter extends IBLActivityContract.AbstractBLActivityPresenter {
-    private BluetoothAdapter mBlueAdapter;
+    private final BluetoothAdapter mBlueAdapter;
+    private final Context context;
     private BluetoothA2dp mBlueA2dp;
     private boolean isNeedRe = false;
-    private Context context;
 
     public BlActivityPresenter(IBLActivityContract.IBLActivityView mView) {
         super(mView);
@@ -32,7 +32,7 @@ public class BlActivityPresenter extends IBLActivityContract.AbstractBLActivityP
 
     @Override
     protected IBLActivityContract.IBLActivityModel createModel() {
-        return new BLActivityModelImpl();
+        return new BlActivityModelImpl();
     }
 
     private void initBlueA2dp() {
@@ -60,7 +60,7 @@ public class BlActivityPresenter extends IBLActivityContract.AbstractBLActivityP
     @Override
     public void getExitsDevices() {
         if (mBlueA2dp != null) {
-            if(isDiscovering()){
+            if (isDiscovering()) {
                 cancelDiscovery();
             }
             List<ScanResultEntity> exitDevices = mModel.getExitsDevices(mBlueAdapter, mBlueA2dp);
@@ -123,7 +123,6 @@ public class BlActivityPresenter extends IBLActivityContract.AbstractBLActivityP
     }
 
 
-
     @Override
     public void disable() {
         if (mBlueAdapter != null) {
@@ -140,20 +139,18 @@ public class BlActivityPresenter extends IBLActivityContract.AbstractBLActivityP
         if (mBlueAdapter.isDiscovering()) {
             mBlueAdapter.cancelDiscovery();
         }
-        if (mBlueAdapter != null) {
-            mBlueAdapter.closeProfileProxy(BluetoothA2dp.A2DP, mBlueA2dp);
-        }
+        mBlueAdapter.closeProfileProxy(BluetoothA2dp.A2DP, mBlueA2dp);
     }
 
     @Override
     public boolean isConnected(@NotNull BluetoothDevice device) {
-        System.err.println("已连接的蓝牙设备。。。"+mBlueA2dp.getConnectedDevices().toString());
+        System.err.println("已连接的蓝牙设备。。。" + mBlueA2dp.getConnectedDevices().toString());
         return mBlueA2dp != null && mBlueA2dp.getConnectedDevices().contains(device);
     }
 
     @Override
     public List<BluetoothDevice> getConnectDevice() {
-        if(mBlueA2dp != null ){
+        if (mBlueA2dp != null) {
             return mBlueA2dp.getConnectedDevices();
         }
         return null;
@@ -170,7 +167,7 @@ public class BlActivityPresenter extends IBLActivityContract.AbstractBLActivityP
 
     @Override
     public boolean isDiscovering() {
-        return mBlueAdapter!=null && mBlueAdapter.isDiscovering();
+        return mBlueAdapter != null && mBlueAdapter.isDiscovering();
     }
 
 

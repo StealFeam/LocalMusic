@@ -10,8 +10,8 @@ import java.util.*
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 class ExampleUnitTest {
-    var currentPosition = 3
-    var index = 4
+    private var currentPosition = 3
+    private var index = 4
     @Test
     fun addition_isCorrect() {
         println(countPositionInSize(true))
@@ -37,10 +37,10 @@ class ExampleUnitTest {
     }
 
     private fun countPositionInSize(isUp: Boolean): Int {
-        if (isUp) {
-            return if ((currentPosition + 1) >= index) 0 else ++currentPosition
+        return if (isUp) {
+            if ((currentPosition + 1) >= index) 0 else ++currentPosition
         } else {
-            return if ((currentPosition - 1) < 0) index - 1 else --currentPosition
+            if ((currentPosition - 1) < 0) index - 1 else --currentPosition
         }
     }
 

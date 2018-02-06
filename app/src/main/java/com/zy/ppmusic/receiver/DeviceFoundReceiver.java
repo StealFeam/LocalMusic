@@ -17,7 +17,7 @@ import java.util.Objects;
  */
 public class DeviceFoundReceiver extends BroadcastReceiver{
     private static final String TAG = "DeviceFoundReceiver";
-    private WeakReference<BlScanActivity> weakReference;
+    private final WeakReference<BlScanActivity> weakReference;
 
     public DeviceFoundReceiver(BlScanActivity weakReference) {
         this.weakReference = new WeakReference<>(weakReference);

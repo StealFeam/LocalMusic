@@ -1,13 +1,8 @@
 package com.zy.ppmusic.receiver
 
-import android.arch.lifecycle.GenericLifecycleObserver
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleOwner
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
-import com.zy.ppmusic.mvp.view.MediaActivity
 import com.zy.ppmusic.service.MediaService
 import java.lang.ref.WeakReference
 

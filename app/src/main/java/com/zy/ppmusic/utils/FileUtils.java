@@ -33,6 +33,9 @@ public class FileUtils {
      */
     public static String getStoragePath(Context mContext, boolean isExternalStorage) {
         StorageManager mStorageManager = (StorageManager) mContext.getSystemService(Context.STORAGE_SERVICE);
+        if (mStorageManager == null) {
+            return null;
+        }
         Class<?> storageVolumeClazz;
         try {
             storageVolumeClazz = Class.forName("android.os.storage.StorageVolume");
@@ -79,7 +82,6 @@ public class FileUtils {
      */
     public static void writeDataToFile(Object object, String path, String name) {
         File dir = new File(path);
-        File saveFile = null;
         if (!dir.exists()) {
             boolean result = dir.mkdirs();
             if (!result) {
@@ -87,7 +89,7 @@ public class FileUtils {
                 return;
             }
         }
-        saveFile = new File(dir.getAbsolutePath() + File.separator + name);
+        File saveFile = new File(dir.getAbsolutePath() + File.separator + name);
         ObjectOutputStream objectOutputStream = null;
         OutputStream outputStream = null;
         try {

@@ -30,7 +30,7 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
     private static final String CACHE_MODE_KEY = "MODE_KEY";
     private SharedPreferences mModeCachePreference;
     private boolean isScanning = false;
-    private volatile Handler mMainHandler = new Handler(Looper.getMainLooper());
+    private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
     public MediaPresenterImpl(IMediaActivityContract.IMediaActivityView mView) {
         super(mView);
@@ -51,6 +51,7 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
             mModel.loadLocalData(context.getCacheDir().getAbsolutePath(), new IMediaActivityContract
                     .IMediaActivityModel.IOnLocalDataLoadFinished() {
                 @Override
+                @SuppressWarnings("unchecked")
                 public void callBack(Object data) {
                     if (data != null) {
                         PrintOut.i("读取本地数据 ----- 有值的");
@@ -158,7 +159,7 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
         });
     }
 
-    private OnTaskFinishedListener finishedListener = new OnTaskFinishedListener() {
+    private final OnTaskFinishedListener finishedListener = new OnTaskFinishedListener() {
         @Override
         public void onRefreshQueue(ArrayList<String> paths) {
             if (mView.get() != null) {
@@ -195,11 +196,11 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
      * 负责将本地数据或者扫描到的数据数据转换
      */
     private static class TransFormTask extends AsyncTask<String, Void, ArrayList<String>> {
-        private WeakReference<Context> mContextWeak;
-        private ArrayList<String> mPaths;
-        private ArrayList<MusicInfoEntity> entities;
-        private boolean isRefresh;
-        private OnTaskFinishedListener listener;
+        private final WeakReference<Context> mContextWeak;
+        private final ArrayList<String> mPaths;
+        private final ArrayList<MusicInfoEntity> entities;
+        private final boolean isRefresh;
+        private final OnTaskFinishedListener listener;
 
         private TransFormTask(Builder builder) {
             this.isRefresh = builder.isRefresh;
@@ -249,7 +250,6 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
     public void detachViewAndModel() {
         super.detachViewAndModel();
         mModel.shutdown();
-        mModel = null;
     }
 
 }

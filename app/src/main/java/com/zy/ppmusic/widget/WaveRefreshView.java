@@ -2,7 +2,6 @@ package com.zy.ppmusic.widget;
 
 import android.animation.Animator;
 import android.animation.ValueAnimator;
-import android.app.Activity;
 import android.arch.lifecycle.Lifecycle;
 import android.arch.lifecycle.LifecycleObserver;
 import android.arch.lifecycle.OnLifecycleEvent;
@@ -33,16 +32,12 @@ import java.util.List;
  */
 public class WaveRefreshView extends View implements LifecycleObserver {
     private static final String TAG = "WaveRefreshView";
-    private final float LINE_AREA = 3f / 5f;
-    private final float OTHER_AREA = 2f / 5f;
     /**
      * 最小宽度占屏幕的比例
      */
     private final float MIN_WIDTH_PERCENT = 1F / 6F;
     private Paint mCirclePaint;
     private int minWidth = 20;
-    private float lineWidth;
-    private float whiteWidth;
     private int maxChange;
     private volatile ArrayList<Animator> mAnimatorList = new ArrayList<>();
     private RectF[] lineRectF = new RectF[5];
@@ -58,7 +53,7 @@ public class WaveRefreshView extends View implements LifecycleObserver {
                 try {
                     Thread.sleep((end + 1) * 80);
                 } catch (InterruptedException e) {
-                    Log.e(TAG, "thread is interupted" + this.getClass().getName());
+                    Log.e(TAG, "thread is interrupted" + this.getClass().getName());
                     break;
                 }
                 end++;
@@ -76,7 +71,7 @@ public class WaveRefreshView extends View implements LifecycleObserver {
 
     public WaveRefreshView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        ((FragmentActivity)context).getLifecycle().addObserver(this);
+        ((FragmentActivity) context).getLifecycle().addObserver(this);
         mCirclePaint = new Paint();
         mCirclePaint.setColor(Color.WHITE);
         mCirclePaint.setAntiAlias(true);
@@ -87,11 +82,13 @@ public class WaveRefreshView extends View implements LifecycleObserver {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
+        float lineArea = 3f / 5f;
+        float otherArea = 2f / 5f;
         maxChange = h / 3;
         //线区域总宽
-        lineWidth = getMeasuredWidth() * LINE_AREA;
+        float lineWidth = getMeasuredWidth() * lineArea;
         //空白区总宽
-        whiteWidth = getMeasuredWidth() * OTHER_AREA;
+        float whiteWidth = getMeasuredWidth() * otherArea;
 
         lineWidth /= lineRectF.length;
         whiteWidth /= lineRectF.length;
@@ -109,7 +106,14 @@ public class WaveRefreshView extends View implements LifecycleObserver {
 
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    public void onActivityStop(){
+    public void onActivityStop() {
+        stopAnim();
+        clearReference();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
         stopAnim();
         clearReference();
     }
@@ -130,8 +134,14 @@ public class WaveRefreshView extends View implements LifecycleObserver {
         }
     }
 
-    private float getScreenParams(int posi) {
-        if (posi < 0 || posi > 2) {
+    private boolean checkPositionRange(int pos) {
+        int minPos = 0;
+        int maxPos = 2;
+        return pos < minPos || pos > maxPos;
+    }
+
+    private float getScreenParams(int pos) {
+        if (checkPositionRange(pos)) {
             return 0;
         }
         if (screenParams == null) {
@@ -148,7 +158,7 @@ public class WaveRefreshView extends View implements LifecycleObserver {
                 return 0;
             }
         }
-        return screenParams[posi];
+        return screenParams[pos];
     }
 
     public void startAnim() {

@@ -58,8 +58,8 @@ public class MediaActivityModelImpl implements IMediaActivityContract.IMediaActi
         mBackGroundPool.execute(new Runnable() {
             @Override
             public void run() {
-                if(mWeakController.get() != null){
-                    mWeakController.get().sendCommand(method,params,mWeakReceiver.get());
+                if (mWeakController.get() != null) {
+                    mWeakController.get().sendCommand(method, params, mWeakReceiver.get());
                 }
             }
         });
@@ -71,8 +71,8 @@ public class MediaActivityModelImpl implements IMediaActivityContract.IMediaActi
         mBackGroundPool.execute(new Runnable() {
             @Override
             public void run() {
-                if(mWeakController.get() != null){
-                    mWeakController.get().getTransportControls().playFromMediaId(mediaId,extra);
+                if (mWeakController.get() != null) {
+                    mWeakController.get().getTransportControls().playFromMediaId(mediaId, extra);
                 }
                 mWeakController.clear();
             }
@@ -82,15 +82,11 @@ public class MediaActivityModelImpl implements IMediaActivityContract.IMediaActi
     @Override
     public void postSendCustomAction(MediaControllerCompat controller, final String action, final Bundle extra) {
         final WeakReference<MediaControllerCompat> mWeakController = new WeakReference<>(controller);
-//        mBackGroundPool.execute(new Runnable() {
-//            @Override
-//            public void run() {
-                if(mWeakController.get() != null){
-                    mWeakController.get().getTransportControls().sendCustomAction(action,extra);
-                }
-                mWeakController.clear();
-//            }
-//        });
+        //待测试线程调用的耗时
+        if (mWeakController.get() != null) {
+            mWeakController.get().getTransportControls().sendCustomAction(action, extra);
+        }
+        mWeakController.clear();
     }
 
     @Override
@@ -99,7 +95,7 @@ public class MediaActivityModelImpl implements IMediaActivityContract.IMediaActi
         mBackGroundPool.execute(new Runnable() {
             @Override
             public void run() {
-                if(mWeakController.get() != null){
+                if (mWeakController.get() != null) {
                     mWeakController.get().getTransportControls().setRepeatMode(mode);
                 }
                 mWeakController.clear();
@@ -113,7 +109,7 @@ public class MediaActivityModelImpl implements IMediaActivityContract.IMediaActi
         mBackGroundPool.execute(new Runnable() {
             @Override
             public void run() {
-                if(mWeakController.get() != null){
+                if (mWeakController.get() != null) {
                     mWeakController.get().getTransportControls().skipToNext();
                 }
                 mWeakController.clear();
@@ -127,7 +123,7 @@ public class MediaActivityModelImpl implements IMediaActivityContract.IMediaActi
         mBackGroundPool.execute(new Runnable() {
             @Override
             public void run() {
-                if(mWeakController.get() != null){
+                if (mWeakController.get() != null) {
                     mWeakController.get().getTransportControls().skipToPrevious();
                 }
                 mWeakController.clear();
@@ -141,7 +137,7 @@ public class MediaActivityModelImpl implements IMediaActivityContract.IMediaActi
         mBackGroundPool.execute(new Runnable() {
             @Override
             public void run() {
-                if(mWeakController.get() != null){
+                if (mWeakController.get() != null) {
                     mWeakController.get().getTransportControls().skipToQueueItem(id);
                 }
                 mWeakController.clear();

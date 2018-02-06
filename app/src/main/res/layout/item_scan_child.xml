@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="horizontal"
     android:padding="@dimen/dp10"
     android:background="?android:attr/selectableItemBackground"
@@ -27,7 +26,8 @@
         app:layout_constraintStart_toEndOf="@id/iv_scan_result_icon"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/tv_connect_state" />
+        app:layout_constraintBottom_toTopOf="@+id/tv_connect_state"
+        android:layout_marginLeft="@dimen/dp10" />
 
     <ImageView
         android:id="@+id/bl_del_bond_iv"
@@ -35,6 +35,7 @@
         android:layout_height="@dimen/dp40"
         android:padding="@dimen/dp5"
         android:visibility="gone"
+        android:contentDescription="@string/itemImgDes"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"

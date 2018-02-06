@@ -6,6 +6,9 @@ package com.zy.ppmusic.callback;
  */
 
 public interface TimeTikCallBack {
-
+    /**
+     * 更新时间
+     * @param mis 剩余时间（毫秒）
+     */
     void onTik(long mis);
 }

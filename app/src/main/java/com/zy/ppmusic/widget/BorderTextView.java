@@ -12,6 +12,8 @@ import android.widget.FrameLayout;
 
 import com.zy.ppmusic.R;
 
+import org.jetbrains.annotations.Nullable;
+
 /**
  * @author ZhiTouPC
  */
@@ -24,7 +26,7 @@ public class BorderTextView extends AppCompatTextView implements ViewGroup.OnHie
         super(context);
     }
 
-    public void show(View v, String text) {
+    public void show(@Nullable View v, String text) {
         if (mRootView == null) {
             findSuitParent(v);
             mRootView.setOnHierarchyChangeListener(this);
@@ -53,14 +55,14 @@ public class BorderTextView extends AppCompatTextView implements ViewGroup.OnHie
     }
 
     private void findSuitParent(View v) {
-        do {
+        while (v != null) {
             if (v.getId() == android.R.id.content) {
                 mRootView = (FrameLayout) v;
                 return;
             }
-            final ViewParent parent = v.getParent();
+            ViewParent parent = v.getParent();
             v = parent instanceof View ? (View) parent : v;
-        } while (v != null);
+        }
     }
 
     @Override
