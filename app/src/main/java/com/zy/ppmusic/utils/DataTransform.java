@@ -40,7 +40,7 @@ public class DataTransform {
      */
     private final ArrayList<String> pathList;
     /**
-     * 用于获取mediaid的位置
+     * 用于获取mediaId的位置
      */
     private final List<String> mediaIdList;
 

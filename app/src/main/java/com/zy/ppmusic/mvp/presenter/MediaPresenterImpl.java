@@ -44,35 +44,45 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
     @Override
     public void refreshQueue(final Context context, boolean isRefresh) {
         mView.get().showLoading();
+        //重新扫描本地文件或者初次扫描
         if (isRefresh) {
             refresh(context, true);
         } else {
-            PrintOut.i("开始读取本地数据");
-            mModel.loadLocalData(context.getCacheDir().getAbsolutePath(), new IMediaActivityContract
-                    .IMediaActivityModel.IOnLocalDataLoadFinished() {
-                @Override
-                @SuppressWarnings("unchecked")
-                public void callBack(Object data) {
-                    if (data != null) {
-                        PrintOut.i("读取本地数据 ----- 有值的");
-                        TransFormTask.Builder builder = new TransFormTask.Builder();
-                        builder.listener = finishedListener;
-                        builder.isRefresh = false;
-                        builder.musicInfoEntities = (ArrayList<MusicInfoEntity>) data;
-                        builder.context = context;
-                        builder.executeTask();
-                    } else {
-                        //回到主线程
-                        mMainHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                PrintOut.i("读取本地数据 ----- 没值的");
-                                refresh(context, false);
-                            }
-                        });
-                    }
+            //内存有数据
+            if (DataTransform.getInstance().getMediaItemList().size() > 0) {
+                if (mView.get() != null) {
+                    mView.get().loadFinished();
+                    mView.get().hideLoading();
                 }
-            });
+            } else {
+                PrintOut.i("开始读取本地数据");
+                mModel.loadLocalData(context.getCacheDir().getAbsolutePath(), new IMediaActivityContract
+                        .IMediaActivityModel.IOnLocalDataLoadFinished() {
+                    @Override
+                    @SuppressWarnings("unchecked")
+                    public void callBack(Object data) {
+                        if (data != null) {
+                            PrintOut.i("读取到本地缓存数据");
+                            TransFormTask.Builder builder = new TransFormTask.Builder();
+                            builder.listener = finishedListener;
+                            builder.isRefresh = false;
+                            builder.musicInfoEntities = (ArrayList<MusicInfoEntity>) data;
+                            builder.context = context;
+                            builder.executeTask();
+                        } else {
+                            //回到主线程
+                            mMainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    PrintOut.i("未读取到本地数据");
+                                    refresh(context, false);
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
         }
     }
 
@@ -108,7 +118,7 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
     }
 
     @Override
-    public void playWithId(MediaControllerCompat controller,String mediaId, Bundle extra) {
+    public void playWithId(MediaControllerCompat controller, String mediaId, Bundle extra) {
         mModel.postPlayWithId(controller, mediaId, extra);
     }
 
@@ -120,7 +130,7 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
     @Override
     public void setRepeatMode(Context context, MediaControllerCompat controller, int mode) {
         mModel.postSetRepeatMode(controller, mode);
-        changeMode(context,mode);
+        changeMode(context, mode);
     }
 
     @Override
@@ -212,9 +222,9 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
 
         @Override
         protected ArrayList<String> doInBackground(String... paths) {
-            if(mPaths == null){
+            if (mPaths == null) {
                 DataTransform.getInstance().transFormData(entities);
-            }else{
+            } else {
                 DataTransform.getInstance().transFormData(mContextWeak.get(), mPaths);
             }
             return mPaths;

@@ -5,6 +5,7 @@
         <item name="colorPrimary">@color/colorTheme</item>
         <item name="colorPrimaryDark">@color/colorThemeDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@null</item>
         <item name="android:statusBarColor">@color/colorTheme</item>
         <!--<item name="android:navigationBarColor">@color/colorWhite</item>-->
     </style>

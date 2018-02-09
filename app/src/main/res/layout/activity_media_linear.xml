@@ -5,6 +5,7 @@
     android:id="@+id/media_content_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorWhite"
     android:clipChildren="false"
     android:fitsSystemWindows="true"
     android:orientation="vertical"
@@ -15,18 +16,12 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp30" />
 
-    <!--<ViewStub-->
-        <!--android:id="@+id/stub_loading_layout"-->
-        <!--android:layout="@layout/loading_layout"-->
-        <!--android:visibility="visible"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent" />-->
-
-    <android.support.v4.view.ViewPager
+    <com.zy.ppmusic.widget.LoopViewPager
         android:id="@+id/vp_show_media_head"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
+
 
     <android.support.v7.widget.LinearLayoutCompat
         android:layout_width="match_parent"
@@ -105,7 +100,7 @@
     <android.support.v7.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/dp20"
+        android:layout_marginBottom="@dimen/dp10"
         android:layout_marginTop="@dimen/dp20"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
@@ -158,4 +153,12 @@
             android:src="@drawable/ic_menu" />
     </android.support.v7.widget.LinearLayoutCompat>
 
+    <TextView
+        android:id="@+id/tv_show_position"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/sp12"
+        android:gravity="center"
+        tools:text="这是测试的文本"
+        android:visibility="visible" />
 </android.support.v7.widget.LinearLayoutCompat>
