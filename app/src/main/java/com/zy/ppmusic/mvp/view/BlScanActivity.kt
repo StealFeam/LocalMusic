@@ -100,7 +100,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
         if (!EasyPermissions.hasPermissions(applicationContext, "android.permission.ACCESS_COARSE_LOCATION")) {
             println("没有权限")
             if (!EasyPermissions.permissionPermanentlyDenied(this, "android.permission.ACCESS_COARSE_LOCATION")) {
-                EasyPermissions.requestPermissions(this@BlScanActivity, "获取粗略位置用来加快扫描",
+                EasyPermissions.requestPermissions(this, "获取粗略位置用来加快扫描",
                         1, "android.permission.ACCESS_COARSE_LOCATION")
             } else {
                 val dialog = AppSettingsDialog.Builder(this)
@@ -147,7 +147,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
                 dialog.build().show()
             } else {
                 println("重新申请")
-                EasyPermissions.requestPermissions(this@BlScanActivity, "获取粗略位置用来加快扫描,否则无法发现新设备",
+                EasyPermissions.requestPermissions(this, "获取粗略位置用来加快扫描,否则无法发现新设备",
                         1, "android.permission.ACCESS_COARSE_LOCATION")
             }
         }

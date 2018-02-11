@@ -1,13 +1,12 @@
 package com.zy.ppmusic.adapter;
 
-import android.support.v7.widget.RecyclerView;
 import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.zy.ppmusic.R;
+import com.zy.ppmusic.adapter.base.AbstractSingleTypeAdapter;
+import com.zy.ppmusic.adapter.base.ExpandableViewHolder;
+import com.zy.ppmusic.adapter.base.OnItemViewClickListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,10 +14,10 @@ import java.util.Locale;
 /**
  * @author ZY
  */
-public class TimeClockAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class TimeClockAdapter extends AbstractSingleTypeAdapter {
     private List<Integer> array;
-    private MainMenuAdapter.OnRecycleItemClickListener listener;
     private boolean isTicking = false;
+    private OnItemViewClickListener mClickListener;
 
     public TimeClockAdapter() {
         this.array = new ArrayList<>();
@@ -33,14 +32,14 @@ public class TimeClockAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
      * 是否正在倒计时
      */
     public void setTicking(boolean flag) {
-        if(isTicking == flag){
+        if (isTicking == flag) {
             return;
         }
         isTicking = flag;
         notifyDataSetChanged();
     }
 
-    public boolean isTick(){
+    public boolean isTick() {
         return isTicking;
     }
 
@@ -48,56 +47,42 @@ public class TimeClockAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         return array.get(position);
     }
 
-    public void setListener(MainMenuAdapter.OnRecycleItemClickListener listener) {
-        this.listener = listener;
+    public void setOnItemClickListener(OnItemViewClickListener l){
+        this.mClickListener = l;
     }
 
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new TimeClockHolder(LayoutInflater.from(parent.getContext()).inflate(
-                R.layout.item_list_normal, parent, false), listener);
+    public void bindHolderData(ExpandableViewHolder holder, int viewType) {
+        super.bindHolderData(holder, viewType);
+        holder.attachOnClickListener(mClickListener,holder.itemView);
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        TimeClockHolder clockHolder = (TimeClockHolder) holder;
+    public void setupItemData(ExpandableViewHolder holder, int position) {
+        TextView tvTime = holder.getView(R.id.item_normal_text);
+        tvTime.setGravity(Gravity.CENTER);
         if (isTicking) {
             if (position == 0) {
-                clockHolder.tvTime.setText("关闭定时");
+                tvTime.setText("关闭定时");
             } else {
-                clockHolder.tvTime.setText(String.format(Locale.CHINA, "%d分钟", array.get(position - 1)));
+                tvTime.setText(String.format(Locale.CHINA, "%d分钟", array.get(position - 1)));
             }
         } else {
-            clockHolder.tvTime.setText(String.format(Locale.CHINA, "%d分钟", array.get(position)));
+            tvTime.setText(String.format(Locale.CHINA, "%d分钟", array.get(position)));
         }
-
     }
 
     @Override
-    public int getItemCount() {
+    public int itemCount() {
         if (array == null) {
             return 0;
         }
         return isTicking ? array.size() + 1 : array.size();
     }
 
-    private static class TimeClockHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        private TextView tvTime;
-        private MainMenuAdapter.OnRecycleItemClickListener listener;
-
-        private TimeClockHolder(View itemView, MainMenuAdapter.OnRecycleItemClickListener listener) {
-            super(itemView);
-            tvTime = itemView.findViewById(R.id.item_normal_text);
-            this.listener = listener;
-            tvTime.setGravity(Gravity.CENTER);
-            itemView.setOnClickListener(this);
-        }
-
-        @Override
-        public void onClick(View v) {
-            if (listener != null) {
-                listener.onItemClick(v, getAdapterPosition());
-            }
-        }
+    @Override
+    public int getItemLayoutId() {
+        return R.layout.item_list_normal;
     }
+
 }

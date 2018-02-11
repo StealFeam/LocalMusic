@@ -305,13 +305,13 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         mBottomQueueDialog = BottomSheetDialog(this)
         if (mBottomQueueAdapter == null) {
             mBottomQueueAdapter = PlayQueueAdapter()
-            mBottomQueueAdapter?.setOnQueueItemClickListener { obj, index ->
-                if (obj is MediaSessionCompat.QueueItem) {
-                    //点击播放列表直接播放选中的media
-                    mPresenter!!.skipToPosition(mMediaController, index.toLong())
+            mBottomQueueAdapter?.setItemClickListener { v, index ->
+                if(v.id == R.id.queue_item_del){
+                    createDelQueueItemDialog(index)
+                    return@setItemClickListener
                 }
-                mBottomQueueAdapter?.setOnQueueItemClickListener(null)
-                mBottomQueueAdapter?.setOnDelListener(null)
+                //点击播放列表直接播放选中的media
+                mPresenter!!.skipToPosition(mMediaController, index.toLong())
                 if (mBottomQueueDialog!!.isShowing) {
                     mBottomQueueDialog?.cancel()
                     mBottomQueueDialog?.dismiss()
@@ -320,11 +320,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 }
             }
 
-            mBottomQueueAdapter?.setOnDelListener { position ->
-                createDelQueueItemDialog(position)
-            }
-
-            mBottomQueueAdapter?.setLongClickListener { position ->
+            mBottomQueueAdapter!!.setItemLongClickListener { _, position ->
                 createQueueItemDetailDialog(position)
             }
         }
@@ -431,6 +427,16 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         mTimeClockRecycler = mTimeContentView?.findViewById(R.id.time_selector_recycler)
         mTimeClockRecycler?.layoutManager = LinearLayoutManager(this)
         mTimeClockAdapter = TimeClockAdapter()
+        mTimeClockAdapter?.setOnItemClickListener { _, position ->
+            mTimeClockDialog?.cancel()
+            if (getCurrentTimeClockLength(position) != 0) {
+                //如果正在倒计时判断是否需要停止倒计时
+                val bundle = Bundle()
+                bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME, (getCurrentTimeClockLength(position) * 1000 * 60).toLong())
+                mPresenter!!.sendCustomAction(mMediaController, MediaService.ACTION_COUNT_DOWN_TIME, bundle)
+                mTimeClockDialog = null
+            }
+        }
         //如果正在倒计时显示取消计时选项，否则隐藏
         if (mBorderTextView != null && mBorderTextView?.visibility == View.VISIBLE) {
             mTimeClockAdapter?.setTicking(true)
@@ -438,16 +444,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             mTimeClockAdapter?.setTicking(false)
         }
         mTimeClockRecycler?.adapter = mTimeClockAdapter
-        mTimeClockAdapter?.setListener { _, p ->
-            mTimeClockDialog?.cancel()
-            if (getCurrentTimeClockLength(p) != 0) {
-                //如果正在倒计时判断是否需要停止倒计时
-                val bundle = Bundle()
-                bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME, (getCurrentTimeClockLength(p) * 1000 * 60).toLong())
-                mPresenter!!.sendCustomAction(mMediaController, MediaService.ACTION_COUNT_DOWN_TIME, bundle)
-                mTimeClockDialog = null
-            }
-        }
+
         val lengthSeekBar = mTimeContentView?.findViewById<SeekBar>(R.id.time_selector_seek_bar)
         val progressHintTv = mTimeContentView?.findViewById<TextView>(R.id.time_selector_progress_hint_tv)
         progressHintTv?.visibility = View.VISIBLE
@@ -743,7 +740,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 setMediaInfo(StringUtils.ifEmpty(displayTitle, getString(R.string.unknown_name)),
                         StringUtils.ifEmpty(subTitle, getString(R.string.unknown_name)))
                 if (mHeadAdapter != null && mHeadAdapter!!.count > position) {
-                    PrintOut.d("信息发生变化了....$position")
                     vp_show_media_head.setCurrentItem(position, false)
                 }
                 updateQueueSize(DataTransform.getInstance().pathList.size, position + 1)

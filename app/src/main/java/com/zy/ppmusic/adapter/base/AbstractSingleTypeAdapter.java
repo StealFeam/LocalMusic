@@ -13,7 +13,8 @@ public abstract class AbstractSingleTypeAdapter extends AbstractExpandableAdapte
 
     @Override
     public ExpandableViewHolder setupViewHolder(ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext()).inflate(getItemLayoutId(),parent,false);
+        View itemView = LayoutInflater.from(parent.getContext())
+                .inflate(getItemLayoutId(),parent,false);
         return new ExpandableViewHolder(itemView);
     }
 

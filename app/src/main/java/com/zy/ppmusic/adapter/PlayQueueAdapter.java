@@ -2,26 +2,25 @@ package com.zy.ppmusic.adapter;
 
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaSessionCompat;
-import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.zy.ppmusic.R;
+import com.zy.ppmusic.adapter.base.AbstractSingleTypeAdapter;
+import com.zy.ppmusic.adapter.base.ExpandableViewHolder;
+import com.zy.ppmusic.adapter.base.OnItemViewClickListener;
+import com.zy.ppmusic.adapter.base.OnItemViewLongClickListener;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+
 /**
  * @author ZY
  */
-public class PlayQueueAdapter extends RecyclerView.Adapter {
+public class PlayQueueAdapter extends AbstractSingleTypeAdapter {
     private List<MediaSessionCompat.QueueItem> mData;
-    private OnQueueItemClickListener onQueueItemClickListener;
-    private OnQueueItemLongClickListener longClickListener;
-    private OnDelQueueItemListener onDelListener;
+    private OnItemViewClickListener mItemClickListener;
+    private OnItemViewLongClickListener mItemLongClickListener;
     private int selectIndex;
 
     public int getSelectIndex() {
@@ -40,130 +39,51 @@ public class PlayQueueAdapter extends RecyclerView.Adapter {
         notifyDataSetChanged();
     }
 
-    public void childMoveTo(int fromPosition, int toPosition) {
-        Collections.swap(mData,fromPosition,toPosition);
-        notifyItemMoved(fromPosition, toPosition);
+    public void setItemLongClickListener(OnItemViewLongClickListener l) {
+        this.mItemLongClickListener = l;
     }
 
-    public void setOnDelListener(OnDelQueueItemListener onDelListener) {
-        this.onDelListener = onDelListener;
-    }
-
-    public void setLongClickListener(OnQueueItemLongClickListener l){
-        this.longClickListener = l;
-    }
-
-    public void setOnQueueItemClickListener(OnQueueItemClickListener onQueueItemClickListener) {
-        this.onQueueItemClickListener = onQueueItemClickListener;
+    public void setItemClickListener(OnItemViewClickListener mItemClickListener) {
+        this.mItemClickListener = mItemClickListener;
     }
 
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        PlayQueueHolder queueHolder = new PlayQueueHolder(LayoutInflater.
-                from(viewGroup.getContext()).inflate(R.layout.item_play_queue, viewGroup
-                , false), onQueueItemClickListener, onDelListener);
-        queueHolder.setLongClickListener(longClickListener);
-        return queueHolder;
+    public int getItemLayoutId() {
+        return R.layout.item_play_queue;
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int i) {
-        if (viewHolder instanceof PlayQueueHolder) {
-            PlayQueueHolder holder = (PlayQueueHolder) viewHolder;
-            MediaDescriptionCompat description = mData.get(i).getDescription();
-            holder.tvSubTitle.setText(description.getSubtitle());
-            holder.tvTitle.setText(description.getTitle());
-            if (selectIndex == i) {
-                holder.vLine.setVisibility(View.VISIBLE);
-                holder.tvPosition.setText(String.format(Locale.CHINA, "%2d", (i + 1)));
-            } else {
-                holder.vLine.setVisibility(View.GONE);
-                holder.tvPosition.setText(String.format(Locale.CHINA, "%2d", (i + 1)));
-            }
-            holder.tvSubTitle.setTag(mData.get(i));
+    public void setupItemData(ExpandableViewHolder holder, int position) {
+        MediaDescriptionCompat description = mData.get(position).getDescription();
+        TextView tvSubTitle = holder.getView(R.id.queue_item_display_sub_title);
+        tvSubTitle.setText(description.getSubtitle());
+        TextView tvTitle = holder.getView(R.id.queue_item_display_title);
+        tvTitle.setText(description.getTitle());
+        TextView tvPosition = holder.getView(R.id.queue_item_position);
+        if (selectIndex == position) {
+            holder.getView(R.id.queue_item_selected_line).setVisibility(View.VISIBLE);
+            tvPosition.setText(String.format(Locale.CHINA, "%2d", (position + 1)));
+        } else {
+            holder.getView(R.id.queue_item_selected_line).setVisibility(View.GONE);
+            tvPosition.setText(String.format(Locale.CHINA, "%2d", (position + 1)));
         }
+        tvSubTitle.setTag(mData.get(position));
     }
 
     @Override
-    public int getItemCount() {
+    public int itemCount() {
         if (mData == null) {
             return 0;
         }
         return mData.size();
     }
 
-    private class PlayQueueHolder extends RecyclerView.ViewHolder implements View.OnClickListener,View.OnLongClickListener {
-        private TextView tvTitle;
-        private TextView tvSubTitle;
-        private TextView tvPosition;
-        private ImageView ivDel;
-        private View vLine;
-        private OnQueueItemClickListener onQueueItemClickListener;
-        private OnQueueItemLongClickListener longClickListener;
-        private OnDelQueueItemListener delL;
-
-        private PlayQueueHolder(View itemView, OnQueueItemClickListener l, OnDelQueueItemListener dl) {
-            super(itemView);
-            this.onQueueItemClickListener = l;
-            this.delL = dl;
-            itemView.setOnClickListener(this);
-            itemView.setOnLongClickListener(this);
-            tvSubTitle = itemView.findViewById(R.id.queue_item_display_sub_title);
-            tvTitle = itemView.findViewById(R.id.queue_item_display_title);
-            tvPosition = itemView.findViewById(R.id.queue_item_position);
-            ivDel = itemView.findViewById(R.id.queue_item_del);
-            vLine = itemView.findViewById(R.id.queue_item_selected_line);
-            ivDel.setOnClickListener(this);
-        }
-
-        private void setLongClickListener(OnQueueItemLongClickListener l){
-            this.longClickListener = l;
-        }
-
-        @Override
-        public void onClick(View v) {
-            if (v.getId() == R.id.queue_item_del) {
-                if (delL != null) {
-                    delL.onDel(getAdapterPosition());
-                }
-            } else {
-                if (onQueueItemClickListener != null) {
-                    onQueueItemClickListener.onItemClick(tvSubTitle.getTag(), getAdapterPosition());
-                }
-            }
-        }
-
-        @Override
-        public boolean onLongClick(View v) {
-            return longClickListener != null && longClickListener.onLongClick(getAdapterPosition());
-        }
+    @Override
+    public void bindHolderData(ExpandableViewHolder holder, int viewType) {
+        super.bindHolderData(holder, viewType);
+        holder.attachOnLongClickListener(mItemLongClickListener,holder.itemView);
+        holder.attachOnClickListener(mItemClickListener,holder.itemView,
+                holder.getView(R.id.queue_item_del));
     }
 
-    public interface OnQueueItemClickListener {
-        /**
-         * item点击回调
-         * @param obj item数据对象
-         * @param position itemPosition
-         */
-        void onItemClick(Object obj, int position);
-    }
-
-
-    public interface OnQueueItemLongClickListener{
-        /**
-         * item长按回调
-         * @param position itemPosition
-         * @return 是否拦截
-         */
-        boolean onLongClick(int position);
-    }
-
-    public interface OnDelQueueItemListener {
-
-        /**
-         * 删除回调
-         * @param position itemPosition
-         */
-        void onDel(int position);
-    }
 }

@@ -54,7 +54,8 @@ public class MenuAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         MenuHolder holder;
         if(convertView == null){
-            convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_menu,parent,false);
+            convertView = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_menu,parent,false);
             holder = new MenuHolder();
             holder.menuIcon = convertView.findViewById(R.id.item_menu_icon);
             holder.menuTitle = convertView.findViewById(R.id.item_menu_title);
