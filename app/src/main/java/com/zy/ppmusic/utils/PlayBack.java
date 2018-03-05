@@ -1,17 +1,33 @@
 package com.zy.ppmusic.utils;
 
+import android.content.ContentProvider;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.UriMatcher;
+import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
+import android.media.MediaDataSource;
 import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Build;
 import android.os.PowerManager;
+import android.support.v4.media.AudioAttributesCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 
+import com.zy.ppmusic.entity.MusicInfoEntity;
 import com.zy.ppmusic.service.MediaService;
 
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.net.URI;
 import java.util.List;
+import java.util.Locale;
+import java.util.WeakHashMap;
 
 /**
  * @author ZhiTouPC
@@ -30,19 +46,19 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
      * we have full audio focus
      */
     private static final int AUDIO_FOCUSED = 2;
-    private final MediaService mMediaService;
     private MediaPlayer mMediaPlayer;
     /**
      * 当前播放队列
      */
-    private volatile List<String> mPlayQueue;
-    private volatile int mCurrentPosition;
-    private volatile String mCurrentMediaId;
+    private List<String> mPlayQueue;
+    private int mCurrentPosition;
+    private String mCurrentMediaId;
     private CallBack mCallBack;
     private AudioManager audioManager;
-    private int mAudioFocus = AUDIO_NO_FOCUS_NO_DUCK;
+    private volatile int mAudioFocus = AUDIO_NO_FOCUS_NO_DUCK;
 
     private boolean mIsAutoStart = false;
+
     /**
      * 是否是用户点击的暂停
      */
@@ -54,9 +70,11 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
 
     private boolean mPlayOnFocusGain;
     private int mState = PlaybackStateCompat.STATE_NONE;
+    private WeakReference<MediaService> mContextWeak;
+
 
     public PlayBack(MediaService mMediaService) {
-        this.mMediaService = mMediaService;
+        this.mContextWeak = new WeakReference<>(mMediaService);
         Context context = mMediaService.getApplicationContext();
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
     }
@@ -71,6 +89,11 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
 
     public void setIsUserPause(boolean flag) {
         this.mIsUserPause = flag;
+    }
+
+    public void playMediaIdAutoStart(String mediaId) {
+        this.mIsAutoStart = true;
+        preparedWithMediaId(mediaId);
     }
 
     public void preparedWithMediaId(String mediaId) {
@@ -89,14 +112,22 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
             int index = DataTransform.getInstance().getMediaIndex(mediaId);
             createPlayerIfNeed();
             mState = PlaybackStateCompat.STATE_BUFFERING;
-            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             try {
                 String path = DataTransform.getInstance().getPath(index);
                 if (TextUtils.isEmpty(path)) {
-                    PrintOut.e("preparedWithMediaId error: path is null");
+                    PrintOut.e("preparedWithMediaId error: path is empty");
                 } else {
                     PrintOut.e("preparedWithMediaId: path=" + path);
-                    mMediaPlayer.setDataSource(path);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        AudioAttributes.Builder builder = new AudioAttributes.Builder()
+                                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                                .setLegacyStreamType(AudioManager.STREAM_MUSIC);
+                        mMediaPlayer.setAudioAttributes(builder.build());
+                    } else {
+                        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                    }
+                    mMediaPlayer.setDataSource(mContextWeak.get(), Uri.parse(String.format(Locale.CHINA, "file://%s", path)));
+
                     mMediaPlayer.prepare();
                     if (mCallBack != null) {
                         mCallBack.onPlayBackStateChange(mState);
@@ -117,7 +148,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
         if (mAudioFocus == AUDIO_NO_FOCUS_NO_DUCK) {
             //如果没有获取到硬件的播放权限则暂停播放
             if (mState == PlaybackStateCompat.STATE_PLAYING) {
-                PrintOut.e( "config:paused");
+                PrintOut.e("config:paused");
                 pause();
                 mIsPauseCauseAudio = true;
             }
@@ -239,11 +270,11 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
 
     private void releasePlayer(boolean releasePlayer) {
         if (mMediaPlayer != null && releasePlayer) {
+            mMediaPlayer.stop();
             mMediaPlayer.reset();
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
-
     }
 
     public String getCurrentMediaId() {
@@ -256,7 +287,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
 
     public String onSkipToNext() {
         checkPlayQueue();
-        if(mPlayQueue.isEmpty()){
+        if (mPlayQueue.isEmpty()) {
             return null;
         }
         int queueIndex = mPlayQueue.indexOf(mCurrentMediaId);
@@ -275,7 +306,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
     }
 
     public String onSkipToPrevious() {
-        if(mPlayQueue.isEmpty()){
+        if (mPlayQueue.isEmpty()) {
             return null;
         }
         int queueIndex = mPlayQueue.indexOf(mCurrentMediaId);
@@ -288,7 +319,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
     }
 
     public void stopPlayer() {
-        mMediaService.stopForeground(false);
+        mContextWeak.get().stopForeground(false);
         mState = PlaybackStateCompat.STATE_STOPPED;
         if (mMediaPlayer != null) {
             mMediaPlayer.reset();
@@ -306,7 +337,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
     private void createPlayerIfNeed() {
         if (mMediaPlayer == null) {
             mMediaPlayer = new MediaPlayer();
-            mMediaPlayer.setWakeMode(mMediaService.getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+            mMediaPlayer.setWakeMode(mContextWeak.get().getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
             mMediaPlayer.setOnCompletionListener(this);
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.setOnErrorListener(this);
@@ -379,11 +410,16 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
         if (mState == PlaybackStateCompat.STATE_BUFFERING) {
             mState = PlaybackStateCompat.STATE_CONNECTING;
         }
+
+        if (mIsAutoStart) {
+            mIsAutoStart = false;
+            mMediaPlayer.start();
+            mState = PlaybackStateCompat.STATE_PLAYING;
+        }
+
         if (mCallBack != null) {
             mCallBack.onPlayBackStateChange(mState);
         }
-
-
     }
 
     /**
@@ -393,7 +429,7 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
      */
     @Override
     public void onSeekComplete(MediaPlayer mp) {
-        mCurrentPosition = mp.getCurrentPosition();
+        mCurrentPosition = mMediaPlayer.getCurrentPosition();
         PrintOut.i("onSeekComplete() called=" + mCurrentPosition);
 
         if (mState == PlaybackStateCompat.STATE_BUFFERING) {

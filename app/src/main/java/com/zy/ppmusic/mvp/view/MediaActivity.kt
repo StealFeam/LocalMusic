@@ -770,7 +770,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             PrintOut.print("onPlaybackStateChanged....." + state?.state)
             PrintOut.print("position=" + state?.position + ",buffer=" + state?.bufferedPosition)
-            PrintOut.print("endPosition=" + endPosition)
+            PrintOut.print("endPosition=$endPosition")
             startPosition = state!!.position
             if (endPosition != 0L) {
                 val percent = ((startPosition * 1.0f) / endPosition * 1.0f)
@@ -782,6 +782,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
         override fun onSessionEvent(event: String?, extras: Bundle?) {
             super.onSessionEvent(event, extras)
+
             when (event) {
                 MediaService.LOCAL_CACHE_POSITION_EVENT -> {
                     val lastPosition = extras?.getInt(MediaService.LOCAL_CACHE_POSITION_EVENT) as Int
@@ -845,7 +846,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 播放器状态处理
      */
     fun handlePlayState(state: Int) {
-        PrintOut.print("handlePlayState=" + state)
+        PrintOut.print("handlePlayState=$state")
         if (state != PlaybackStateCompat.STATE_PLAYING) {
             stopLoop()
             control_action_play_pause.setImageResource(R.drawable.ic_black_play)

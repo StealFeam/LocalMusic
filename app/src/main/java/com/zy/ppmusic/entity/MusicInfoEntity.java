@@ -1,5 +1,7 @@
 package com.zy.ppmusic.entity;
 
+import android.net.Uri;
+
 import java.io.Serializable;
 import java.util.Arrays;
 

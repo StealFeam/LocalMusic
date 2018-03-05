@@ -116,6 +116,7 @@ public class DataTransform {
                         String size = query.getString(query.getColumnIndex(MediaStore.Audio.Media.SIZE));
                         String queryPath = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DATA));
 
+
                         mediaMetadataRetriever.setDataSource(queryPath);
                         Bitmap mBitmap = null;
                         if (mediaMetadataRetriever.getEmbeddedPicture() != null) {

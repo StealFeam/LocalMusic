@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
+ * 播放列表
  * @author ZY
  */
 public class PlayQueueAdapter extends AbstractSingleTypeAdapter {
@@ -82,8 +83,7 @@ public class PlayQueueAdapter extends AbstractSingleTypeAdapter {
     public void bindHolderData(ExpandableViewHolder holder, int viewType) {
         super.bindHolderData(holder, viewType);
         holder.attachOnLongClickListener(mItemLongClickListener,holder.itemView);
-        holder.attachOnClickListener(mItemClickListener,holder.itemView,
-                holder.getView(R.id.queue_item_del));
+        holder.attachOnClickListener(mItemClickListener,holder.itemView,holder.getView(R.id.queue_item_del));
     }
 
 }

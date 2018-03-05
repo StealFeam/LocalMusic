@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.base.AbstractMultipleTypeAdapter
+import com.zy.ppmusic.adapter.base.ExpandableViewHolder
 import com.zy.ppmusic.entity.ScanResultEntity
 
 /**
@@ -114,8 +115,6 @@ class ScanResultCopyAdapter(mData: ArrayList<ScanResultEntity>) : AbstractMultip
                 }
             }
         }
-
-
     }
 
     override fun itemCount(): Int = mBondDevices.size + mScanDevices.size
