@@ -5,6 +5,7 @@ import android.animation.ObjectAnimator;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
+import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
@@ -107,7 +108,7 @@ class DragFinishHelper {
     private void scrollToStart() {
         if (mWeakRootView != null) {
             ViewGroup root = mWeakRootView.get();
-            ObjectAnimator animator = ObjectAnimator.ofFloat(root.getRootView(), "translationX",
+            ObjectAnimator animator = ObjectAnimator.ofFloat(root.getRootView(), View.TRANSLATION_X,
                     root.getRootView().getTranslationX(), 0);
             animator.setDuration(300);
             animator.setInterpolator(new LinearInterpolator());
@@ -118,7 +119,7 @@ class DragFinishHelper {
     private void scrollTo(int deltaX) {
         if (mWeakRootView != null) {
             ViewGroup root = mWeakRootView.get();
-            ObjectAnimator animator = ObjectAnimator.ofFloat(root.getRootView(), "translationX",
+            ObjectAnimator animator = ObjectAnimator.ofFloat(root.getRootView(), View.TRANSLATION_X,
                     root.getRootView().getTranslationX(), deltaX);
             animator.setDuration(400);
             animator.setInterpolator(new LinearInterpolator());

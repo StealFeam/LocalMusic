@@ -17,6 +17,7 @@ import kotlin.collections.ArrayList
  * @author ZY
  */
 class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
     private var mBondDevices: ArrayList<ScanResultEntity> = ArrayList()
     private val mScanDevices: ArrayList<ScanResultEntity> = ArrayList()
     private var listener: OnItemClickListener? = null
@@ -89,20 +90,20 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder? {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
             R.layout.item_scan_title -> {
-                return TitleHolder(LayoutInflater.from(parent!!.context).inflate(R.layout.item_scan_title, parent, false))
+                return TitleHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_scan_title, parent, false))
             }
             R.layout.item_scan_child -> {
-                return ScanResultHolder(LayoutInflater.from(parent!!.context).
+                return ScanResultHolder(LayoutInflater.from(parent.context).
                         inflate(R.layout.item_scan_child, parent, false), listener!!)
             }
         }
-        return null
+        return TitleHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_scan_title, parent, false))
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder?, p1: Int) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, p1: Int) {
         if (holder is TitleHolder) {
             holder.title!!.text = mBondDevices[p1].title
         } else if (holder is ScanResultHolder) {

@@ -30,6 +30,7 @@ ext {
     //库文件编译的版本
     compileSdkVersion = 27
     buildToolsVersion = "27.0.3"
+    compileToolsVersion="27.1.0"
     minSdkVersion = 14
     targetSdkVersion = 25
     versionCode = 1

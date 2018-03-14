@@ -11,6 +11,13 @@
     android:orientation="vertical"
     tools:context="com.zy.ppmusic.mvp.view.MediaActivity">
 
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/tb_media"
+        app:titleTextColor="@color/colorWhite"
+        app:subtitleTextColor="@color/colorWhite"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
     <View
         android:id="@+id/media_title_tint"
         android:layout_width="match_parent"
@@ -159,6 +166,6 @@
         android:layout_height="wrap_content"
         android:textSize="@dimen/sp12"
         android:gravity="center"
-        tools:text="这是测试的文本"
+        tools:text="文本"
         android:visibility="visible" />
 </android.support.v7.widget.LinearLayoutCompat>

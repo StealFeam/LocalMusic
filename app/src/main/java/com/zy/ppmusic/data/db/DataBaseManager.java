@@ -64,6 +64,9 @@ public class DataBaseManager {
     }
 
     public void closeConn() {
+        if (mOpenHelper == null) {
+            return;
+        }
         mOpenHelper.close();
         mOpenHelper = null;
     }

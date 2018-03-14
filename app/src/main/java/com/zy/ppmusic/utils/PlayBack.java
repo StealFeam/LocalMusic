@@ -121,13 +121,13 @@ public class PlayBack implements AudioManager.OnAudioFocusChangeListener, MediaP
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         AudioAttributes.Builder builder = new AudioAttributes.Builder()
                                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                                .setLegacyStreamType(AudioManager.STREAM_MUSIC);
+                                .setLegacyStreamType(AudioManager.STREAM_MUSIC)
+                                .setFlags(AudioManager.FLAG_ALLOW_RINGER_MODES);
                         mMediaPlayer.setAudioAttributes(builder.build());
                     } else {
                         mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                     }
                     mMediaPlayer.setDataSource(mContextWeak.get(), Uri.parse(String.format(Locale.CHINA, "file://%s", path)));
-
                     mMediaPlayer.prepare();
                     if (mCallBack != null) {
                         mCallBack.onPlayBackStateChange(mState);

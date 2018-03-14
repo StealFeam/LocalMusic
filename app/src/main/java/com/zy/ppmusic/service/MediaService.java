@@ -555,6 +555,14 @@ public class MediaService extends MediaBrowserServiceCompat {
     }
 
     @Override
+    public boolean onUnbind(Intent intent) {
+        if(mPlayBack != null && !mPlayBack.isPlaying()){
+            handleStopRequest(true);
+        }
+        return super.onUnbind(intent);
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy() called");
@@ -757,7 +765,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                             return;
                         }
                     } else {
-                        if (mCurrentMedia != null && mediaId.equals(mCurrentMedia.getDescription().getMediaId())) {
+                        if (mCurrentMedia != null && !mediaId.equals(mCurrentMedia.getDescription().getMediaId())) {
                             onMediaChange(mediaId, true);
                             return;
                         }

@@ -8,6 +8,8 @@ import android.graphics.Bitmap;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.provider.MediaStore;
+import android.support.v4.app.NotificationBuilderWithBuilderAccessor;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.MediaDescriptionCompat;
@@ -94,19 +96,21 @@ public class NotificationUtils {
             NotificationChannel notificationChannel = mNotificationManager.getNotificationChannel(TAG);
             if (notificationChannel == null) {
                 notificationChannel = new NotificationChannel(TAG,
-                        context.getPackageName(), NotificationManager.IMPORTANCE_DEFAULT);
+                        context.getPackageName(), NotificationManager.IMPORTANCE_NONE);
+                notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+                notificationChannel.setSound(null,null);
+                //取消震动
+                notificationChannel.enableVibration(false);
+                //取消提示灯
+                notificationChannel.enableLights(false);
                 mNotificationManager.createNotificationChannel(notificationChannel);
             }
             builder = new NotificationCompat.Builder(context,notificationChannel.getId());
         }else{
-            builder = new NotificationCompat.Builder(context,
-                    String.valueOf(NOTIFY_ID));
+            builder = new NotificationCompat.Builder(context, String.valueOf(NOTIFY_ID));
         }
         builder.setSmallIcon(R.drawable.ic_small_notify);
-        builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         builder.setCustomContentView(contentView);
-        builder.setPriority(NotificationCompat.PRIORITY_MAX);
-
         builder.setContentIntent(mediaSession.getController().getSessionActivity());
 
         Notification notification = builder.build();

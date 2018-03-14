@@ -68,6 +68,7 @@ public class BorderTextView extends AppCompatTextView implements ViewGroup.OnHie
     @Override
     public void onChildViewAdded(View parent, View child) {
         if(child instanceof BorderTextView){
+            invalidate();
             isAdded = true;
         }
     }

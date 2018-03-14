@@ -44,7 +44,4 @@ class ExampleUnitTest {
         }
     }
 
-    @Test
-    fun testSign(){
-    }
 }

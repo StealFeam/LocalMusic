@@ -1,6 +1,7 @@
 package com.zy.ppmusic.mvp.view
 
 import android.annotation.SuppressLint
+import android.arch.lifecycle.ViewModelProvider
 import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
@@ -22,6 +23,7 @@ import android.view.*
 import android.widget.FrameLayout
 import android.widget.SeekBar
 import android.widget.TextView
+import com.zy.ppmusic.App
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.MediaHeadAdapter
 import com.zy.ppmusic.adapter.MenuAdapter
@@ -29,12 +31,14 @@ import com.zy.ppmusic.adapter.PlayQueueAdapter
 import com.zy.ppmusic.adapter.TimeClockAdapter
 import com.zy.ppmusic.mvp.base.AbstractBaseMvpActivity
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract
+import com.zy.ppmusic.mvp.model.HeadViewModel
 import com.zy.ppmusic.mvp.presenter.MediaPresenterImpl
 import com.zy.ppmusic.service.MediaService
 import com.zy.ppmusic.utils.*
 import com.zy.ppmusic.widget.*
 import kotlinx.android.synthetic.main.activity_media_linear.*
 import kotlinx.android.synthetic.main.dl_content_del_item.view.*
+import kotlinx.android.synthetic.main.frag_media_info.*
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -138,6 +142,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      */
     private var isStarted = false
 
+
     /**
      * 接收媒体服务回传的信息，这里处理的是当前播放的位置和进度
      */
@@ -188,9 +193,11 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     override fun createPresenter(): MediaPresenterImpl = MediaPresenterImpl(this)
 
     override fun initViews() {
-        if (supportActionBar != null) {
-            supportActionBar?.elevation = 0f
+        tb_media.setBackgroundColor(ContextCompat.getColor(this,R.color.colorTheme))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            tb_media.elevation = 0f
         }
+        setSupportActionBar(tb_media)
         //斜边View的背景
         val drawable = TimBackGroundDrawable()
         drawable.setDrawableColor(ContextCompat.getColor(this, R.color.colorTheme))
@@ -340,7 +347,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 (mBottomQueueAdapter!!.selectIndex + 1), if (mPlayQueueList == null) 0 else mPlayQueueList?.size)
         mBottomQueueDialog?.setContentView(mBottomQueueContentView)
         mQueueRecycler?.adapter = mBottomQueueAdapter
-        mQueueRecycler?.layoutManager = LinearLayoutManager(this)
+        mQueueRecycler?.layoutManager = LinearLayoutManager(applicationContext)
         mQueueRecycler?.addItemDecoration(RecycleViewDecoration(this, LinearLayoutManager.VERTICAL,
                 R.drawable.recyclerview_vertical_line, UiUtils.dp2px(this, 25)))
         mBottomQueueAdapter?.setData(mPlayQueueList)
@@ -666,7 +673,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                         control_display_duration_tv.text = DateUtil.getInstance().getTime(endPosition)
                         setMediaInfo(displayTitle, subTitle)
                         val position = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
-
                         vp_show_media_head.setCurrentItem(position, false)
                         updateQueueSize(mHeadAdapter!!.count, position + 1)
                     }
@@ -782,7 +788,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
         override fun onSessionEvent(event: String?, extras: Bundle?) {
             super.onSessionEvent(event, extras)
-
             when (event) {
                 MediaService.LOCAL_CACHE_POSITION_EVENT -> {
                     val lastPosition = extras?.getInt(MediaService.LOCAL_CACHE_POSITION_EVENT) as Int
@@ -842,19 +847,31 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         tv_show_position.text = String.format(Locale.CHINA, "%2d/%2d", current, total)
     }
 
+    private var mPlayStateModel:HeadViewModel ?= null
+
+    private fun createModelIfNeed(){
+        if(mPlayStateModel == null){
+            val provider = ViewModelProvider(this,ViewModelProvider.AndroidViewModelFactory(App.getInstance()))
+            mPlayStateModel = provider.get(HeadViewModel::class.java)
+        }
+    }
+
     /**
      * 播放器状态处理
      */
     fun handlePlayState(state: Int) {
         PrintOut.print("handlePlayState=$state")
+        createModelIfNeed()
         if (state != PlaybackStateCompat.STATE_PLAYING) {
             stopLoop()
+            mPlayStateModel!!.setPlayState(true)
             control_action_play_pause.setImageResource(R.drawable.ic_black_play)
             if (state == PlaybackStateCompat.STATE_STOPPED) {
                 control_display_progress.progress = 0
             }
         } else {
             startLoop()
+            mPlayStateModel!!.setPlayState(false)
             control_action_play_pause.setImageResource(R.drawable.ic_black_pause)
         }
     }
@@ -911,7 +928,10 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     override fun onStop() {
         super.onStop()
         PrintOut.print("onStop called")
-        disConnectService()
+        if(isFinishing){
+            disConnectService()
+            PrintOut.print("这确定是要finish了吧")
+        }
     }
 
     override fun onDestroy() {
