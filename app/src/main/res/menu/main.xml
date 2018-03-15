@@ -1,12 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
+<menu xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/menu_media_scan"
+        android:icon="@drawable/ic_search_music"
+        android:title="@string/scan_media"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/menu_blue_connect"
         android:checkable="false"
+        android:checked="false"
         android:enabled="true"
-        android:icon="@drawable/ic_music_play_state"
-        android:orderInCategory="100"
-        android:title="@string/string_show_play_state"
-        app:showAsAction="always" />
+        android:icon="@drawable/ic_bl_manager"
+        android:menuCategory="container"
+        android:title="@string/connect_bluetooth"
+        android:titleCondensed="@string/app_name"
+        android:visible="true"
+        app:showAsAction="never|withText|collapseActionView" />
+    <item
+        android:id="@+id/menu_count_time"
+        android:title="@string/set_time_to_come_down"
+        android:icon="@drawable/ic_time_clock"
+        app:showAsAction="never" />
 </menu>

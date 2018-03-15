@@ -6,7 +6,7 @@ class StringUtils {
         private fun ifEmpty(str: CharSequence?): Boolean = str?.isEmpty() ?: true
 
         fun ifEmpty(str: String?, emptyReturn: String?): String? {
-            return if (str == null || str.isEmpty()) {
+            return if (str == null || str.isEmpty() || "null" == str) {
                 emptyReturn
             } else {
                 str

@@ -115,8 +115,6 @@ public class DataTransform {
                         long duration = query.getLong(query.getColumnIndex(MediaStore.Audio.Media.DURATION));
                         String size = query.getString(query.getColumnIndex(MediaStore.Audio.Media.SIZE));
                         String queryPath = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DATA));
-
-
                         mediaMetadataRetriever.setDataSource(queryPath);
                         Bitmap mBitmap = null;
                         if (mediaMetadataRetriever.getEmbeddedPicture() != null) {
@@ -129,7 +127,7 @@ public class DataTransform {
                             continue;
                         }
                         //过滤本地不存在的媒体文件
-                        if (!isExits(queryPath)) {
+                        if (!FileUtils.isExits(queryPath)) {
                             continue;
                         }
                         builder = new MediaMetadataCompat.Builder();
@@ -140,9 +138,11 @@ public class DataTransform {
                         //显示名称
                         builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, title);
                         //作者
-                        builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, artist);
+                        builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, StringUtils.Companion
+                                .ifEmpty(artist,"<未知作者>"));
                         //作者
-                        builder.putString(MediaMetadataCompat.METADATA_KEY_AUTHOR, artist);
+                        builder.putString(MediaMetadataCompat.METADATA_KEY_AUTHOR, StringUtils.Companion
+                                .ifEmpty(artist,"<未知作者>"));
 
                         builder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, mBitmap);
 
@@ -189,10 +189,6 @@ public class DataTransform {
         Log.d(TAG, "queryResolver() called with: context = [" + context + "]");
     }
 
-    private boolean isExits(String path) {
-        return new File(path).exists();
-    }
-
     /**
      * 重新对数据遍历，筛选出系统ContentProvider中不存在的媒体
      * @param list 扫描到的数据列表
@@ -231,10 +227,10 @@ public class DataTransform {
 
                 //作者
                 builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE,
-                        StringUtils.Companion.ifEmpty(artistS, "unknown"));
+                        StringUtils.Companion.ifEmpty(artistS, "<未知作者>"));
                 //作者
                 builder.putString(MediaMetadataCompat.METADATA_KEY_AUTHOR,
-                        StringUtils.Companion.ifEmpty(artistS, "unknown"));
+                        StringUtils.Companion.ifEmpty(artistS, "<未知作者>"));
                 //时长
                 builder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, d);
 
@@ -274,7 +270,7 @@ public class DataTransform {
             pathList.add(itemEntity.getQueryPath());
             mediaIdList.add(itemEntity.getMediaId());
 
-            itemEntity.setExits(isExits(itemEntity.getQueryPath()));
+            itemEntity.setExits(FileUtils.isExits(itemEntity.getQueryPath()));
 
             MediaMetadataCompat.Builder itemBuilder = new MediaMetadataCompat.Builder();
             //唯一id

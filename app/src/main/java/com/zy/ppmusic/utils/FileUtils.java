@@ -176,6 +176,10 @@ public class FileUtils {
         }
     }
 
+    public static boolean isExits(String path) {
+        return path != null && new File(path).exists();
+    }
+
 
     public static boolean deleteFile(String path) {
         if (TextUtils.isEmpty(path)) {

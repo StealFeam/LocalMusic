@@ -10,6 +10,8 @@ import com.zy.ppmusic.adapter.base.AbstractSingleTypeAdapter;
 import com.zy.ppmusic.adapter.base.ExpandableViewHolder;
 import com.zy.ppmusic.adapter.base.OnItemViewClickListener;
 import com.zy.ppmusic.adapter.base.OnItemViewLongClickListener;
+import com.zy.ppmusic.utils.StringUtils;
+import com.zy.ppmusic.utils.UiUtils;
 
 import java.util.List;
 import java.util.Locale;
@@ -57,9 +59,11 @@ public class PlayQueueAdapter extends AbstractSingleTypeAdapter {
     public void setupItemData(ExpandableViewHolder holder, int position) {
         MediaDescriptionCompat description = mData.get(position).getDescription();
         TextView tvSubTitle = holder.getView(R.id.queue_item_display_sub_title);
-        tvSubTitle.setText(description.getSubtitle());
+        tvSubTitle.setText(StringUtils.Companion.ifEmpty(String.valueOf(description.getSubtitle()),
+                UiUtils.getString(R.string.unknown_author)));
         TextView tvTitle = holder.getView(R.id.queue_item_display_title);
-        tvTitle.setText(description.getTitle());
+        tvTitle.setText(StringUtils.Companion.ifEmpty(String.valueOf(description.getTitle())
+                ,UiUtils.getString(R.string.unknown_name)));
         TextView tvPosition = holder.getView(R.id.queue_item_position);
         if (selectIndex == position) {
             holder.getView(R.id.queue_item_selected_line).setVisibility(View.VISIBLE);

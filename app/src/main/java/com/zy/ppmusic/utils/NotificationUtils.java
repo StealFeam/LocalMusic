@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.hardware.usb.UsbInterface;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -78,9 +79,12 @@ public class NotificationUtils {
             contentView.setImageViewResource(R.id.notify_action_play_pause, R.drawable.ic_play);
         }
         if (descriptionCompat != null) {
-            Log.e(TAG, "postNotification: title=" + descriptionCompat.getTitle() + ",subTitle=" + descriptionCompat.getSubtitle());
-            contentView.setTextViewText(R.id.notify_display_title, descriptionCompat.getTitle());
-            contentView.setTextViewText(R.id.notify_display_sub_title, descriptionCompat.getSubtitle());
+            Log.e(TAG, "postNotification: title=" + descriptionCompat.getTitle() +
+                    ",subTitle=" + descriptionCompat.getSubtitle());
+            contentView.setTextViewText(R.id.notify_display_title, StringUtils.Companion
+                    .ifEmpty(String.valueOf(descriptionCompat.getTitle()),UiUtils.getString(R.string.unknown_name)));
+            contentView.setTextViewText(R.id.notify_display_sub_title, StringUtils.Companion
+                    .ifEmpty(String.valueOf(descriptionCompat.getSubtitle()), UiUtils.getString(R.string.unknown_author)));
         } else {
             Log.e(TAG, "postNotification: description is null");
         }

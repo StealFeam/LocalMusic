@@ -24,8 +24,10 @@ public class App extends Application {
 
     public static App getInstance() {
         mActivityLists = new LinkedHashMap<>();
-        return SingleInstance.INSTANCE;
+        return mAppInstance;
     }
+
+    private static App mAppInstance;
 
     public static int getAppVersion(Context context) {
         try {
@@ -40,6 +42,7 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        mAppInstance = this;
         StrictMode.enableDefaults();
         LeakCanary.install(this);
     }
@@ -83,7 +86,4 @@ public class App extends Application {
         }
     }
 
-    private static class SingleInstance {
-        private static final App INSTANCE = new App();
-    }
 }

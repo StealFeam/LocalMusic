@@ -14,7 +14,13 @@ import android.view.WindowManager;
  * @author ZhiTouPC
  * @date 2018/2/7
  */
-public class LoopViewPager extends ViewPager {
+public class LoopViewPager extends ViewPager{
+    private int mLastX;
+    private int maxTranslation = 0;
+    private boolean mSkipToFirst = false;
+    private boolean mSkipToEnd = false;
+    private float damp = 1;
+    private OnDragListener mDragListener;
 
     public LoopViewPager(@NonNull Context context) {
         this(context, null);
@@ -24,10 +30,9 @@ public class LoopViewPager extends ViewPager {
         super(context, attrs);
     }
 
-    private int mLastX;
-    private int maxTranslation = 0;
-    private boolean mSkipToFirst = false;
-    private boolean mSkipToEnd = false;
+    public void setDragListener(OnDragListener listener) {
+        this.mDragListener = listener;
+    }
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
@@ -38,10 +43,10 @@ public class LoopViewPager extends ViewPager {
                 DisplayMetrics displayMetrics = new DisplayMetrics();
                 manager.getDefaultDisplay().getMetrics(displayMetrics);
                 maxTranslation = displayMetrics.widthPixels / 3;
+                System.out.println("max=====" + maxTranslation);
             }
         }
     }
-
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -59,11 +64,23 @@ public class LoopViewPager extends ViewPager {
                 if (getCurrentItem() == 0) {
                     //从左往右
                     intercepted = deltaX > 0 && getScrollX() == 0;
+                    if(!intercepted && getTranslationX() > 0){
+                        intercepted = true;
+                    }
                 }
                 if (getCurrentItem() == getAdapter().getCount() - 1) {
                     intercepted = deltaX < 0 && !canScrollHorizontally(1);
                 }
                 if (intercepted) {
+                    damp += 0.3;
+                    float currentTranslationX = getTranslationX() + deltaX / damp;
+                    if (Math.abs(currentTranslationX) > maxTranslation) {
+                        currentTranslationX = currentTranslationX > 0 ? maxTranslation : -maxTranslation;
+                    }
+                    setTranslationX(currentTranslationX);
+                    if (mDragListener != null) {
+                        mDragListener.onDrag(getTranslationX());
+                    }
                     if (Math.abs(deltaX) > maxTranslation) {
                         if (deltaX > 0) {
                             mSkipToEnd = true;
@@ -73,12 +90,20 @@ public class LoopViewPager extends ViewPager {
                             mSkipToEnd = false;
                         }
                         return true;
+                    } else {
+                        mSkipToEnd = false;
+                        mSkipToFirst = false;
                     }
                 }
                 break;
             case MotionEvent.ACTION_UP:
                 //当滑动到第一个item时，且向右滑动，跳转到最后一个item
                 //当滑动到最后一个item时，且向左滑动，跳转到第一个item
+                damp = 1;
+                setTranslationX(0);
+                if (mDragListener != null) {
+                    mDragListener.onDrag(0);
+                }
                 if (mSkipToEnd) {
                     setCurrentItem(getAdapter().getCount(), false);
                     mSkipToEnd = false;
@@ -95,7 +120,15 @@ public class LoopViewPager extends ViewPager {
             default:
                 break;
         }
-        return super.onTouchEvent(ev);
+        return intercepted || super.onTouchEvent(ev);
     }
 
+    public interface OnDragListener {
+        /**
+         * x方向移动距离变化时
+         *
+         * @param distance 移动的距离
+         */
+        void onDrag(float distance);
+    }
 }

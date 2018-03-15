@@ -375,7 +375,7 @@ public class MediaService extends MediaBrowserServiceCompat {
     /**
      * 通过列表模式决定下一个播放的媒体
      *
-     * @param isNext  true下一首曲目，false上一首曲目
+     * @param isNext     true下一首曲目，false上一首曲目
      * @param isComplete 调用是否来自歌曲播放完成
      */
     private void changeMediaByMode(boolean isNext, boolean isComplete) {
@@ -473,7 +473,7 @@ public class MediaService extends MediaBrowserServiceCompat {
     /**
      * 播放曲目发生变化时
      *
-     * @param mediaId                    曲目id
+     * @param mediaId                曲目id
      * @param shouldPlayWhenPrepared 是否需要准备完成后播放
      */
     public void onMediaChange(String mediaId, boolean shouldPlayWhenPrepared) {
@@ -556,7 +556,8 @@ public class MediaService extends MediaBrowserServiceCompat {
 
     @Override
     public boolean onUnbind(Intent intent) {
-        if(mPlayBack != null && !mPlayBack.isPlaying()){
+        //如果前台退出绑定，且没有播放媒体就让服务停止
+        if (mPlayBack != null && !mPlayBack.isPlaying()) {
             handleStopRequest(true);
         }
         return super.onUnbind(intent);
@@ -613,7 +614,7 @@ public class MediaService extends MediaBrowserServiceCompat {
     /**
      * 播放曲目发生变化时
      *
-     * @param mediaId                    曲目id
+     * @param mediaId                曲目id
      * @param shouldPlayWhenPrepared 是否需要准备完成后播放
      */
     public void onMediaChange(String mediaId, boolean shouldPlayWhenPrepared, int shouldSeekToPosition) {
@@ -681,9 +682,9 @@ public class MediaService extends MediaBrowserServiceCompat {
                 mediaService.mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if(isShouldPlay){
+                        if (isShouldPlay) {
                             mediaService.mPlayBack.playMediaIdAutoStart(mediaId);
-                        }else{
+                        } else {
                             mediaService.mPlayBack.preparedWithMediaId(mediaId);
                         }
                     }
@@ -837,25 +838,29 @@ public class MediaService extends MediaBrowserServiceCompat {
 
         @Override
         public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
-            KeyEvent ke = mediaButtonEvent.getParcelableExtra("android.intent.extra.KEY_EVENT");
-            if (ke.getAction() == KeyEvent.ACTION_DOWN) {
-                switch (ke.getKeyCode()) {
+            KeyEvent notificationKeyEvent = mediaButtonEvent.getParcelableExtra("android.intent.extra.KEY_EVENT");
+            if (notificationKeyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+                switch (notificationKeyEvent.getKeyCode()) {
+                    //点击下一首
                     case KeyEvent.KEYCODE_MEDIA_NEXT:
                         changeMediaByMode(true, false);
                         break;
+                    //点击关闭
                     case KeyEvent.KEYCODE_MEDIA_STOP:
                         handleStopRequest(true);
                         break;
+                    //点击上一首（目前没有）
                     case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
                         changeMediaByMode(false, false);
                         break;
                     //有线耳机 暂支持下一首
                     case KeyEvent.KEYCODE_HEADSETHOOK:
-                        if (mLastDownTime != ke.getDownTime()) {
-                            mHeadSetDownTime = ke.getEventTime();
-                            mLastDownTime = ke.getDownTime();
+                        if (mLastDownTime != notificationKeyEvent.getDownTime()) {
+                            mHeadSetDownTime = notificationKeyEvent.getEventTime();
+                            mLastDownTime = notificationKeyEvent.getDownTime();
                         }
                         break;
+                    //点击播放按钮
                     case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                     case KeyEvent.KEYCODE_MEDIA_PAUSE:
                     case KeyEvent.KEYCODE_MEDIA_PLAY:
@@ -865,15 +870,18 @@ public class MediaService extends MediaBrowserServiceCompat {
                         break;
                 }
             } else {
-                if (ke.getKeyCode() == KeyEvent.KEYCODE_HEADSETHOOK && ke.getAction() == KeyEvent.ACTION_UP) {
+                //如果耳机上的播放键长按了300毫秒以上，则视为下一首
+                if (notificationKeyEvent.getKeyCode() == KeyEvent.KEYCODE_HEADSETHOOK &&
+                        notificationKeyEvent.getAction() == KeyEvent.ACTION_UP) {
                     long secondMis = 300;
-                    if (ke.getEventTime() - mHeadSetDownTime > secondMis) {
+                    if (notificationKeyEvent.getEventTime() - mHeadSetDownTime > secondMis) {
                         changeMediaByMode(true, false);
                     } else {
                         handlePlayOrPauseRequest();
                     }
                 }
-                Log.w(TAG, "onMediaButtonEvent: action=" + ke.getAction() + ",code=" + ke.getKeyCode());
+                Log.w(TAG, "onMediaButtonEvent: action=" + notificationKeyEvent.getAction() +
+                        ",code=" + notificationKeyEvent.getKeyCode());
             }
             return true;
         }
