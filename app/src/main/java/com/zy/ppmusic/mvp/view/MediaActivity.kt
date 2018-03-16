@@ -16,6 +16,7 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v4.view.ViewCompat
 import android.support.v4.view.ViewPager
 import android.support.v7.app.AlertDialog
+import android.support.v7.view.menu.MenuBuilder
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.ListPopupWindow
 import android.support.v7.widget.RecyclerView
@@ -207,6 +208,12 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         val vpDrawable = RoundDrawable(dp2px, ContextCompat.getColor(this, R.color.colorGray))
         ViewCompat.setBackground(vp_show_media_head, vpDrawable)
 
+        val bottomBackGround = TimBackGroundDrawable()
+        bottomBackGround.setDrawableColor(UiUtils.getColor(R.color.colorTheme))
+        bottomBackGround.setCorner(TimBackGroundDrawable.LEFT)
+        bottomBackGround.setPercent(TimBackGroundDrawable.BOTTOM)
+        ViewCompat.setBackground(tv_show_position,bottomBackGround)
+
         control_display_progress.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
@@ -282,6 +289,18 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main, menu)
+        if(menu!= null){
+            if(menu::class == MenuBuilder::class){
+                try {
+                    val method = menu::class.java.getDeclaredMethod("setOptionalIconsVisible",
+                            Boolean::class.java)
+                    method.isAccessible = true
+                    method.invoke(menu,true)
+                }catch (e:Exception){
+                    PrintOut.d("反射显示图标失败")
+                }
+            }
+        }
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -292,7 +311,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 mPresenter?.refreshQueue(applicationContext, true)
             }
             R.id.menu_blue_connect -> {
-                val intent = Intent(applicationContext, BlScanActivity::class.java)
+                val intent = Intent(this, BlScanActivity::class.java)
                 startActivity(intent)
             }
             R.id.menu_count_time -> {
@@ -575,6 +594,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     }
 
     override fun showLoading() {
+        PrintOut.d("showLoading")
         if (mLoadingDialog == null) {
             mLoadingDialog = LoadingDialog(this)
         }
@@ -584,6 +604,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     }
 
     override fun hideLoading() {
+        PrintOut.d("hideLoading")
         if (mLoadingDialog != null) {
             mLoadingDialog!!.hide()
         }
@@ -937,6 +958,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         PrintOut.print("MediaActivity is destroy")
         ViewCompat.setBackground(media_title_tint, null)
         ViewCompat.setBackground(vp_show_media_head, null)
+        ViewCompat.setBackground(tv_show_position,null)
         if (mLoadingDialog != null) {
             mLoadingDialog!!.cancel()
             mLoadingDialog = null

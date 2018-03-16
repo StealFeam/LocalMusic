@@ -68,4 +68,19 @@
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowActionBar">false</item>
     </style>
+    
+    <style name="ToolBarPopTheme" parent="Widget.AppCompat.Light.PopupMenu.Overflow">
+        <item name="overlapAnchor">false</item>
+        <item name="android:textSize">@dimen/sp15</item>
+        <item name="android:gravity">center</item>
+        <!--弹窗menu文字颜色-->
+        <item name="android:textColorPrimary">@color/colorBlack</item>
+    </style>
+    
+    <style name="ToolBarTheme" parent="@style/ThemeOverlay.AppCompat.Light">
+        <item name="isLightTheme">true</item>
+        <!--弹出menu图标颜色-->
+        <item name="colorControlNormal">@color/colorWhite</item>
+        <item name="colorControlHighlight">@color/colorWhite</item>
+    </style>
 </resources>

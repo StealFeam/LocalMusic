@@ -5,7 +5,7 @@
 
     <item
         android:id="@+id/menu_media_scan"
-        android:icon="@drawable/ic_search_music"
+        android:icon="@drawable/ic_menu_search_media"
         android:title="@string/scan_media"
         app:showAsAction="never" />
     <item
@@ -13,15 +13,15 @@
         android:checkable="false"
         android:checked="false"
         android:enabled="true"
-        android:icon="@drawable/ic_bl_manager"
+        android:icon="@drawable/ic_menu_connect_bl"
         android:menuCategory="container"
         android:title="@string/connect_bluetooth"
         android:titleCondensed="@string/app_name"
         android:visible="true"
-        app:showAsAction="never|withText|collapseActionView" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/menu_count_time"
         android:title="@string/set_time_to_come_down"
-        android:icon="@drawable/ic_time_clock"
+        android:icon="@drawable/ic_menu_time_to_close"
         app:showAsAction="never" />
 </menu>

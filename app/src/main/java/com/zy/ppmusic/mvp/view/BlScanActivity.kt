@@ -27,6 +27,7 @@ import com.zy.ppmusic.mvp.contract.IBLActivityContract
 import com.zy.ppmusic.mvp.presenter.BlActivityPresenter
 import com.zy.ppmusic.receiver.DeviceFoundReceiver
 import com.zy.ppmusic.receiver.StatusChangeReceiver
+import com.zy.ppmusic.utils.UiUtils
 import com.zy.ppmusic.widget.EasyTintView
 import kotlinx.android.synthetic.main.activity_bl_scan.*
 import pub.devrel.easypermissions.AppSettingsDialog
@@ -57,7 +58,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
 
         mScanResultRecycler = findViewById(R.id.show_device_recycler)
         if (mPresenter!!.isSupportBl().not()) {
-            Toast.makeText(this, "您的设备不支持蓝牙", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, UiUtils.getString(R.string.unsupport_bluetooth), Toast.LENGTH_SHORT).show()
             finish()
             return
         }

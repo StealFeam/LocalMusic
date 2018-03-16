@@ -20,10 +20,20 @@ public class TimBackGroundDrawable extends Drawable {
     public static final int MIDDLE = 2;
     public static final int BOTTOM = 3;
 
+    /**
+     * 尖角在左侧
+     */
+    public static final int LEFT = 1001;
+    /**
+     * 尖角在右侧
+     */
+    public static final int RIGHT = 1002;
+
     private Paint mPaint;
     private Path mPath;
     private int mPaintColor = Color.BLUE;
     private int mLinePercent = MIDDLE;
+    private int mCorner = RIGHT;
 
     public TimBackGroundDrawable() {
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -44,14 +54,23 @@ public class TimBackGroundDrawable extends Drawable {
         invalidateSelf();
     }
 
+    public void setCorner(int corner){
+        this.mCorner = corner;
+        invalidateSelf();
+    }
+
     @Override
     public void draw(@NonNull Canvas canvas) {
         Rect bounds = getBounds();
-        clipPath(canvas, bounds);
+        if(mCorner == RIGHT){
+            clipRightPath(canvas, bounds);
+        }else{
+            clipLeftPath(canvas,bounds);
+        }
         canvas.drawPath(mPath, mPaint);
     }
 
-    private void clipPath(Canvas canvas, Rect area) {
+    private void clipRightPath(Canvas canvas, Rect area) {
         mPath.rewind();
         mPath.moveTo(area.left, 0);
         mPath.lineTo(area.width(), 0);
@@ -70,6 +89,28 @@ public class TimBackGroundDrawable extends Drawable {
                 break;
         }
 
+        mPath.lineTo(0, area.height());
+        mPath.close();
+        canvas.clipPath(mPath);
+    }
+
+    private void clipLeftPath(Canvas canvas, Rect area) {
+        mPath.rewind();
+        switch (mLinePercent) {
+            case TOP:
+                mPath.moveTo(area.left, area.height()*3/5);
+                break;
+            case MIDDLE:
+                mPath.moveTo(area.left,area.height()/2);
+                break;
+            case BOTTOM:
+                mPath.moveTo(area.left,area.height());
+                break;
+            default:
+                break;
+        }
+        mPath.lineTo(area.width(),0);
+        mPath.lineTo(area.width(),area.height());
         mPath.lineTo(0, area.height());
         mPath.close();
         canvas.clipPath(mPath);

@@ -15,13 +15,18 @@
         android:id="@+id/tb_media"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:popupTheme="?actionBarPopupTheme"
+        tools:background="@color/colorTheme"
+        app:popupTheme="@style/ToolBarPopTheme"
+        android:theme="@style/ToolBarTheme"
+        app:title="@string/app_name"
+        app:subtitle="@string/app_name"
         app:subtitleTextColor="@color/colorWhite"
         app:titleTextColor="@color/colorWhite" />
 
     <View
         android:id="@+id/media_title_tint"
         android:layout_width="match_parent"
+        tools:background="@color/colorTheme"
         android:layout_height="@dimen/dp30" />
 
     <com.zy.ppmusic.widget.LoopViewPager
@@ -44,7 +49,7 @@
             android:layout_marginRight="@dimen/dp10"
             android:layout_marginStart="@dimen/dp5"
             android:text="@string/string_time_init"
-            android:textSize="@dimen/sp10" />
+            android:textSize="@dimen/sp11" />
 
         <SeekBar
             android:id="@+id/control_display_progress"
@@ -65,15 +70,15 @@
             android:layout_marginRight="@dimen/dp5"
             android:layout_marginStart="@dimen/dp10"
             android:text="@string/string_time_init"
-            android:textSize="@dimen/sp10" />
+            android:textSize="@dimen/sp11" />
 
     </android.support.v7.widget.LinearLayoutCompat>
 
     <android.support.v7.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/dp10"
-        android:layout_marginTop="@dimen/dp20"
+        android:layout_marginBottom="@dimen/dp5"
+        android:layout_marginTop="@dimen/dp10"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
@@ -111,9 +116,12 @@
     <TextView
         android:id="@+id/tv_show_position"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
+        android:layout_height="@dimen/dp15"
+        android:gravity="bottom|end"
         android:textSize="@dimen/sp12"
+        android:textColor="@color/colorWhite"
+        tools:background="@color/colorTheme"
+        android:textStyle="bold"
         android:visibility="visible"
-        tools:text="文本" />
+        tools:text="1000/100000" />
 </android.support.v7.widget.LinearLayoutCompat>

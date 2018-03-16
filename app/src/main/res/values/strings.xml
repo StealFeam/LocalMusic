@@ -58,4 +58,5 @@
     <string name="scan_media">扫描</string>
     <string name="connect_bluetooth">连接蓝牙</string>
     <string name="set_time_to_come_down">定时关闭</string>
+    <string name="unsupport_bluetooth">您的设备不支持蓝牙</string>
 </resources>
