@@ -1,20 +1,15 @@
 package com.zy.ppmusic.mvp.model;
 
-import android.app.Application;
-import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.MutableLiveData;
-import android.support.annotation.NonNull;
+import android.arch.lifecycle.ViewModel;
 
 /**
  * @author y-slience
  * @date 2018/3/9
+ * 如果需要context则继承AndroidViewModel
  */
-public class HeadViewModel extends AndroidViewModel{
+public class HeadViewModel extends ViewModel{
     private MutableLiveData<Boolean> mPlayStateLiveData = new MutableLiveData<>();
-
-    public HeadViewModel(@NonNull Application application) {
-        super(application);
-    }
 
     public void setPlayState(boolean isPlaying){
         mPlayStateLiveData.setValue(isPlaying);

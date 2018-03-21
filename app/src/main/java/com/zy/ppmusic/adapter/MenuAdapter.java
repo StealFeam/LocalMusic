@@ -65,7 +65,6 @@ public class MenuAdapter extends BaseAdapter {
         }
         holder.menuIcon.setImageResource(menuItemList.get(position).getIcon());
         holder.menuTitle.setText(String.valueOf(menuItemList.get(position).getTitle()));
-
         return convertView;
     }
 

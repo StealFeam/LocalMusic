@@ -46,9 +46,9 @@ class DragFinishHelper {
             case MotionEvent.ACTION_DOWN:
                 rawX = (int) event.getRawX();
                 rawY = (int) event.getRawY();
-                if(mXVelocity ==null){
+                if (mXVelocity == null) {
                     mXVelocity = VelocityTracker.obtain();
-                }else{
+                } else {
                     mXVelocity.clear();
                 }
                 mXVelocity.addMovement(event);
@@ -118,7 +118,7 @@ class DragFinishHelper {
 
     private void scrollTo(int deltaX) {
         if (mWeakRootView != null) {
-            ViewGroup root = mWeakRootView.get();
+            final ViewGroup root = mWeakRootView.get();
             ObjectAnimator animator = ObjectAnimator.ofFloat(root.getRootView(), View.TRANSLATION_X,
                     root.getRootView().getTranslationX(), deltaX);
             animator.setDuration(400);
@@ -130,6 +130,7 @@ class DragFinishHelper {
 
                 @Override
                 public void onAnimationEnd(Animator animation) {
+                    root.clearAnimation();
                     if (listener != null) {
                         listener.scrollToRightBorder();
                     }

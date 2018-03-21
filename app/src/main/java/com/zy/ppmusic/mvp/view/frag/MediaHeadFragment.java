@@ -2,19 +2,20 @@ package com.zy.ppmusic.mvp.view.frag;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProvider;
-import android.database.Observable;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
-import android.support.v7.widget.AppCompatImageView;
 import android.util.Log;
-import android.util.Printer;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
+import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
@@ -26,11 +27,11 @@ import com.zy.ppmusic.utils.PrintOut;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.WeakReference;
-import java.util.WeakHashMap;
 
 /**
  * @author ZhiTouPC
  * @date 2017/12/26
+ * 显示媒体专辑图片
  */
 public class MediaHeadFragment extends Fragment {
     private static final String TAG = "MediaHeadFragment";
@@ -38,6 +39,8 @@ public class MediaHeadFragment extends Fragment {
     private final RequestOptions mImageLoadOptions;
     private PlayStateObserver mObserver;
     private HeadViewModel mViewModel;
+    private ImageView mHeadImageView;
+    private float mPauseProgress = 0f;
 
     public MediaHeadFragment() {
         this.mImageLoadOptions = new RequestOptions()
@@ -55,8 +58,8 @@ public class MediaHeadFragment extends Fragment {
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         if (getActivity() != null) {
             if (mViewModel == null) {
                 ViewModelProvider provider = new ViewModelProvider(getActivity(),
@@ -65,16 +68,19 @@ public class MediaHeadFragment extends Fragment {
                 if (mObserver == null) {
                     mObserver = new PlayStateObserver(this);
                 }
-                mViewModel.getPlayState().observe(getActivity(),mObserver);
+                mViewModel.getPlayState().observe(this,mObserver);
+                PrintOut.w("开始监听数据。。。。。");
             }
         }
     }
+
+
 
     @Nullable
     @Override
     public View onCreateView(@NotNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_media_head, container, false);
-        AppCompatImageView imageView = rootView.findViewById(R.id.iv_media_head);
+        mHeadImageView = rootView.findViewById(R.id.iv_media_head);
         try {
             Bundle arguments = getArguments();
             MediaMetadataCompat info = null;
@@ -86,26 +92,51 @@ public class MediaHeadFragment extends Fragment {
                 Bitmap iconBitmap = description.getIconBitmap();
                 if (iconBitmap != null) {
                     try {
-                        Glide.with(this).load(iconBitmap).apply(mImageLoadOptions).into(imageView);
+                        Glide.with(this).load(iconBitmap)
+                                .apply(mImageLoadOptions).into(mHeadImageView);
                     }catch (Exception e){
-                        imageView.setImageResource(R.mipmap.ic_music_launcher_round);
+                        mHeadImageView.setImageResource(R.mipmap.ic_music_launcher_round);
                     }
                 } else {
-                    imageView.setImageResource(R.mipmap.ic_music_launcher_round);
+                    mHeadImageView.setImageResource(R.mipmap.ic_music_launcher_round);
                 }
             } else {
-                imageView.setImageResource(R.mipmap.ic_music_launcher_round);
+                mHeadImageView.setImageResource(R.mipmap.ic_music_launcher_round);
             }
         } catch (Exception e) {
-            imageView.setImageResource(R.mipmap.ic_music_launcher_round);
+            mHeadImageView.setImageResource(R.mipmap.ic_music_launcher_round);
             Log.e(TAG, "onCreateView: exception load .. " + e.getMessage());
         }
-
         return rootView;
     }
 
     public void changeState(boolean isPlaying){
-        PrintOut.d("play的状态；；；；"+isPlaying);
+        PrintOut.w("changeState........."+isPlaying);
+        //当前旋转存在一个问题：滑动的时候另一个position的图片也在转动，需要添加滑动时暂停旋转，并且纪录当前的旋转角度
+//        if(isPlaying){
+//            startRotate();
+//        }else{
+//            endRotate();
+//        }
+    }
+
+    private void endRotate() {
+        Animation animation = mHeadImageView.getAnimation();
+        if (animation != null) {
+            animation.cancel();
+        }
+        mHeadImageView.clearAnimation();
+    }
+
+    private void startRotate() {
+        endRotate();
+        RotateAnimation rotateAnimation = new RotateAnimation(mPauseProgress,mPauseProgress + 360,
+                RotateAnimation.RELATIVE_TO_SELF, 0.5f,RotateAnimation.RELATIVE_TO_SELF,0.5f);
+        rotateAnimation.setDuration(20000);
+        rotateAnimation.setInterpolator(new LinearInterpolator());
+        rotateAnimation.setFillAfter(true);
+        rotateAnimation.setRepeatCount(-1);
+        mHeadImageView.startAnimation(rotateAnimation);
     }
 
     @Override

@@ -37,7 +37,6 @@ ext {
     versionName = "0.4.2"
 }
 
-
 task clean(type: Delete) {
     delete rootProject.buildDir
 }

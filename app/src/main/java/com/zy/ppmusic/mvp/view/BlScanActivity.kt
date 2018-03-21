@@ -55,7 +55,6 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
 
     override fun initViews() {
         mToolBar = findViewById(R.id.toolbar_bl)
-
         mScanResultRecycler = findViewById(R.id.show_device_recycler)
         if (mPresenter!!.isSupportBl().not()) {
             Toast.makeText(this, UiUtils.getString(R.string.unsupport_bluetooth), Toast.LENGTH_SHORT).show()

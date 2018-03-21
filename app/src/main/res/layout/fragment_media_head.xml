@@ -5,7 +5,8 @@
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/iv_media_head"
-        android:layout_gravity="center"
         android:layout_width="@dimen/dp200"
-        android:layout_height="@dimen/dp200" />
+        android:layout_height="@dimen/dp200"
+        android:layout_gravity="center" />
+
 </FrameLayout>

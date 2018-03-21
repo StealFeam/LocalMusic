@@ -198,6 +198,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             tb_media.elevation = 0f
         }
         setSupportActionBar(tb_media)
+
         //斜边View的背景
         val drawable = TimBackGroundDrawable()
         drawable.setDrawableColor(ContextCompat.getColor(this, R.color.colorTheme))
@@ -212,7 +213,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         bottomBackGround.setDrawableColor(UiUtils.getColor(R.color.colorTheme))
         bottomBackGround.setCorner(TimBackGroundDrawable.LEFT)
         bottomBackGround.setPercent(TimBackGroundDrawable.BOTTOM)
-        ViewCompat.setBackground(tv_show_position,bottomBackGround)
+        ViewCompat.setBackground(tv_show_position, bottomBackGround)
 
         control_display_progress.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -289,19 +290,19 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main, menu)
-        if(menu!= null){
-            if(menu::class == MenuBuilder::class){
+        if (menu != null) {
+            if (menu::class == MenuBuilder::class) {
                 try {
                     val method = menu::class.java.getDeclaredMethod("setOptionalIconsVisible",
                             Boolean::class.java)
                     method.isAccessible = true
-                    method.invoke(menu,true)
-                }catch (e:Exception){
+                    method.invoke(menu, true)
+                } catch (e: Exception) {
                     PrintOut.d("反射显示图标失败")
                 }
             }
         }
-        return super.onCreateOptionsMenu(menu)
+        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -732,13 +733,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
             super.onMetadataChanged(metadata)
             PrintOut.print("onMetadataChanged ------------- called")
-            if (Looper.myLooper() == Looper.getMainLooper()) {
-                runOnUiThread {
-                    updateMetadata(metadata)
-                }
-            } else {
-                updateMetadata(metadata)
-            }
+            updateMetadata(metadata)
         }
 
         fun updateMetadata(metadata: MediaMetadataCompat?) {
@@ -856,7 +851,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
     }
 
-
     private fun updateQueueSize(total: Int, current: Int) {
         if (total == 0) {
             tv_show_position.visibility = View.GONE
@@ -870,7 +864,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
     private fun createModelIfNeed() {
         if (mPlayStateModel == null) {
-            val provider = ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory(App.getInstance()))
+            val provider = ViewModelProvider(this,
+                    ViewModelProvider.AndroidViewModelFactory(App.getInstance()))
             mPlayStateModel = provider.get(HeadViewModel::class.java)
         }
     }
@@ -883,14 +878,14 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         createModelIfNeed()
         if (state != PlaybackStateCompat.STATE_PLAYING) {
             stopLoop()
-            mPlayStateModel!!.setPlayState(true)
+            mPlayStateModel!!.setPlayState(false)
             control_action_play_pause.setImageResource(R.drawable.ic_black_play)
             if (state == PlaybackStateCompat.STATE_STOPPED) {
                 control_display_progress.progress = 0
             }
         } else {
             startLoop()
-            mPlayStateModel!!.setPlayState(false)
+            mPlayStateModel!!.setPlayState(true)
             control_action_play_pause.setImageResource(R.drawable.ic_black_pause)
         }
     }
@@ -949,7 +944,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         PrintOut.print("onStop called")
         if (isFinishing) {
             disConnectService()
-            PrintOut.print("这确定是要finish了吧")
         }
     }
 
@@ -958,7 +952,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         PrintOut.print("MediaActivity is destroy")
         ViewCompat.setBackground(media_title_tint, null)
         ViewCompat.setBackground(vp_show_media_head, null)
-        ViewCompat.setBackground(tv_show_position,null)
+        ViewCompat.setBackground(tv_show_position, null)
         if (mLoadingDialog != null) {
             mLoadingDialog!!.cancel()
             mLoadingDialog = null
@@ -991,7 +985,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             mTimeClockDialog = null
             mTimeClockAdapter = null
         }
-
         mResultReceive = null
         //去除ViewPager的监听
         vp_show_media_head.removeOnPageChangeListener(mHeadChangeListener)

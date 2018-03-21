@@ -1,8 +1,8 @@
 package com.zy.ppmusic.adapter.base;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.view.ContextMenu;
 import android.view.ViewGroup;
 
 import org.jetbrains.annotations.Nullable;
@@ -16,8 +16,9 @@ import java.lang.ref.WeakReference;
 public abstract class AbstractExpandableAdapter extends RecyclerView.Adapter<ExpandableViewHolder> {
     private WeakReference<Context> mContextWeak;
 
+    @NonNull
     @Override
-    public ExpandableViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ExpandableViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (mContextWeak != null) {
             mContextWeak.clear();
         }
@@ -28,7 +29,7 @@ public abstract class AbstractExpandableAdapter extends RecyclerView.Adapter<Exp
     }
 
     @Override
-    public void onBindViewHolder(ExpandableViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ExpandableViewHolder holder, int position) {
         setupItemData(holder, position);
     }
 
@@ -36,6 +37,7 @@ public abstract class AbstractExpandableAdapter extends RecyclerView.Adapter<Exp
     public int getItemCount() {
         return itemCount();
     }
+
     @Nullable
     protected Context getContext(){
         if(mContextWeak == null){

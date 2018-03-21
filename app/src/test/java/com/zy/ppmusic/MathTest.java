@@ -62,7 +62,7 @@ public class MathTest {
      * @param num 123
      * @return 321
      */
-    private int reverseNum(int num) {
+    public int reverseNum(int num) {
         //simple 123 -> 321
         long result = 0;
         for (; num != 0; num /= 10) {

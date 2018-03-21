@@ -16,8 +16,8 @@ import kotlin.collections.ArrayList
 /**
  * @author ZY
  */
-class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
+class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
+        RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var mBondDevices: ArrayList<ScanResultEntity> = ArrayList()
     private val mScanDevices: ArrayList<ScanResultEntity> = ArrayList()
     private var listener: OnItemClickListener? = null
@@ -73,10 +73,10 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
     fun deviceDisappeared(device: BluetoothDevice) {
         mScanDevices.forEachIndexed { index, scanResultEntity ->
             if (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                Objects.equals(scanResultEntity.device.address, device.address)
-            } else {
-                device.address == scanResultEntity.device.address
-            }) {
+                        Objects.equals(scanResultEntity.device.address, device.address)
+                    } else {
+                        device.address == scanResultEntity.device.address
+                    }) {
                 mScanDevices.removeAt(index)
                 return
             }

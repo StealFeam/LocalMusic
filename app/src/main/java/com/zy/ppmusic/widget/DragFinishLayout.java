@@ -29,6 +29,5 @@ public class DragFinishLayout extends LinearLayout {
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         return helper.onTouchEvent(ev) || super.dispatchTouchEvent(ev);
-
     }
 }
