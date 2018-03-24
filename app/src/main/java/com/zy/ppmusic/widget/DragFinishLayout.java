@@ -28,6 +28,11 @@ public class DragFinishLayout extends LinearLayout {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        return helper.onTouchEvent(ev) || super.dispatchTouchEvent(ev);
+        return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return helper.onTouchEvent(event) || super.onTouchEvent(event);
     }
 }

@@ -18,52 +18,52 @@
         android:id="@+id/time_selector_desc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/dp5"
-        android:layout_marginLeft="@dimen/dp5"
         android:padding="@dimen/dp5"
         android:text="@string/string_custom_time_hint"
         app:layout_constraintBottom_toBottomOf="@+id/time_selector_seek_bar"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/time_selector_seek_bar"/>
+        app:layout_constraintTop_toTopOf="@+id/time_selector_seek_bar" />
 
     <android.support.v7.widget.AppCompatSeekBar
         android:id="@+id/time_selector_seek_bar"
+        style="@style/SelfSeekBarStyle"
         android:layout_width="0dp"
-        android:max="119"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toEndOf="@+id/time_selector_desc"
+        android:max="119"
+        app:layout_constraintBottom_toBottomOf="@+id/time_selector_sure_btn"
         app:layout_constraintEnd_toStartOf="@+id/time_selector_sure_btn"
-        app:layout_constraintTop_toTopOf="@+id/time_selector_sure_btn"
-        app:layout_constraintBottom_toBottomOf="@+id/time_selector_sure_btn" />
+        app:layout_constraintStart_toEndOf="@+id/time_selector_desc"
+        app:layout_constraintTop_toTopOf="@+id/time_selector_sure_btn" />
 
-    <android.support.v7.widget.AppCompatButton
+    <Button
         android:id="@+id/time_selector_sure_btn"
-        android:layout_width="@dimen/dp50"
-        android:layout_height="@dimen/dp30"
-        android:layout_margin="@dimen/dp5"
-        android:layout_marginTop="8dp"
+        android:layout_width="@dimen/dp45"
+        android:layout_height="@dimen/dp25"
+        android:layout_marginEnd="@dimen/dp5"
+        android:layout_marginRight="@dimen/dp5"
         android:background="@drawable/normal_btn_shape"
         android:text="@string/string_sure"
         android:textColor="@color/colorTheme"
+        android:textSize="@dimen/sp14"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/time_selector_seek_bar"
-        app:layout_constraintTop_toBottomOf="@+id/time_selector_recycler" />
+        app:layout_constraintTop_toBottomOf="@+id/time_selector_progress_hint_tv" />
 
     <TextView
         android:id="@+id/time_selector_progress_hint_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:minWidth="@dimen/dp20"
-        android:visibility="invisible"
-        android:padding="@dimen/dp2"
+        android:background="@drawable/progress_tint_shape"
         android:gravity="center"
+        android:minWidth="@dimen/dp20"
+        android:padding="@dimen/dp2"
         android:text="@string/app_name"
         android:textColor="@color/colorWhite"
-        android:background="@drawable/progress_tint_shape"
-        android:textSize="@dimen/sp12"
-        app:layout_constraintStart_toStartOf="@+id/time_selector_seek_bar"
-        app:layout_constraintEnd_toEndOf="@+id/time_selector_seek_bar"
+        android:textSize="@dimen/sp11"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toStartOf="@+id/time_selector_sure_btn"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintBottom_toTopOf="@+id/time_selector_seek_bar" />
+        app:layout_constraintStart_toStartOf="@+id/time_selector_seek_bar"
+        app:layout_constraintTop_toBottomOf="@+id/time_selector_recycler" />
 
 </android.support.constraint.ConstraintLayout>

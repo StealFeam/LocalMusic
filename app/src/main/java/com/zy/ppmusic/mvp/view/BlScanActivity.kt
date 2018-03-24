@@ -21,12 +21,15 @@ import android.view.animation.RotateAnimation
 import android.widget.Toast
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.ScanResultAdapter
+import com.zy.ppmusic.adapter.ScanResultCopyAdapter
+import com.zy.ppmusic.adapter.base.OnItemViewClickListener
 import com.zy.ppmusic.entity.ScanResultEntity
 import com.zy.ppmusic.mvp.base.AbstractBaseMvpActivity
 import com.zy.ppmusic.mvp.contract.IBLActivityContract
 import com.zy.ppmusic.mvp.presenter.BlActivityPresenter
 import com.zy.ppmusic.receiver.DeviceFoundReceiver
 import com.zy.ppmusic.receiver.StatusChangeReceiver
+import com.zy.ppmusic.utils.PrintOut
 import com.zy.ppmusic.utils.UiUtils
 import com.zy.ppmusic.widget.EasyTintView
 import kotlinx.android.synthetic.main.activity_bl_scan.*
@@ -47,7 +50,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
     private var mBlStateChangeReceiver: StatusChangeReceiver? = null
     private var mScanDeviceList: ArrayList<ScanResultEntity>? = null
     private var mScanResultRecycler: RecyclerView? = null
-    private var mScanResultAdapter: ScanResultAdapter? = null
+    private var mScanResultAdapter: ScanResultCopyAdapter? = null
     private var mDeviceFoundReceiver: DeviceFoundReceiver? = null
     private var mLoadingAnim: RotateAnimation? = null
     private var mToolBar: Toolbar? = null
@@ -167,57 +170,76 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
         checkConnectDevice()
 
         if (mScanResultAdapter == null) {
-            mScanResultAdapter = ScanResultAdapter(mScanDeviceList!!)
-            mScanResultAdapter!!.setListener(object : ScanResultAdapter.OnItemClickListener() {
-                override fun onItemOtherClick(view: View?, position: Int) {
-                    if (position >= 0 && position < mScanDeviceList!!.size) {
-                        val state = mScanDeviceList!![position].device.bondState
-                        if (state == BluetoothDevice.BOND_BONDED) {
-                            if (mPresenter!!.removeBondDevice(mScanDeviceList!![position].device)) {
-                                mScanDeviceList!!.removeAt(position)
-                                println("移除配对")
-                                mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
-                            }
+            mScanResultAdapter = ScanResultCopyAdapter(mScanDeviceList!!)
+            mScanResultAdapter!!.setItemClickListener(OnItemViewClickListener { _, position ->
+                val device = mScanResultAdapter!!.getDevice(position)
+                if (device != null) {
+                    val state = device.bondState
+                    if (state == BluetoothDevice.BOND_BONDED) {
+                        var realPosition = 0
+                        if(!mScanResultAdapter!!.isBondedDevice(position)){
+                        }
+                        if (mPresenter!!.removeBondDevice(mScanDeviceList!![realPosition].device)) {
+                            mScanDeviceList!!.removeAt(realPosition)
+                            println("移除配对")
+                            mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
                         }
                     }
-                }
-
-                override fun onItemClick(device: BluetoothDevice, position: Int) {
-                    val deviceClass = device.bluetoothClass
-                    //如果是音频类型的设备才能进行连接
-                    if (deviceClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_WEARABLE_HEADSET ||
-                            deviceClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_HEADPHONES) {
-                        println("click called   name=" + device.name + ",position=$position")
-                        when (device.bondState) {
-                            BluetoothDevice.BOND_BONDED -> {
-                                if (mPresenter!!.isDiscovering()) {
-                                    mPresenter!!.cancelDiscovery()
-                                }
-                                if (mPresenter!!.isConnected(device)) {
-                                    mPresenter!!.disconnectDevice(device)
-                                } else {
-                                    mPresenter!!.connectDevice(device)
-                                }
-                                mPresenter!!.startDiscovery()
-                            }
-                            BluetoothDevice.BOND_BONDING -> {//正在配对
-                                mPresenter!!.getExitsDevices()
-                            }
-                            BluetoothDevice.BOND_NONE -> {//未配对
-                                mScanDeviceList!!.add(ScanResultEntity(R.layout.item_scan_child, device))
-                                mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
-                                //开始配对
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                    device.createBond()
-                                }
-                                mPresenter!!.getExitsDevices()
-                            }
-                        }
-                    } else {
-                        showToast("此设备不可作为蓝牙耳机")
-                    }
+                    PrintOut.d("点击Item")
+                }else{
+                    PrintOut.d("点击title了")
                 }
             })
+//            mScanResultAdapter!!.setListener(object : ScanResultAdapter.OnItemClickListener() {
+//                override fun onItemOtherClick(view: View?, position: Int) {
+//                    if (position >= 0 && position < mScanDeviceList!!.size) {
+//                        val state = mScanDeviceList!![position].device.bondState
+//                        if (state == BluetoothDevice.BOND_BONDED) {
+//                            if (mPresenter!!.removeBondDevice(mScanDeviceList!![position].device)) {
+//                                mScanDeviceList!!.removeAt(position)
+//                                println("移除配对")
+//                                mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                override fun onItemClick(device: BluetoothDevice, position: Int) {
+//                    val deviceClass = device.bluetoothClass
+//                    //如果是音频类型的设备才能进行连接
+//                    if (deviceClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_WEARABLE_HEADSET ||
+//                            deviceClass.deviceClass == BluetoothClass.Device.AUDIO_VIDEO_HEADPHONES) {
+//                        println("click called   name=" + device.name + ",position=$position")
+//                        when (device.bondState) {
+//                            BluetoothDevice.BOND_BONDED -> {
+//                                if (mPresenter!!.isDiscovering()) {
+//                                    mPresenter!!.cancelDiscovery()
+//                                }
+//                                if (mPresenter!!.isConnected(device)) {
+//                                    mPresenter!!.disconnectDevice(device)
+//                                } else {
+//                                    mPresenter!!.connectDevice(device)
+//                                }
+//                                mPresenter!!.startDiscovery()
+//                            }
+//                            BluetoothDevice.BOND_BONDING -> {//正在配对
+//                                mPresenter!!.getExitsDevices()
+//                            }
+//                            BluetoothDevice.BOND_NONE -> {//未配对
+//                                mScanDeviceList!!.add(ScanResultEntity(R.layout.item_scan_child, device))
+//                                mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
+//                                //开始配对
+//                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+//                                    device.createBond()
+//                                }
+//                                mPresenter!!.getExitsDevices()
+//                            }
+//                        }
+//                    } else {
+//                        showToast("此设备不可作为蓝牙耳机")
+//                    }
+//                }
+//            })
             mScanResultRecycler!!.adapter = mScanResultAdapter
             mScanResultRecycler!!.layoutManager = LinearLayoutManager(this)
         } else {

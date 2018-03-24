@@ -8,7 +8,9 @@ import android.widget.TextView
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.base.AbstractMultipleTypeAdapter
 import com.zy.ppmusic.adapter.base.ExpandableViewHolder
+import com.zy.ppmusic.adapter.base.OnItemViewClickListener
 import com.zy.ppmusic.entity.ScanResultEntity
+import com.zy.ppmusic.utils.PrintOut
 
 /**
  * @author ZhiTouPC
@@ -18,6 +20,7 @@ class ScanResultCopyAdapter(mData: ArrayList<ScanResultEntity>) : AbstractMultip
     private var mBondDevices: ArrayList<ScanResultEntity> = ArrayList()
     private val mScanDevices: ArrayList<ScanResultEntity> = ArrayList()
     private var listener: ScanResultAdapter.OnItemClickListener? = null
+    private var mItemClickListener: OnItemViewClickListener? = null
 
     init {
         this.mBondDevices.addAll(mData)
@@ -25,6 +28,10 @@ class ScanResultCopyAdapter(mData: ArrayList<ScanResultEntity>) : AbstractMultip
 
     fun setListener(l: ScanResultAdapter.OnItemClickListener) {
         this.listener = l
+    }
+
+    fun setItemClickListener(itemClickListener: OnItemViewClickListener) {
+        this.mItemClickListener = itemClickListener
     }
 
     fun clearData() {
@@ -40,6 +47,27 @@ class ScanResultCopyAdapter(mData: ArrayList<ScanResultEntity>) : AbstractMultip
         }
         mScanDevices.add(entity)
         notifyItemInserted(mBondDevices.size + mScanDevices.size - 1)
+    }
+
+    private fun getBondedDevice(position: Int):BluetoothDevice?{
+        return if(position > 0 && position < (mBondDevices.size + 2)){
+            mBondDevices[position-1].device
+        }else null
+    }
+
+    fun isBondedDevice(position: Int):Boolean = position>0 && position<(mBondDevices.size + 2)
+
+
+    fun getDevice(position: Int):BluetoothDevice?{
+        if (isBondedDevice(position)){
+            return mBondDevices[position].device
+        }
+        val bondedDevice = getBondedDevice(position)
+        if(bondedDevice != null){
+            return bondedDevice
+        }
+        val realPosition = position - 2 - mBondDevices.size
+        return mScanDevices[realPosition].device
     }
 
     /**
@@ -76,22 +104,30 @@ class ScanResultCopyAdapter(mData: ArrayList<ScanResultEntity>) : AbstractMultip
 
     override fun getItemLayoutIdByType(viewType: Int): Int = viewType
 
+    override fun bindHolderData(holder: ExpandableViewHolder?, viewType: Int) {
+        when (viewType) {
+            R.layout.item_scan_child -> {
+                holder?.attachOnClickListener(mItemClickListener, holder.itemView)
+            }
+        }
+    }
+
     override fun setupItemData(holder: ExpandableViewHolder?, position: Int) {
-        when(getItemTypeByPosition(position)){
-            R.layout.item_scan_title->{
-                val titleTv:TextView = holder!!.getView(R.id.tv_scan_result_title)
+        when (getItemTypeByPosition(position)) {
+            R.layout.item_scan_title -> {
+                val titleTv: TextView = holder!!.getView(R.id.tv_scan_result_title)
                 titleTv.text = mBondDevices[position].title
             }
-            R.layout.item_scan_child->{
+            R.layout.item_scan_child -> {
                 val entity: ScanResultEntity? = if (position < mBondDevices.size) {
                     mBondDevices[position]
                 } else {
                     mScanDevices[position - mBondDevices.size]
                 }
                 val nameTv = holder!!.getView<TextView>(R.id.tv_scan_result_name)
-                nameTv.text = if(entity!!.device.name == null){
+                nameTv.text = if (entity!!.device.name == null) {
                     "unknown"
-                }else{
+                } else {
                     entity.device.name
                 }
                 nameTv.tag = entity.device

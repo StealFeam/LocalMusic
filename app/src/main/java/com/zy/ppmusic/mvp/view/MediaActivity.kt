@@ -260,7 +260,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
     /*专辑图片位置改变监听*/
     private val mHeadChangeListener = object : ViewPager.OnPageChangeListener {
-        private var dragBeforeIndex = 0
+        private var dragBeforeIndex = -1
 
         override fun onPageScrollStateChanged(state: Int) {
             if (state == ViewPager.SCROLL_STATE_DRAGGING) {
@@ -283,8 +283,12 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 updateQueueSize(mPlayQueueList!!.size, vp_show_media_head.currentItem + 1)
             }
         }
-
+        /**
+         * 直接跳转到最后一个或者第一个只有这个
+         */
         override fun onPageSelected(position: Int) {
+            onPageScrolled(position,0f,0)
+            println("dragIndex====$dragBeforeIndex but now position is $position")
         }
     }
 
@@ -311,10 +315,10 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 showMsg(getString(R.string.start_scanning_the_local_file))
                 mPresenter?.refreshQueue(applicationContext, true)
             }
-            R.id.menu_blue_connect -> {
-                val intent = Intent(this, BlScanActivity::class.java)
-                startActivity(intent)
-            }
+//            R.id.menu_blue_connect -> {
+//                val intent = Intent(this, BlScanActivity::class.java)
+//                startActivity(intent)
+//            }
             R.id.menu_count_time -> {
                 createTimeClockDialog()
             }

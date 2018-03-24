@@ -52,14 +52,15 @@ class DragFinishHelper {
                     mXVelocity.clear();
                 }
                 mXVelocity.addMovement(event);
-                if (rawX <= minTranslateX) {
-                    isDrag = true;
-                    mXVelocity.addMovement(event);
-                    return true;
-                } else {
-                    isDrag = false;
-                    return false;
-                }
+                return false;
+//                if (rawX <= minTranslateX) {
+//                    isDrag = true;
+//                    mXVelocity.addMovement(event);
+//                    return true;
+//                } else {
+//                    isDrag = false;
+//                    return false;
+//                }
             case MotionEvent.ACTION_MOVE:
                 int deltaX = (int) (event.getRawX() - rawX);
                 int deltaY = (int) (event.getRawY() - rawY);
