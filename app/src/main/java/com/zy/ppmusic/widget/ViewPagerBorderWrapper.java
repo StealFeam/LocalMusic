@@ -31,11 +31,11 @@ public class ViewPagerBorderWrapper extends ViewGroup {
     /**
      * 左侧的View
      */
-    private VerticalTextView mLeftView;
+    private SimpleVerticalTextView mLeftView;
     /**
      * 右侧的View
      */
-    private VerticalTextView mRightView;
+    private SimpleVerticalTextView mRightView;
     /**
      * 最大的移动距离
      */
@@ -72,19 +72,19 @@ public class ViewPagerBorderWrapper extends ViewGroup {
     private void attachViewPager(ViewPager viewPager) {
         this.mViewPager = viewPager;
         if (mLeftView == null) {
-            mLeftView = new VerticalTextView(getContext());
+            mLeftView = new SimpleVerticalTextView(getContext());
             mLeftView.setGravity(Gravity.CENTER);
         }
         if (mRightView == null) {
-            mRightView = new VerticalTextView(getContext());
+            mRightView = new SimpleVerticalTextView(getContext());
             mRightView.setGravity(Gravity.CENTER);
         }
         mLeftView.setTextColor(UiUtils.getColor(R.color.colorBlack));
         mRightView.setTextColor(UiUtils.getColor(R.color.colorBlack));
         removeAllViews();
-        addView(mLeftView, 0);
+        addView(mLeftView, 0,new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT));
         addView(mViewPager, 1);
-        addView(mRightView, 2);
+        addView(mRightView, 2,new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT));
     }
 
 
@@ -111,7 +111,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
         setMeasuredDimension(measureWidth, measureHeight);
         //仅在首次时将左右两侧的View宽度设置为0
         if (maxChangedWidth == 0) {
-            maxChangedWidth = mViewPager.getMeasuredWidth() / 3;
+            maxChangedWidth = mViewPager.getMeasuredWidth() / 4;
             LayoutParams layoutParams = mLeftView.getLayoutParams();
             layoutParams.width = 0;
             mLeftView.setLayoutParams(layoutParams);
@@ -138,14 +138,11 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                 if (mViewPager.getCurrentItem() == 0) {
                     if (deltaX > 0) {
                         isLastIntercepted = true;
+                        Log.e(TAG, "diapatchTouchEvent：这是最左侧触发：");
                         return true;
                     }
                     //上次的事件序列并没有结束
-                    if (isLastIntercepted && mInterceptDownTime == ev.getDownTime()) {
-                        return true;
-                    }
-                    Log.e(TAG, "diapatchTouchEvent：这是最左侧触发：");
-                    return false;
+                    return isLastIntercepted && mInterceptDownTime == ev.getDownTime();
                 }
                 if (mViewPager.getAdapter() == null) {
                     Log.d(TAG, "dispatchTouchEvent: this viewpager's adapter is null");
@@ -158,15 +155,13 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                         Log.e(TAG, "dispatchTouchEvent: 这是到最右侧时触发");
                         return true;
                     }
-                    if (isLastIntercepted && mInterceptDownTime == ev.getDownTime()) {
-                        return true;
-                    }
-                    return true;
+                    return isLastIntercepted && mInterceptDownTime == ev.getDownTime();
                 }
                 break;
             case MotionEvent.ACTION_UP:
                 mLastTouchX = (int) ev.getRawX();
                 isLastIntercepted = false;
+                mInterceptDownTime = ev.getDownTime();
                 break;
             default:
                 break;
@@ -195,11 +190,11 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                     layoutParams.width += deltaX;
                     layoutParams.width = Math.max(0, layoutParams.width);
                     if (layoutParams.width > maxChangedWidth) {
-                        mLeftView.setText("释放跳转");
+                        mLeftView.setText("释放跳转到最后一首");
                         isSkip = true;
                     } else {
                         isSkip = false;
-                        mLeftView.setText("再滑动就能跳转了");
+                        mLeftView.setText("继续滑动");
                     }
                     mLeftView.setLayoutParams(layoutParams);
                     //最后一个条目，并且是向左滑动
@@ -208,7 +203,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                     layoutParams.width -= deltaX;
                     layoutParams.width = Math.max(0, layoutParams.width);
                     if (layoutParams.width > maxChangedWidth) {
-                        mRightView.setText("释放跳转");
+                        mRightView.setText("释放跳转到第一首");
                         isSkip = true;
                     } else {
                         isSkip = false;
@@ -225,8 +220,6 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                 final LayoutParams rightParams = mRightView.getLayoutParams();
                 if (rightParams.width > 0) {
                     restoreView(rightParams, mRightView, 0);
-                    scrollTo(0, 0);
-                    invalidate();
                 } else {
                     int endPosition = -1;
                     if (mViewPager.getAdapter() != null) {
@@ -248,6 +241,11 @@ public class ViewPagerBorderWrapper extends ViewGroup {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 params.width = (int) animation.getAnimatedValue();
+                //当前仅有右侧滑动会改动scrollX
+                if(getScrollX() != 0){
+                    scrollTo(params.width,0);
+                    invalidate();
+                }
                 view.setLayoutParams(params);
                 if (params.width == 0) {
                     animation.removeAllUpdateListeners();

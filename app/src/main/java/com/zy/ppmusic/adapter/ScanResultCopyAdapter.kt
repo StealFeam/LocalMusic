@@ -57,7 +57,6 @@ class ScanResultCopyAdapter(mData: ArrayList<ScanResultEntity>) : AbstractMultip
 
     fun isBondedDevice(position: Int):Boolean = position>0 && position<(mBondDevices.size + 2)
 
-
     fun getDevice(position: Int):BluetoothDevice?{
         if (isBondedDevice(position)){
             return mBondDevices[position].device

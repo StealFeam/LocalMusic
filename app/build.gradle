@@ -8,7 +8,7 @@ android {
     buildToolsVersion "27.0.3"
     defaultConfig {
         applicationId "com.zy.ppmusic"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 27
         versionCode 8
         versionName "1.0.7"
@@ -20,6 +20,30 @@ android {
             shrinkResources true
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        applicationVariants.all{ variant->
+            variant.outputs.all{
+                if(variant.buildType.name == 'release'){
+                    if(variant.versionName != null){
+                        String name = "local_music_release_${variant.versionName}_${variant.versionCode}_"
+                        if(!variant.signingReady){
+                            name += "_unsigned"
+                        }
+                        name += getDate()+".apk"
+                        outputFileName = name
+                    }
+                }
+                if(variant.buildType.name == 'debug'){
+                    if(variant.versionName != null){
+                        String name = "local_music_debug_${variant.versionName}_${variant.versionCode}_"
+                        if(!variant.signingReady){
+                            name += "_unsigned"
+                        }
+                        name += getDate()+".apk"
+                        outputFileName = name
+                    }
+                }
+            }
         }
     }
     sourceSets {
@@ -34,6 +58,12 @@ android {
     }
 }
 
+static def getDate(){
+    def date = new Date()
+    def dateFormat = date.format("yyyyMMddHHmmss")
+    return dateFormat
+}
+
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
@@ -46,8 +76,6 @@ dependencies {
     testImplementation "org.powermock:powermock-module-junit4-rule:1.7.3"
     testImplementation "org.powermock:powermock-api-mockito2:1.7.3" //注意这里是mockito2
     testImplementation "org.powermock:powermock-classloading-xstream:1.7.3"
-
-
 
     //    系统库 双引号代表可以使用表达式
     implementation "com.android.support:cardview-v7:${rootProject.ext.compileToolsVersion}"
@@ -68,8 +96,8 @@ dependencies {
     //    权限申请库
     implementation project(':easypermissions')
     //ViewModel and LiveData
-    implementation 'android.arch.lifecycle:extensions:1.1.0'
-    annotationProcessor "android.arch.lifecycle:compiler:1.1.0"
+    implementation 'android.arch.lifecycle:extensions:1.1.1'
+    annotationProcessor "android.arch.lifecycle:compiler:1.1.1"
     //leak检测
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'
     releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
