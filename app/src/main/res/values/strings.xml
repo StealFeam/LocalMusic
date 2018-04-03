@@ -17,7 +17,6 @@
     <string name="string_add_all">全部加入播放队列</string>
     <string name="string_read_external">android.permission.READ_EXTERNAL_STORAGE</string>
     <string name="string_write_external">android.permission.WRITE_EXTERNAL_STORAGE</string>
-
     <string name="string_permission_read">只有得到本地存储权限才能获取到本地媒体文件</string>
     <string name="exit">退出</string>
     <string name="string_loop_mode">播放模式</string>
@@ -59,4 +58,6 @@
     <string name="connect_bluetooth">连接蓝牙</string>
     <string name="set_time_to_come_down">定时关闭</string>
     <string name="unsupport_bluetooth">您的设备不支持蓝牙</string>
+    <string name="dialog_error_content_msg">抱歉，应用出现了点问题，请清除缓存后重新试一下吧(*^▽^*)</string>
+    <string name="dialog_error_sure">我知道了</string>
 </resources>

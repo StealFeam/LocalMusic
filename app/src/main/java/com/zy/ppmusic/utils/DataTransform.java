@@ -97,7 +97,7 @@ public class DataTransform {
             if (mediaIdList.contains(String.valueOf(itemPath.hashCode()))) {
                 continue;
             } else {
-                PrintOut.print(itemPath);
+                PrintLog.print(itemPath);
             }
             //根据音频地址获取uri，区分为内部存储和外部存储
             Uri audioUri = MediaStore.Audio.Media.getContentUriForPath(itemPath);
@@ -249,7 +249,7 @@ public class DataTransform {
                 MusicInfoEntity infoEntity = new MusicInfoEntity(String.valueOf(itemPath.hashCode()),
                         musicName, artistS, itemPath, 0, d, embeddedPicture);
                 musicInfoEntities.add(infoEntity);
-                PrintOut.print("put else index=" + i + ",path=" + itemPath);
+                PrintLog.print("put else index=" + i + ",path=" + itemPath);
                 pathList.add(itemPath);
                 mediaIdList.add(String.valueOf(itemPath.hashCode()));
             }

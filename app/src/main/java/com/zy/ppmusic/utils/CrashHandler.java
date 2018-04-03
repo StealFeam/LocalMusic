@@ -1,10 +1,21 @@
 package com.zy.ppmusic.utils;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Looper;
+import android.os.Process;
 import android.support.annotation.NonNull;
+import android.support.design.widget.BottomSheetDialog;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.PopupWindow;
 import android.widget.Toast;
+
+import com.zy.ppmusic.R;
+import com.zy.ppmusic.mvp.view.BlScanActivity;
+import com.zy.ppmusic.mvp.view.ErrorActivity;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -16,12 +27,13 @@ import java.util.concurrent.TimeUnit;
  * @author ZhiTouPC
  */
 public class CrashHandler implements Thread.UncaughtExceptionHandler {
-    private static final String TAG = "CrashHandler";
     private final Context mContext;
-    private ExecutorService mThreadPool;
 
     public CrashHandler(Context context) {
         this.mContext = context;
+    }
+
+    public void attach(){
         Thread.setDefaultUncaughtExceptionHandler(this);
     }
 
@@ -39,30 +51,10 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
         if (e == null) {
             return;
         }
-        PrintOut.print(e.getMessage());
-        if (mThreadPool == null) {
-            mThreadPool = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
-                    new LinkedBlockingDeque<Runnable>(), new ThreadFactory() {
-                @Override
-                public Thread newThread(@NonNull Runnable r) {
-                    return new Thread(r,TAG);
-                }
-            });
-        }
-        mThreadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                Looper.prepare();
-                Toast.makeText(mContext, "sorry，发生错误了", Toast.LENGTH_SHORT).show();
-                Looper.loop();
-            }
-        });
-        try {
-            Thread.sleep(800);
-        } catch (InterruptedException e1) {
-            Log.e(TAG,e1.toString());
-        }
-        android.os.Process.killProcess(android.os.Process.myPid());
-        System.exit(1);
+        PrintLog.print(e.getMessage());
+        Intent it = new Intent(mContext, ErrorActivity.class);
+        it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        mContext.startActivity(it);
+        Process.killProcess(Process.myPid());
     }
 }

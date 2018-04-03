@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.zy.ppmusic.utils.PrintOut;
+import com.zy.ppmusic.utils.PrintLog;
 
 /**
  * @author ZhiTouPC
@@ -30,7 +30,7 @@ public class LoopService extends IntentService{
     public void onStart(@Nullable Intent intent, int startId) {
         super.onStart(intent, startId);
         loopStart = true;
-        PrintOut.i("loop start ... ");
+        PrintLog.i("loop start ... ");
     }
 
     @Override
@@ -56,6 +56,6 @@ public class LoopService extends IntentService{
     @Override
     public void onDestroy() {
         super.onDestroy();
-        PrintOut.i("loop stop ... ");
+        PrintLog.i("loop stop ... ");
     }
 }

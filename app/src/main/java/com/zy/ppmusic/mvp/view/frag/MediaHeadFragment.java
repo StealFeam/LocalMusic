@@ -22,7 +22,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.zy.ppmusic.App;
 import com.zy.ppmusic.R;
 import com.zy.ppmusic.mvp.model.HeadViewModel;
-import com.zy.ppmusic.utils.PrintOut;
+import com.zy.ppmusic.utils.PrintLog;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -69,7 +69,7 @@ public class MediaHeadFragment extends Fragment {
                     mObserver = new PlayStateObserver(this);
                 }
                 mViewModel.getPlayState().observe(this,mObserver);
-                PrintOut.w("开始监听数据。。。。。");
+                PrintLog.w("开始监听数据。。。。。");
             }
         }
     }
@@ -111,7 +111,7 @@ public class MediaHeadFragment extends Fragment {
     }
 
     public void changeState(boolean isPlaying){
-        PrintOut.w("changeState........."+isPlaying);
+        PrintLog.w("changeState........."+isPlaying);
         //当前旋转存在一个问题：滑动的时候另一个position的图片也在转动，需要添加滑动时暂停旋转，并且纪录当前的旋转角度
 //        if(isPlaying){
 //            startRotate();

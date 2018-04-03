@@ -15,7 +15,7 @@ import com.zy.ppmusic.mvp.contract.IMediaActivityContract;
 import com.zy.ppmusic.mvp.model.MediaActivityModelImpl;
 import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.FileUtils;
-import com.zy.ppmusic.utils.PrintOut;
+import com.zy.ppmusic.utils.PrintLog;
 import com.zy.ppmusic.utils.ScanMusicFile;
 
 import java.lang.ref.WeakReference;
@@ -50,21 +50,21 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
         } else {
             //内存有数据
             if (DataTransform.getInstance().getMediaItemList().size() > 0) {
-                PrintOut.d("走这里");
+                PrintLog.d("走这里");
                 if (mView.get() != null) {
-                    PrintOut.d("完成刷新");
+                    PrintLog.d("完成刷新");
                     mView.get().loadFinished();
                     mView.get().hideLoading();
                 }
             } else {
-                PrintOut.i("开始读取本地数据");
+                PrintLog.i("开始读取本地数据");
                 mModel.loadLocalData(context.getCacheDir().getAbsolutePath(), new IMediaActivityContract
                         .IMediaActivityModel.IOnLocalDataLoadFinished() {
                     @Override
                     @SuppressWarnings("unchecked")
                     public void callBack(Object data) {
                         if (data != null) {
-                            PrintOut.i("读取到本地缓存数据");
+                            PrintLog.i("读取到本地缓存数据");
                             TransFormTask.Builder builder = new TransFormTask.Builder();
                             builder.listener = finishedListener;
                             builder.isRefresh = false;
@@ -76,7 +76,7 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
                             mMainHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    PrintOut.i("未读取到本地数据");
+                                    PrintLog.i("未读取到本地数据");
                                     refresh(context, false);
                                 }
                             });
@@ -154,7 +154,7 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
         if (isScanning) {
             return;
         }
-        PrintOut.i("开始扫描本地媒体。。。。。。");
+        PrintLog.i("开始扫描本地媒体。。。。。。");
         isScanning = true;
         mModel.refreshQueue(context, new ScanMusicFile.AbstractOnScanComplete() {
             @Override

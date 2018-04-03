@@ -1,6 +1,7 @@
 package com.zy.ppmusic.widget;
 
 import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.support.annotation.Nullable;
@@ -12,7 +13,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
-import android.widget.Toast;
 
 import com.zy.ppmusic.R;
 import com.zy.ppmusic.utils.UiUtils;
@@ -115,8 +115,6 @@ public class ViewPagerBorderWrapper extends ViewGroup {
             LayoutParams layoutParams = mLeftView.getLayoutParams();
             layoutParams.width = 0;
             mLeftView.setLayoutParams(layoutParams);
-
-
             Log.e(TAG, "onMeasure: width==" + getMeasuredWidth());
             System.out.println("left====" + mLeftView.getMeasuredWidth());
             System.out.println("content====" + mViewPager.getMeasuredWidth());
@@ -138,7 +136,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                 if (mViewPager.getCurrentItem() == 0) {
                     if (deltaX > 0) {
                         isLastIntercepted = true;
-                        Log.e(TAG, "diapatchTouchEvent：这是最左侧触发：");
+                        Log.e(TAG, "dispatchTouchEvent：这是最左侧触发：");
                         return true;
                     }
                     //上次的事件序列并没有结束
@@ -155,6 +153,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                         Log.e(TAG, "dispatchTouchEvent: 这是到最右侧时触发");
                         return true;
                     }
+
                     return isLastIntercepted && mInterceptDownTime == ev.getDownTime();
                 }
                 break;
@@ -169,6 +168,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
         return super.onInterceptTouchEvent(ev);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         if (mViewPager.getAdapter() == null) {
@@ -194,7 +194,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                         isSkip = true;
                     } else {
                         isSkip = false;
-                        mLeftView.setText("继续滑动");
+                        mLeftView.setText("继续向右滑动");
                     }
                     mLeftView.setLayoutParams(layoutParams);
                     //最后一个条目，并且是向左滑动
@@ -207,11 +207,18 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                         isSkip = true;
                     } else {
                         isSkip = false;
-                        mRightView.setText("继续滑动");
+                        mRightView.setText("继续向左滑动");
                     }
                     mRightView.setLayoutParams(layoutParams);
+                    //限制先左滑之后一直右滑导致ContentView的位移
+                    int scrollX = getScrollX() - deltaX;
+                    if(scrollX < 0){
+                        scrollTo(0,0);
+                        return false;
+                    }
                     scrollBy(-deltaX, 0);
                     invalidate();
+                    System.out.println("scrollX==="+getScrollX());
                 }
                 mLastTouchX = (int) ev.getRawX();
                 break;

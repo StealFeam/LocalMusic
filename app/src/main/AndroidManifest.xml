@@ -24,7 +24,7 @@
         tools:ignore="GoogleAppIndexingWarning">
         <activity
             android:name=".mvp.view.BlScanActivity"
-            android:theme="@style/AppTheme.NoActionBar.Translate"/>
+            android:theme="@style/AppTheme.NoActionBar.Translate" />
 
         <service
             android:name=".service.MediaService"
@@ -33,7 +33,6 @@
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
-
         <service android:name=".service.LoopService" />
 
         <receiver android:name="android.support.v4.media.session.MediaButtonReceiver">
@@ -45,17 +44,17 @@
         <activity
             android:name=".mvp.view.MediaActivity"
             android:launchMode="singleTask" />
-
         <activity
             android:name=".mvp.view.SplashActivity"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        <activity android:name=".mvp.view.ErrorActivity"/>
     </application>
 
 </manifest>

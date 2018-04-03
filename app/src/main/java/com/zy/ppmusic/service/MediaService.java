@@ -34,7 +34,7 @@ import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.FileUtils;
 import com.zy.ppmusic.utils.NotificationUtils;
 import com.zy.ppmusic.utils.PlayBack;
-import com.zy.ppmusic.utils.PrintOut;
+import com.zy.ppmusic.utils.PrintLog;
 import com.zy.ppmusic.utils.StringUtils;
 import com.zy.ppmusic.utils.TimerUtils;
 
@@ -274,7 +274,7 @@ public class MediaService extends MediaBrowserServiceCompat {
 
     @Override
     public IBinder onBind(Intent intent) {
-        PrintOut.e("服务已绑定");
+        PrintLog.e("服务已绑定");
         return super.onBind(intent);
     }
 
@@ -309,7 +309,7 @@ public class MediaService extends MediaBrowserServiceCompat {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        PrintOut.e("service onStartCommand");
+        PrintLog.e("service onStartCommand");
         initPlayBack();
         //也可以在这接收通知按钮的event事件
         MediaButtonReceiver.handleIntent(mMediaSessionCompat, intent);
@@ -335,7 +335,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                 ArrayList<MediaBrowserCompat.MediaItem> list = DataTransform.getInstance().getMediaItemList();
                 if (list != null) {
                     mMediaItemList = list;
-                    PrintOut.print("load list size ... " + mMediaItemList.size());
+                    PrintLog.print("load list size ... " + mMediaItemList.size());
                 }
                 result.sendResult(list);
             } else {
@@ -787,7 +787,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                     mPlayBack.seekTo(seekPosition, true);
                     Log.e(TAG, "onPlayFromMediaId: " + seekPosition);
                 } else {
-                    PrintOut.i("unknown event");
+                    PrintLog.i("unknown event");
                 }
             }
         }
@@ -924,7 +924,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                     stopLoop();
                     break;
                 default:
-                    PrintOut.print("onCommand no match");
+                    PrintLog.print("onCommand no match");
                     super.onCommand(command, reqExtra, cb);
                     break;
             }

@@ -3,7 +3,6 @@ package com.zy.ppmusic.mvp.view
 import android.app.Activity
 import android.bluetooth.BluetoothA2dp
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothClass
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.Intent
@@ -20,7 +19,6 @@ import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
 import android.widget.Toast
 import com.zy.ppmusic.R
-import com.zy.ppmusic.adapter.ScanResultAdapter
 import com.zy.ppmusic.adapter.ScanResultCopyAdapter
 import com.zy.ppmusic.adapter.base.OnItemViewClickListener
 import com.zy.ppmusic.entity.ScanResultEntity
@@ -29,7 +27,7 @@ import com.zy.ppmusic.mvp.contract.IBLActivityContract
 import com.zy.ppmusic.mvp.presenter.BlActivityPresenter
 import com.zy.ppmusic.receiver.DeviceFoundReceiver
 import com.zy.ppmusic.receiver.StatusChangeReceiver
-import com.zy.ppmusic.utils.PrintOut
+import com.zy.ppmusic.utils.PrintLog
 import com.zy.ppmusic.utils.UiUtils
 import com.zy.ppmusic.widget.EasyTintView
 import kotlinx.android.synthetic.main.activity_bl_scan.*
@@ -185,9 +183,9 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
                             mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
                         }
                     }
-                    PrintOut.d("点击Item")
+                    PrintLog.d("点击Item")
                 }else{
-                    PrintOut.d("点击title了")
+                    PrintLog.d("点击title了")
                 }
             })
 //            mScanResultAdapter!!.setListener(object : ScanResultAdapter.OnItemClickListener() {

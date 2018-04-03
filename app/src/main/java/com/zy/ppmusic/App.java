@@ -8,7 +8,8 @@ import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 
 import com.squareup.leakcanary.LeakCanary;
-import com.zy.ppmusic.utils.PrintOut;
+import com.zy.ppmusic.utils.CrashHandler;
+import com.zy.ppmusic.utils.PrintLog;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -45,6 +46,8 @@ public class App extends Application {
         mAppInstance = this;
         StrictMode.enableDefaults();
         LeakCanary.install(this);
+        CrashHandler handler = new CrashHandler(this);
+        handler.attach();
     }
 
     public Context getContext() {
@@ -57,7 +60,7 @@ public class App extends Application {
 
     public void destroyActivity(AppCompatActivity activity) {
         if (!mActivityLists.containsKey(activity.getLocalClassName())) {
-            PrintOut.e("not found this activity " + activity.getLocalClassName());
+            PrintLog.e("not found this activity " + activity.getLocalClassName());
             return;
         }
         WeakReference<AppCompatActivity> activityWeakReference = mActivityLists.get(activity.getLocalClassName());

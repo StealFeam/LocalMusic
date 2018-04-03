@@ -1,6 +1,6 @@
 package com.zy.ppmusic;
 
-import com.zy.ppmusic.utils.PrintOut;
+import com.zy.ppmusic.utils.PrintLog;
 
 import org.junit.Test;
 
@@ -53,7 +53,7 @@ public class MathTest {
             }
             cache.put(target - array[i], i);
         }
-        PrintOut.print(cache.toString());
+        PrintLog.print(cache.toString());
         return null;
     }
 
@@ -83,7 +83,7 @@ public class MathTest {
         for (; copyNum != 0; copyNum /= 10) {
             reverseNum = reverseNum * 10 + copyNum % 10;
         }
-        PrintOut.print(String.format(Locale.CHINA, "reverse=%d,num=%d", reverseNum, num));
+        PrintLog.print(String.format(Locale.CHINA, "reverse=%d,num=%d", reverseNum, num));
         return reverseNum == num;
     }
 
@@ -99,14 +99,14 @@ public class MathTest {
         for (; num > reverseNum; num /= 10) {
             reverseNum = reverseNum * 10 + num % 10;
         }
-        PrintOut.print(String.format(Locale.CHINA, "reverse=%d,num=%d", reverseNum, num));
+        PrintLog.print(String.format(Locale.CHINA, "reverse=%d,num=%d", reverseNum, num));
         return reverseNum == num || reverseNum / 10 == num;
     }
 
 
     @Test
     public void test() {
-        PrintOut.print(reverseNum(1234567891));
+        PrintLog.print(reverseNum(1234567891));
         int[] numSum = getNumSum(new int[]{2, 7, 11, 14}, 21);
         printIntArray(numSum);
 
@@ -115,8 +115,8 @@ public class MathTest {
             printIntArray(ints);
         }
 
-        PrintOut.print(reverseNumIsEqual(75614));
-        PrintOut.print(reverseNumIsEqualTwo(1234321));
+        PrintLog.print(reverseNumIsEqual(75614));
+        PrintLog.print(reverseNumIsEqualTwo(1234321));
     }
 
     @Test
@@ -128,7 +128,7 @@ public class MathTest {
 
     private void printIntArray(int[] array) {
         for (int i : array) {
-            PrintOut.print(i);
+            PrintLog.print(i);
         }
     }
 

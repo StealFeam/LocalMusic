@@ -21,25 +21,25 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        applicationVariants.all{ variant->
-            variant.outputs.all{
-                if(variant.buildType.name == 'release'){
-                    if(variant.versionName != null){
+        applicationVariants.all { variant ->
+            variant.outputs.all {
+                if (variant.buildType.name == 'release') {
+                    if (variant.versionName != null) {
                         String name = "local_music_release_${variant.versionName}_${variant.versionCode}_"
-                        if(!variant.signingReady){
+                        if (!variant.signingReady) {
                             name += "_unsigned"
                         }
-                        name += getDate()+".apk"
+                        name += getDate() + ".apk"
                         outputFileName = name
                     }
                 }
-                if(variant.buildType.name == 'debug'){
-                    if(variant.versionName != null){
+                if (variant.buildType.name == 'debug') {
+                    if (variant.versionName != null) {
                         String name = "local_music_debug_${variant.versionName}_${variant.versionCode}_"
-                        if(!variant.signingReady){
+                        if (!variant.signingReady) {
                             name += "_unsigned"
                         }
-                        name += getDate()+".apk"
+                        name += getDate() + ".apk"
                         outputFileName = name
                     }
                 }
@@ -58,7 +58,7 @@ android {
     }
 }
 
-static def getDate(){
+static def getDate() {
     def date = new Date()
     def dateFormat = date.format("yyyyMMddHHmmss")
     return dateFormat
@@ -66,10 +66,10 @@ static def getDate(){
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    //    java测试库
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    //    java测试库
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.mockito:mockito-core:2.11.0'
     testImplementation "org.powermock:powermock-module-junit4:1.7.3"

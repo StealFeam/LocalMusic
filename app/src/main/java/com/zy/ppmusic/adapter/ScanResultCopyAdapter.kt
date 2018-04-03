@@ -10,7 +10,6 @@ import com.zy.ppmusic.adapter.base.AbstractMultipleTypeAdapter
 import com.zy.ppmusic.adapter.base.ExpandableViewHolder
 import com.zy.ppmusic.adapter.base.OnItemViewClickListener
 import com.zy.ppmusic.entity.ScanResultEntity
-import com.zy.ppmusic.utils.PrintOut
 
 /**
  * @author ZhiTouPC

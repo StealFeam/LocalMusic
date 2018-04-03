@@ -136,9 +136,9 @@ public class FileUtils {
             try {
                 boolean createFileResult = file.createNewFile();
                 if (createFileResult) {
-                    PrintOut.print("创建缓存文件成功");
+                    PrintLog.print("创建缓存文件成功");
                 } else {
-                    PrintOut.print("创建缓存文件失败");
+                    PrintLog.print("创建缓存文件失败");
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -149,7 +149,7 @@ public class FileUtils {
             outputStream = new ObjectOutputStream(new FileOutputStream(file));
             outputStream.writeObject(obj);
             outputStream.flush();
-            PrintOut.print("write object success");
+            PrintLog.print("write object success");
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -166,10 +166,10 @@ public class FileUtils {
         ObjectInputStream inputStream = null;
         try {
             inputStream = new ObjectInputStream(new FileInputStream(file));
-            PrintOut.print("read object success");
+            PrintLog.print("read object success");
             return inputStream.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            PrintOut.e("read cache has a error :"+e.getMessage());
+            PrintLog.e("read cache has a error :"+e.getMessage());
             return null;
         } finally {
             StreamUtils.closeIo(inputStream);
