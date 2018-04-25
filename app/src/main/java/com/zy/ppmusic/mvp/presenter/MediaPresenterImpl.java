@@ -50,9 +50,7 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
         } else {
             //内存有数据
             if (DataTransform.getInstance().getMediaItemList().size() > 0) {
-                PrintLog.d("走这里");
                 if (mView.get() != null) {
-                    PrintLog.d("完成刷新");
                     mView.get().loadFinished();
                     mView.get().hideLoading();
                 }

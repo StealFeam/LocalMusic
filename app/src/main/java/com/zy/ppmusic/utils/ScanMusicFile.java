@@ -32,10 +32,6 @@ public class ScanMusicFile {
      */
     private static final int SCAN_COMPLETE = 0X000;
     /**
-     * 所支持的音乐格式
-     */
-    private String[] mSupportMedia = {".mp3", ".MP3", ".wav", ".flac"};
-    /**
      * 单一线程池
      */
     private ExecutorService executor = new ThreadPoolExecutor(1, 1, 0L,
@@ -174,7 +170,7 @@ public class ScanMusicFile {
             return;
         }
         //判断文件的类型是否支持
-        for (String format : mSupportMedia) {
+        for (String format : SupportMediaType.SUPPORT_TYPE) {
             if (file.getName().endsWith(format)) {
                 // * 1L  1M的大小
                 long size = 1024L * 1024L;

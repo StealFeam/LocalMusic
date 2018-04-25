@@ -458,8 +458,7 @@ public class MediaService extends MediaBrowserServiceCompat {
             stateBuilder.setActiveQueueItemId(mCurrentMedia.getQueueId());
         }
         mMediaSessionCompat.setPlaybackState(stateBuilder.build());
-        Notification notification = NotificationUtils.createNotify(this, mMediaSessionCompat,
-                mPlayBack.isPlaying());
+        Notification notification = NotificationUtils.createNotify(this, mMediaSessionCompat, mPlayBack.isPlaying());
         if (notification != null) {
             startForeground(NOTIFY_ID, notification);
         }
@@ -556,7 +555,7 @@ public class MediaService extends MediaBrowserServiceCompat {
 
     @Override
     public boolean onUnbind(Intent intent) {
-        //如果前台退出绑定，且没有播放媒体就让服务停止
+        //TODO 如果前台退出绑定，且没有播放媒体就让服务停止
         if (mPlayBack != null && !mPlayBack.isPlaying()) {
             handleStopRequest(true);
         }
@@ -659,9 +658,9 @@ public class MediaService extends MediaBrowserServiceCompat {
                 return;
             }
             final MediaService mediaService = mWeakService.get();
-            //设置媒体信息
+            //TODO 设置媒体信息
             MediaMetadataCompat track = DataTransform.getInstance().getMetadataCompatList().get(mediaId);
-            //触发MediaControllerCompat.Callback->onMetadataChanged方法
+            //TODO 触发MediaControllerCompat.Callback->onMetadataChanged方法
             if (track != null) {
                 mediaService.mMediaSessionCompat.setMetadata(track);
             }
@@ -697,7 +696,7 @@ public class MediaService extends MediaBrowserServiceCompat {
     /**
      * 更新播放列表
      */
-    public static class UpdateQueueRunnable implements Runnable {
+    private static class UpdateQueueRunnable implements Runnable {
         private WeakReference<MediaService> mWeakService;
 
         private UpdateQueueRunnable(MediaService mWeakService) {
@@ -744,7 +743,7 @@ public class MediaService extends MediaBrowserServiceCompat {
             if (extras != null) {
                 String action = extras.getString(ACTION_PARAM);
                 Log.d(TAG, "onPlayFromMediaId: extra=" + action);
-                //缓冲请求
+                //TODO 缓冲请求
                 if (ACTION_PREPARED_WITH_ID.equals(action)) {
                     String noneMediaId = "-1";
                     if (noneMediaId.equals(mediaId)) {
@@ -756,9 +755,9 @@ public class MediaService extends MediaBrowserServiceCompat {
                     } else {
                         onMediaChange(mediaId, false);
                     }
-                    //播放指定id请求
+                    //TODO 播放指定id请求
                 } else if (ACTION_PLAY_WITH_ID.equals(action)) {
-                    //如果和当前的mediaId相同则视为暂停或播放操作，不同则替换曲目
+                    //TODO 如果和当前的mediaId相同则视为暂停或播放操作，不同则替换曲目
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                         if (!Objects.equals(mediaId, mCurrentMedia != null ?
                                 mCurrentMedia.getDescription().getMediaId() : null)) {
@@ -772,7 +771,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                         }
                     }
                     handlePlayOrPauseRequest();
-                    //初始化播放器，如果本地有播放记录，取播放记录，没有就初始化穿过来的media
+                    //TODO 初始化播放器，如果本地有播放记录，取播放记录，没有就初始化穿过来的media
                 } else if (ACTION_PLAY_INIT.equals(action)) {
                     List<MusicDbEntity> entityRecordList = DataBaseManager.getInstance()
                             .initDb(getApplicationContext()).getEntity();
@@ -838,8 +837,8 @@ public class MediaService extends MediaBrowserServiceCompat {
 
         @Override
         public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
-            KeyEvent notificationKeyEvent = mediaButtonEvent.getParcelableExtra("android.intent.extra.KEY_EVENT");
-            if (notificationKeyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+            KeyEvent notificationKeyEvent = mediaButtonEvent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+            if (notificationKeyEvent.getAction() == KeyEvent.ACTION_UP) {
                 switch (notificationKeyEvent.getKeyCode()) {
                     //点击下一首
                     case KeyEvent.KEYCODE_MEDIA_NEXT:
@@ -855,9 +854,11 @@ public class MediaService extends MediaBrowserServiceCompat {
                         break;
                     //有线耳机 暂支持下一首
                     case KeyEvent.KEYCODE_HEADSETHOOK:
-                        if (mLastDownTime != notificationKeyEvent.getDownTime()) {
-                            mHeadSetDownTime = notificationKeyEvent.getEventTime();
-                            mLastDownTime = notificationKeyEvent.getDownTime();
+                        long secondMis = 300;
+                        if (notificationKeyEvent.getEventTime() - mHeadSetDownTime > secondMis) {
+                            changeMediaByMode(true, false);
+                        } else {
+                            handlePlayOrPauseRequest();
                         }
                         break;
                     //点击播放按钮
@@ -870,14 +871,12 @@ public class MediaService extends MediaBrowserServiceCompat {
                         break;
                 }
             } else {
-                //如果耳机上的播放键长按了300毫秒以上，则视为下一首
+                //TODO 如果有线耳机上的播放键长按了300毫秒以上，则视为下一首
                 if (notificationKeyEvent.getKeyCode() == KeyEvent.KEYCODE_HEADSETHOOK &&
-                        notificationKeyEvent.getAction() == KeyEvent.ACTION_UP) {
-                    long secondMis = 300;
-                    if (notificationKeyEvent.getEventTime() - mHeadSetDownTime > secondMis) {
-                        changeMediaByMode(true, false);
-                    } else {
-                        handlePlayOrPauseRequest();
+                        notificationKeyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+                    if (mLastDownTime != notificationKeyEvent.getDownTime()) {
+                        mHeadSetDownTime = notificationKeyEvent.getEventTime();
+                        mLastDownTime = notificationKeyEvent.getDownTime();
                     }
                 }
                 Log.w(TAG, "onMediaButtonEvent: action=" + notificationKeyEvent.getAction() +
@@ -947,7 +946,7 @@ public class MediaService extends MediaBrowserServiceCompat {
         public void onCustomAction(String action, Bundle extras) {
             super.onCustomAction(action, extras);
             switch (action) {
-                //开始倒计时
+                //TODO 开始倒计时
                 case ACTION_COUNT_DOWN_TIME:
                     if (mCountDownTimer != null) {
                         mCountDownTimer.stopTik();
@@ -956,7 +955,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                     mCountDownTimer = new TimerUtils(extras.getLong(ACTION_COUNT_DOWN_TIME), 1000);
                     mCountDownTimer.startTik(timeTikCallBack);
                     break;
-                //结束倒计时
+                //TODO 结束倒计时
                 case ACTION_STOP_COUNT_DOWN:
                     if (mCountDownTimer != null) {
                         mCountDownTimer.stopTik();

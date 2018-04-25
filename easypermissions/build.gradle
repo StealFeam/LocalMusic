@@ -20,7 +20,7 @@ android {
 }
 
 dependencies {
-    api "com.android.support:appcompat-v7:${rootProject.ext.compileToolsVersion}"
+    compile "com.android.support:appcompat-v7:${rootProject.ext.compileToolsVersion}"
 }
 
 

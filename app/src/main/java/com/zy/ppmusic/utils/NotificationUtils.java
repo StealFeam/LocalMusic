@@ -4,13 +4,9 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
-import android.hardware.usb.UsbInterface;
-import android.media.AudioAttributes;
-import android.media.AudioManager;
-import android.net.Uri;
-import android.provider.MediaStore;
-import android.support.v4.app.NotificationBuilderWithBuilderAccessor;
+import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.MediaDescriptionCompat;
@@ -21,6 +17,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import com.zy.ppmusic.R;
 
@@ -28,7 +25,7 @@ import com.zy.ppmusic.R;
  * @author ZhiTouPC
  */
 public class NotificationUtils {
-    private static final String TAG = "NotificationUtils";
+    private static final String TAG = "正在播放通知";
     /**
      * 通知的id
      */
@@ -99,9 +96,13 @@ public class NotificationUtils {
             //获取通道
             NotificationChannel notificationChannel = mNotificationManager.getNotificationChannel(TAG);
             if (notificationChannel == null) {
-                notificationChannel = new NotificationChannel(TAG,
-                        context.getPackageName(), NotificationManager.IMPORTANCE_NONE);
+                notificationChannel = new NotificationChannel("音乐",
+                        "播放通知", NotificationManager.IMPORTANCE_DEFAULT);
                 notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+                notificationChannel.setDescription("这是音乐通知的描述");
+                //不显示图标上的小圆点
+                notificationChannel.setShowBadge(false);
+                notificationChannel.setName("这是通知Name");
                 notificationChannel.setSound(null,null);
                 //取消震动
                 notificationChannel.enableVibration(false);
@@ -109,9 +110,18 @@ public class NotificationUtils {
                 notificationChannel.enableLights(false);
                 mNotificationManager.createNotificationChannel(notificationChannel);
             }
+
+            //用户关闭了通知通道
+            if(notificationChannel.getImportance() == NotificationManager.IMPORTANCE_NONE){
+                Intent it = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS);
+                it.putExtra(Settings.EXTRA_APP_PACKAGE,context.getPackageName());
+                it.putExtra(Settings.EXTRA_CHANNEL_ID,notificationChannel.getId());
+                context.startActivity(it);
+                Toast.makeText(context,"请将通知权限打开",Toast.LENGTH_SHORT).show();
+            }
             builder = new NotificationCompat.Builder(context,notificationChannel.getId());
         }else{
-            builder = new NotificationCompat.Builder(context, String.valueOf(NOTIFY_ID));
+            builder = new NotificationCompat.Builder(context, TAG);
         }
         builder.setSmallIcon(R.drawable.ic_small_notify);
         builder.setCustomContentView(contentView);

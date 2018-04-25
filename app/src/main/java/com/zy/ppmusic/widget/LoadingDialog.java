@@ -13,7 +13,7 @@ import java.lang.ref.WeakReference;
  * @author ZhiTouPC
  * @date 2018/1/16
  */
-public class LoadingDialog extends AppCompatDialog{
+public class LoadingDialog extends AppCompatDialog {
     private View mContentView;
     private final WeakReference<Context> mContextWeak;
 

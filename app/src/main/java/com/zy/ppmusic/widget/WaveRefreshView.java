@@ -1,36 +1,27 @@
 package com.zy.ppmusic.widget;
 
-import android.animation.Animator;
 import android.animation.ValueAnimator;
-import android.arch.lifecycle.Lifecycle;
-import android.arch.lifecycle.LifecycleObserver;
-import android.arch.lifecycle.OnLifecycleEvent;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentActivity;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
 
 import com.zy.ppmusic.utils.PrintLog;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author ZhiTouPC
  */
-public class WaveRefreshView extends View implements LifecycleObserver {
+public class WaveRefreshView extends View {
     private static final String TAG = "WaveRefreshView";
     /**
      * 最小宽度占屏幕的比例
@@ -39,27 +30,8 @@ public class WaveRefreshView extends View implements LifecycleObserver {
     private Paint mCirclePaint;
     private int minWidth = 20;
     private int maxChange;
-    private volatile ArrayList<Animator> mAnimatorList = new ArrayList<>();
     private RectF[] lineRectF = new RectF[5];
     private float[] screenParams;
-    private DelayHandler mDelayHandler;
-    private Runnable callback = new Runnable() {
-        @Override
-        public void run() {
-            int count = mAnimatorList.size();
-            int end = 0;
-            while (end < count) {
-                mDelayHandler.sendEmptyMessage(end);
-                try {
-                    Thread.sleep((end + 1) * 80);
-                } catch (InterruptedException e) {
-                    Log.e(TAG, "thread is interrupted" + this.getClass().getName());
-                    break;
-                }
-                end++;
-            }
-        }
-    };
 
     public WaveRefreshView(Context context) {
         this(context, null);
@@ -71,7 +43,6 @@ public class WaveRefreshView extends View implements LifecycleObserver {
 
     public WaveRefreshView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        ((FragmentActivity) context).getLifecycle().addObserver(this);
         mCirclePaint = new Paint();
         mCirclePaint.setColor(Color.WHITE);
         mCirclePaint.setAntiAlias(true);
@@ -104,17 +75,16 @@ public class WaveRefreshView extends View implements LifecycleObserver {
         startAnim();
     }
 
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    public void onActivityStop() {
-        stopAnim();
-        clearReference();
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        startAnim();
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        stopAnim();
+        stopRunningAnim();
         clearReference();
     }
 
@@ -127,10 +97,35 @@ public class WaveRefreshView extends View implements LifecycleObserver {
         setMeasuredDimension(lastWidthAndHeight, lastWidthAndHeight);
     }
 
+    /**
+     * 判断是否到达最小或最大值
+     */
+    private SparseBooleanArray mDirectionArray = new SparseBooleanArray(lineRectF.length);
+
     @Override
     protected void onDraw(Canvas canvas) {
-        for (RectF aLineRectF : lineRectF) {
-            canvas.drawRoundRect(aLineRectF, 20, 20, mCirclePaint);
+        if (isStoped) {
+            return;
+        }
+        for (int i = 0; i < lineRectF.length; i++) {
+            RectF itemRect = lineRectF[i];
+            if (mDirectionArray.get(i)) {
+                itemRect.top = itemRect.top + maxChange * 0.02f * (i+1);
+            } else {
+                itemRect.top = itemRect.top - maxChange * 0.02f * (i+1);
+            }
+            if (itemRect.top <= 0) {
+                itemRect.top = 0;
+                mDirectionArray.put(i, true);
+            } else if (itemRect.top >= maxChange) {
+                itemRect.top = maxChange;
+                mDirectionArray.put(i, false);
+            }
+            canvas.save();
+            if (canvas.clipRect(itemRect)) {
+                canvas.drawRoundRect(itemRect, 20, 20, mCirclePaint);
+            }
+            canvas.restore();
         }
     }
 
@@ -161,79 +156,34 @@ public class WaveRefreshView extends View implements LifecycleObserver {
         return screenParams[pos];
     }
 
+    private ValueAnimator animator;
+    private boolean isStoped = true;
+
     public void startAnim() {
-        for (Animator animator : mAnimatorList) {
-            animator.cancel();
-        }
-        mAnimatorList.clear();
-        for (int i = 0; i < lineRectF.length; i++) {
-            final int index = i;
-            ValueAnimator animator = ValueAnimator.ofInt(0, maxChange);
-            animator.setDuration(1000);
-            animator.setRepeatMode(ValueAnimator.REVERSE);
-            animator.setRepeatCount(-1);
-            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    if (lineRectF[index] == null) {
-                        return;
-                    }
-                    float percent = animation.getAnimatedFraction();
-                    lineRectF[index].top = maxChange * percent;
-                    lineRectF[index].bottom = getMeasuredHeight() - maxChange * percent;
-                    postInvalidate();
-                }
-            });
-            mAnimatorList.add(animator);
-        }
-        if (mDelayHandler == null) {
-            mDelayHandler = new DelayHandler(mAnimatorList);
-        }
-        mDelayHandler.removeCallbacksAndMessages(null);
-        post(callback);
+        stopRunningAnim();
+        animator = ValueAnimator.ofFloat(0, maxChange);
+        animator.setDuration(1000);
+        animator.setRepeatMode(ValueAnimator.REVERSE);
+        animator.setRepeatCount(-1);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                invalidate();
+            }
+        });
+        animator.start();
+        isStoped = false;
     }
 
     public void clearReference() {
-        removeCallbacks(callback);
-        mDelayHandler.sendEmptyMessage(-1);
-        mDelayHandler.removeCallbacksAndMessages(null);
-        mDelayHandler = null;
-        mAnimatorList.clear();
+
     }
 
-    public void stopAnim() {
-        if (mDelayHandler != null) {
-            mDelayHandler.sendEmptyMessage(-1);
-            mDelayHandler.removeCallbacksAndMessages(null);
-        }
-        mAnimatorList.clear();
-    }
-
-    private static class DelayHandler extends Handler {
-        private List<Animator> animators;
-
-        private DelayHandler(List<Animator> list) {
-            super(Looper.getMainLooper());
-            this.animators = list;
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            int currentStartIndex = msg.what;
-            if (currentStartIndex == -1) {
-                if (animators != null) {
-                    for (Animator animator : animators) {
-                        animator.end();
-                        animator.cancel();
-                    }
-                }
-                return;
-            }
-            if (animators != null && currentStartIndex < animators.size()) {
-                Animator animator = animators.get(currentStartIndex);
-                animator.start();
-            }
+    public void stopRunningAnim() {
+        if (animator != null && animator.isRunning()) {
+            animator.cancel();
+            animator = null;
+            isStoped = true;
         }
     }
 

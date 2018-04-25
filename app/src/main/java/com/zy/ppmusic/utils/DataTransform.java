@@ -122,14 +122,19 @@ public class DataTransform {
                                     0, mediaMetadataRetriever.getEmbeddedPicture().length);
                         }
 
-                        //过滤小于20s的文件
-                        if (duration < 20 * 1000) {
+                        //过滤小于30s的文件
+                        if (duration < 30L * 1000L) {
                             continue;
                         }
                         //过滤本地不存在的媒体文件
                         if (!FileUtils.isExits(queryPath)) {
                             continue;
                         }
+                        //过滤系统媒体库中其他类型的媒体文件
+                        if(!isSupportMediaType(queryPath)){
+                            continue;
+                        }
+
                         builder = new MediaMetadataCompat.Builder();
                         //唯一id
                         builder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, String.valueOf(queryPath.hashCode()));
@@ -187,6 +192,15 @@ public class DataTransform {
             reQueryList(localList);
         }
         Log.d(TAG, "queryResolver() called with: context = [" + context + "]");
+    }
+
+    private boolean isSupportMediaType(String queryPath) {
+        for (String type : SupportMediaType.SUPPORT_TYPE) {
+            if(queryPath.endsWith(type)){
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

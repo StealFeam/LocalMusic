@@ -4,8 +4,12 @@ import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.os.Build;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.squareup.leakcanary.LeakCanary;
 import com.zy.ppmusic.utils.CrashHandler;
@@ -38,6 +42,23 @@ public class App extends Application {
             e.printStackTrace();
         }
         return 1;
+    }
+
+    @Override
+    public Resources getResources() {
+        Resources resources = super.getResources();
+        Configuration configuration = resources.getConfiguration();
+        float defaultValue = 1.0f;
+        if (configuration.fontScale != defaultValue) {
+            configuration.fontScale = defaultValue;
+            resources.updateConfiguration(configuration, resources.getDisplayMetrics());
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                createConfigurationContext(configuration);
+            }
+            return resources;
+        }
+        return resources;
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.zy.ppmusic.mvp.view
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.animation.AlphaAnimation
@@ -23,7 +24,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         App.getInstance().createActivity(this)
 
         val animation = AnimationSet(true)
-        val alphaAnim = AlphaAnimation(0f, 1f)
+        val alphaAnim = AlphaAnimation(0.4f,1f)
         alphaAnim.fillAfter = true
         alphaAnim.duration = 1500
         animation.addAnimation(alphaAnim)
@@ -31,11 +32,9 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         tv_splash_open.animation = animation
         animation.start()
         animation.setAnimationListener(object : Animation.AnimationListener {
-            override fun onAnimationRepeat(a: Animation?) {
-            }
+            override fun onAnimationRepeat(a: Animation?) = Unit
 
-            override fun onAnimationStart(a: Animation?) {
-            }
+            override fun onAnimationStart(a: Animation?) = Unit
 
             override fun onAnimationEnd(a: Animation?) =
                     if (EasyPermissions.hasPermissions(applicationContext, getString(R.string.string_read_external)
@@ -48,6 +47,8 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
                     }
         })
     }
+
+    override fun getResources(): Resources  = App.getInstance().resources
 
     fun actionToMain() {
         val mediaIntent = Intent(this, MediaActivity::class.java)
@@ -105,9 +106,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         }
     }
 
-    override fun onPermissionsGranted(requestCode: Int, perms: List<String>?) {
-        actionToMain()
-    }
+    override fun onPermissionsGranted(requestCode: Int, perms: List<String>?) = actionToMain()
 
     override fun onStop() {
         super.onStop()

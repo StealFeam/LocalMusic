@@ -513,21 +513,19 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     /**
      * 获取当前倒计时长度
      */
-    private fun getCurrentTimeClockLength(position: Int): Int {
-        //如果处于倒计时状态，第一条为取消倒计时
-        return if (mTimeClockAdapter!!.isTick) {
-            //发送停止倒计时，隐藏倒计时文本
-            if (position == 0) {
-                mPresenter!!.sendCustomAction(mMediaController, MediaService.ACTION_STOP_COUNT_DOWN, null)
-                mBorderTextView?.hide()
-                0
+    private fun getCurrentTimeClockLength(position: Int): Int =//如果处于倒计时状态，第一条为取消倒计时
+            if (mTimeClockAdapter!!.isTick) {
+                //发送停止倒计时，隐藏倒计时文本
+                if (position == 0) {
+                    mPresenter!!.sendCustomAction(mMediaController, MediaService.ACTION_STOP_COUNT_DOWN, null)
+                    mBorderTextView?.hide()
+                    0
+                } else {
+                    mTimeClockAdapter!!.getItem(position - 1)
+                }
             } else {
-                mTimeClockAdapter!!.getItem(position - 1)
+                mTimeClockAdapter!!.getItem(position)
             }
-        } else {
-            mTimeClockAdapter!!.getItem(position)
-        }
-    }
 
     override fun checkConnection() {
         if (mMediaBrowser?.isConnected!!.not()) {
@@ -551,15 +549,13 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
     }
 
-    private fun updateHead() {
-        if (mHeadAdapter == null) {
-            mHeadAdapter = MediaHeadAdapter(supportFragmentManager, DataTransform.getInstance().pathList)
-            vp_show_media_head.offscreenPageLimit = 1
-            vp_show_media_head.addOnPageChangeListener(mHeadChangeListener)
-            vp_show_media_head.adapter = mHeadAdapter
-        } else {
-            mHeadAdapter!!.setPathList(DataTransform.getInstance().pathList)
-        }
+    private fun updateHead() = if (mHeadAdapter == null) {
+        mHeadAdapter = MediaHeadAdapter(supportFragmentManager, DataTransform.getInstance().pathList)
+        vp_show_media_head.offscreenPageLimit = 1
+        vp_show_media_head.addOnPageChangeListener(mHeadChangeListener)
+        vp_show_media_head.adapter = mHeadAdapter
+    } else {
+        mHeadAdapter!!.setPathList(DataTransform.getInstance().pathList)
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -592,17 +588,23 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }, 100)
     }
 
+    private var mLoadingDialogFragment:LoadingDialogFragment ?= null
+
     /**
      * 显示加载框
      */
     override fun showLoading() {
         PrintLog.d("showLoading")
-        if (mLoadingDialog == null) {
-            mLoadingDialog = LoadingDialog(this)
+//        if (mLoadingDialog == null) {
+//            mLoadingDialog = LoadingDialog(this)
+//        }
+//        mLoadingDialog?.setCancelable(false)
+//        mLoadingDialog!!.show()
+        if(mLoadingDialogFragment == null){
+            mLoadingDialogFragment = LoadingDialogFragment()
         }
-        mLoadingDialog?.setCancelable(false)
-        mLoadingDialog!!.show()
-        showMsg("加载中....")
+        mLoadingDialogFragment?.isCancelable = false
+        mLoadingDialogFragment?.show(supportFragmentManager,"loading")
     }
 
     /**
@@ -610,10 +612,9 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      */
     override fun hideLoading() {
         PrintLog.d("hideLoading")
-        if (mLoadingDialog != null) {
-            mLoadingDialog!!.hide()
+        if (mLoadingDialogFragment != null && mLoadingDialogFragment!!.isVisible) {
+            mLoadingDialogFragment!!.dismiss()
         }
-        showMsg("加载完成")
     }
 
     /**
@@ -730,9 +731,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
 
         //播放列表加载失败
-        override fun onError(parentId: String) {
-            PrintLog.print("SubscriptionCallback onError called.....")
-        }
+        override fun onError(parentId: String) =
+                PrintLog.print("SubscriptionCallback onError called.....")
     }
 
     /**
@@ -952,6 +952,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     override fun onStop() {
         super.onStop()
         PrintLog.print("onStop called")
+        //正常按键返回退出调用
         if (isFinishing) {
             disConnectService()
         }
@@ -959,6 +960,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
     override fun onDestroy() {
         super.onDestroy()
+        //配置发生变化获取其他意外终止
+        disConnectService()
         PrintLog.print("MediaActivity is destroy")
         ViewCompat.setBackground(media_title_tint, null)
         ViewCompat.setBackground(vp_show_media_head, null)

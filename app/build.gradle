@@ -2,14 +2,16 @@ apply plugin: 'com.android.application'
 apply plugin: 'org.greenrobot.greendao'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 27
     buildToolsVersion "27.0.3"
+
     defaultConfig {
         applicationId "com.zy.ppmusic"
         minSdkVersion 16
-        targetSdkVersion 27
+        targetSdkVersion 24
         versionCode 8
         versionName "1.0.7"
         resConfigs 'zh'
@@ -22,26 +24,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         applicationVariants.all { variant ->
-            variant.outputs.all {
+            variant.outputs.each { output ->
                 if (variant.buildType.name == 'release') {
-                    if (variant.versionName != null) {
-                        String name = "local_music_release_${variant.versionName}_${variant.versionCode}_"
-                        if (!variant.signingReady) {
-                            name += "_unsigned"
-                        }
-                        name += getDate() + ".apk"
-                        outputFileName = name
+                    String name = "love_music_r_${variant.versionCode}_"
+                    if (!variant.signingReady) {
+                        name += "_unsigned"
                     }
+                    name += ".apk"
+//                        output.outputFileName = name
+                    output.outputFile = new File(output.outputFile.parent, name)
                 }
                 if (variant.buildType.name == 'debug') {
-                    if (variant.versionName != null) {
-                        String name = "local_music_debug_${variant.versionName}_${variant.versionCode}_"
-                        if (!variant.signingReady) {
-                            name += "_unsigned"
-                        }
-                        name += getDate() + ".apk"
-                        outputFileName = name
-                    }
+                    String name = "love_music_d_${variant.versionCode}.apk"
+//                        output.outputFileName = name
+                    output.outputFile = new File(output.outputFile.parent, name)
                 }
             }
         }
@@ -56,49 +52,47 @@ android {
         daoPackage 'com.zy.ppmusic.data.db.dao'
         targetGenDir 'src/main/java'
     }
-}
-
-static def getDate() {
-    def date = new Date()
-    def dateFormat = date.format("yyyyMMddHHmmss")
-    return dateFormat
+    compileOptions {
+        sourceCompatibility 1.7
+        targetCompatibility 1.7
+    }
 }
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     //    java测试库
-    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    testImplementation 'junit:junit:4.12'
-    testImplementation 'org.mockito:mockito-core:2.11.0'
-    testImplementation "org.powermock:powermock-module-junit4:1.7.3"
-    testImplementation "org.powermock:powermock-module-junit4-rule:1.7.3"
-    testImplementation "org.powermock:powermock-api-mockito2:1.7.3" //注意这里是mockito2
-    testImplementation "org.powermock:powermock-classloading-xstream:1.7.3"
-
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:2.11.0'
+    testCompile 'org.powermock:powermock-module-junit4:1.7.3'
+    testCompile 'org.powermock:powermock-module-junit4-rule:1.7.3'
+    //注意这里是mockito2
+    testCompile 'org.powermock:powermock-api-mockito2:1.7.3'
+    testCompile 'org.powermock:powermock-classloading-xstream:1.7.3'
     //    系统库 双引号代表可以使用表达式
-    implementation "com.android.support:cardview-v7:${rootProject.ext.compileToolsVersion}"
-    implementation "com.android.support:design:${rootProject.ext.compileToolsVersion}"
-    implementation 'com.android.support:support-v4:27.1.0'
+    compile "com.android.support:cardview-v7:${rootProject.ext.compileToolsVersion}"
+    compile "com.android.support:design:${rootProject.ext.compileToolsVersion}"
+    compile 'com.android.support:support-v4:27.1.1'
     //由EasyPermission提供
-    //implementation 'com.android.support:appcompat-v7:27.0.2'
+    compile "com.android.support:appcompat-v7:${rootProject.ext.compileToolsVersion}"
     //    Glide相关
-    implementation 'com.github.bumptech.glide:glide:4.5.0'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.5.0'
-    implementation 'jp.wasabeef:glide-transformations:2.0.2'
+    compile 'com.github.bumptech.glide:glide:4.7.1'
+    kapt 'com.github.bumptech.glide:compiler:4.7.1'
+    compile 'jp.wasabeef:glide-transformations:2.0.2'
     //  kotlin支持
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     //    constraint库
-    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
     //    greendao数据库
-    implementation 'org.greenrobot:greendao:3.2.2'
+    compile 'org.greenrobot:greendao:3.2.2'
     //    权限申请库
-    implementation project(':easypermissions')
+    compile project(':easypermissions')
     //ViewModel and LiveData
-    implementation 'android.arch.lifecycle:extensions:1.1.1'
-    annotationProcessor "android.arch.lifecycle:compiler:1.1.1"
+    compile 'android.arch.lifecycle:extensions:1.1.1'
+    kapt "android.arch.lifecycle:compiler:1.1.1"
     //leak检测
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'
-    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
+    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.5.4'
+    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
 }

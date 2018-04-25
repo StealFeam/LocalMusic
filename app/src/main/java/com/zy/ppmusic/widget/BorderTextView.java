@@ -45,7 +45,6 @@ public class BorderTextView extends AppCompatTextView implements ViewGroup.OnHie
             getBackground().setBounds(0,0,getBackground().getIntrinsicWidth() - 10,getBackground().getIntrinsicHeight());
             this.setTextColor(Color.WHITE);
             this.setPadding(10, 10, 0, 10);
-            Log.e(TAG, "show: AddView.....");
         }
         setText(text);
     }

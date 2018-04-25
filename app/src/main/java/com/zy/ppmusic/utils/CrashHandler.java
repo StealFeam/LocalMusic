@@ -53,6 +53,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
         }
         PrintLog.print(e.getMessage());
         Intent it = new Intent(mContext, ErrorActivity.class);
+        it.putExtra(ErrorActivity.Companion.getERROR_INFO(),e);
         it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
         mContext.startActivity(it);
         Process.killProcess(Process.myPid());
