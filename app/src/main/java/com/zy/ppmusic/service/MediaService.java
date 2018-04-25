@@ -838,7 +838,9 @@ public class MediaService extends MediaBrowserServiceCompat {
         @Override
         public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
             KeyEvent notificationKeyEvent = mediaButtonEvent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
-            if (notificationKeyEvent.getAction() == KeyEvent.ACTION_UP) {
+            if (notificationKeyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+                Log.w(TAG, "onMediaButtonEvent: up=" + notificationKeyEvent.getAction() +
+                        ",code=" + notificationKeyEvent.getKeyCode());
                 switch (notificationKeyEvent.getKeyCode()) {
                     //点击下一首
                     case KeyEvent.KEYCODE_MEDIA_NEXT:
@@ -854,11 +856,9 @@ public class MediaService extends MediaBrowserServiceCompat {
                         break;
                     //有线耳机 暂支持下一首
                     case KeyEvent.KEYCODE_HEADSETHOOK:
-                        long secondMis = 300;
-                        if (notificationKeyEvent.getEventTime() - mHeadSetDownTime > secondMis) {
-                            changeMediaByMode(true, false);
-                        } else {
-                            handlePlayOrPauseRequest();
+                        if (mLastDownTime != notificationKeyEvent.getDownTime()) {
+                            mHeadSetDownTime = notificationKeyEvent.getEventTime();
+                            mLastDownTime = notificationKeyEvent.getDownTime();
                         }
                         break;
                     //点击播放按钮
@@ -873,10 +873,12 @@ public class MediaService extends MediaBrowserServiceCompat {
             } else {
                 //TODO 如果有线耳机上的播放键长按了300毫秒以上，则视为下一首
                 if (notificationKeyEvent.getKeyCode() == KeyEvent.KEYCODE_HEADSETHOOK &&
-                        notificationKeyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-                    if (mLastDownTime != notificationKeyEvent.getDownTime()) {
-                        mHeadSetDownTime = notificationKeyEvent.getEventTime();
-                        mLastDownTime = notificationKeyEvent.getDownTime();
+                        notificationKeyEvent.getAction() == KeyEvent.ACTION_UP) {
+                    long secondMis = 300;
+                    if (notificationKeyEvent.getEventTime() - mHeadSetDownTime > secondMis) {
+                        changeMediaByMode(true, false);
+                    } else {
+                        handlePlayOrPauseRequest();
                     }
                 }
                 Log.w(TAG, "onMediaButtonEvent: action=" + notificationKeyEvent.getAction() +

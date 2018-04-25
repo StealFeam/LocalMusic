@@ -25,7 +25,7 @@ import com.zy.ppmusic.R;
  * @author ZhiTouPC
  */
 public class NotificationUtils {
-    private static final String TAG = "正在播放通知";
+    private static final String TAG = "NotificationUtils";
     /**
      * 通知的id
      */
@@ -121,7 +121,7 @@ public class NotificationUtils {
             }
             builder = new NotificationCompat.Builder(context,notificationChannel.getId());
         }else{
-            builder = new NotificationCompat.Builder(context, TAG);
+            builder = new NotificationCompat.Builder(context, String.valueOf(NOTIFY_ID));
         }
         builder.setSmallIcon(R.drawable.ic_small_notify);
         builder.setCustomContentView(contentView);
