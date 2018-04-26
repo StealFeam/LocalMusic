@@ -104,7 +104,7 @@ public class WaveRefreshView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if (isStoped) {
+        if (isStopped) {
             return;
         }
         for (int i = 0; i < lineRectF.length; i++) {
@@ -157,7 +157,7 @@ public class WaveRefreshView extends View {
     }
 
     private ValueAnimator animator;
-    private boolean isStoped = true;
+    private boolean isStopped = true;
 
     public void startAnim() {
         stopRunningAnim();
@@ -172,7 +172,7 @@ public class WaveRefreshView extends View {
             }
         });
         animator.start();
-        isStoped = false;
+        isStopped = false;
     }
 
     public void clearReference() {
@@ -183,7 +183,7 @@ public class WaveRefreshView extends View {
         if (animator != null && animator.isRunning()) {
             animator.cancel();
             animator = null;
-            isStoped = true;
+            isStopped = true;
         }
     }
 
