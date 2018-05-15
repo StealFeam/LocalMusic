@@ -210,7 +210,8 @@ public class DataTransform {
     private void reQueryList(List<String> list) {
         MediaMetadataCompat.Builder builder;
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        for (int i = 0; i < list.size(); i++) {
+        int listSize = list.size();
+        for (int i = 0; i < listSize; i++) {
             String itemPath = list.get(i);
             if (!this.pathList.contains(itemPath)) {
                 retriever.setDataSource(itemPath);
@@ -279,7 +280,8 @@ public class DataTransform {
         clearData();
         this.musicInfoEntities = localList;
         MediaMetadataCompat metadataCompatItem;
-        for (int i = 0; i < musicInfoEntities.size(); i++) {
+        int dataSize = musicInfoEntities.size();
+        for (int i = 0; i < dataSize; i++) {
             MusicInfoEntity itemEntity = musicInfoEntities.get(i);
             pathList.add(itemEntity.getQueryPath());
             mediaIdList.add(itemEntity.getMediaId());

@@ -43,6 +43,10 @@ public class MediaPresenterImpl extends IMediaActivityContract.AbstractMediaActi
 
     @Override
     public void refreshQueue(final Context context, boolean isRefresh) {
+        if (mView.get() == null) {
+            PrintLog.i("view is null");
+            return;
+        }
         mView.get().showLoading();
         //重新扫描本地文件或者初次扫描
         if (isRefresh) {

@@ -60,6 +60,12 @@ public class MediaHeadFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
         if (getActivity() != null) {
             if (mViewModel == null) {
                 ViewModelProvider provider = new ViewModelProvider(getActivity(),
@@ -74,11 +80,10 @@ public class MediaHeadFragment extends Fragment {
         }
     }
 
-
-
     @Nullable
     @Override
-    public View onCreateView(@NotNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NotNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_media_head, container, false);
         mHeadImageView = rootView.findViewById(R.id.iv_media_head);
         try {

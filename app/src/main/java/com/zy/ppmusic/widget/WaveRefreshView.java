@@ -163,7 +163,6 @@ public class WaveRefreshView extends View {
         stopRunningAnim();
         animator = ValueAnimator.ofFloat(0, maxChange);
         animator.setDuration(1000);
-        animator.setRepeatMode(ValueAnimator.REVERSE);
         animator.setRepeatCount(-1);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override

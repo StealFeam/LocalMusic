@@ -67,8 +67,8 @@ public class App extends Application {
         mAppInstance = this;
         StrictMode.enableDefaults();
         LeakCanary.install(this);
-        CrashHandler handler = new CrashHandler(this);
-        handler.attach();
+//        CrashHandler handler = new CrashHandler(this);
+//        handler.attach();
     }
 
     public Context getContext() {

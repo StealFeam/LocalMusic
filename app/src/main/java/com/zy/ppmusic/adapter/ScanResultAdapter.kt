@@ -145,7 +145,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
     class TitleHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var title: TextView? = null
         init {
-            title = itemView.findViewById(R.id.tv_scan_result_title)
+            title = itemView.findViewById(R.id.tv_scan_result_title) as TextView?
         }
     }
 
@@ -169,10 +169,10 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
         init {
             this.listener = l
             itemView.setOnClickListener(this)
-            icon = itemView.findViewById(R.id.iv_scan_result_icon)
-            name = itemView.findViewById(R.id.tv_scan_result_name)
-            tvState = itemView.findViewById(R.id.tv_connect_state)
-            delBond = itemView.findViewById(R.id.bl_del_bond_iv)
+            icon = itemView.findViewById(R.id.iv_scan_result_icon) as ImageView?
+            name = itemView.findViewById(R.id.tv_scan_result_name) as TextView?
+            tvState = itemView.findViewById(R.id.tv_connect_state) as TextView?
+            delBond = itemView.findViewById(R.id.bl_del_bond_iv) as ImageView?
             delBond!!.setOnClickListener(this)
         }
 

@@ -2,10 +2,14 @@ package com.zy.ppmusic.mvp.view
 
 import android.annotation.SuppressLint
 import android.arch.lifecycle.ViewModelProvider
+import android.arch.lifecycle.ViewModelStore
 import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
-import android.os.*
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.ResultReceiver
 import android.support.design.widget.BottomSheetDialog
 import android.support.v4.content.ContextCompat
 import android.support.v4.media.MediaBrowserCompat
@@ -21,7 +25,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.ListPopupWindow
 import android.support.v7.widget.RecyclerView
 import android.view.*
-import android.widget.FrameLayout
+import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
 import com.zy.ppmusic.App
@@ -137,7 +141,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 记录循环是否已经开始
      */
     private var isStarted = false
-
 
     /**
      * 接收媒体服务回传的信息，这里处理的是当前播放的位置和进度
@@ -273,18 +276,19 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 }
                 PrintLog.i("-----------ViewPager index 更新 ${vp_show_media_head.currentItem}")
                 val currentMediaId = DataTransform.getInstance().mediaIdList[vp_show_media_head.currentItem]
-                if (StringUtils.ifEquals(currentMediaId, mCurrentMediaIdStr)) {
+                if (StringUtils.ifEquals(currentMediaId, mCurrentMediaIdStr) || mPlayQueueList == null) {
                     return
                 }
                 mPresenter!!.skipToPosition(mMediaController, vp_show_media_head.currentItem.toLong())
                 updateQueueSize(mPlayQueueList!!.size, vp_show_media_head.currentItem + 1)
             }
         }
+
         /**
          * 直接跳转到最后一个或者第一个只有这个
          */
         override fun onPageSelected(position: Int) {
-            onPageScrolled(position,0f,0)
+            onPageScrolled(position, 0f, 0)
             println("dragIndex====$dragBeforeIndex but now position is $position")
         }
     }
@@ -352,8 +356,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
         if (mBottomQueueContentView == null) {
             mBottomQueueContentView = LayoutInflater.from(this).inflate(R.layout.play_queue_layout, null)
-            mQueueRecycler = mBottomQueueContentView?.findViewById(R.id.control_queue_recycle)
-            mQueueCountTv = mBottomQueueContentView?.findViewById(R.id.control_queue_count)
+            mQueueRecycler = mBottomQueueContentView?.findViewById(R.id.control_queue_recycle) as RecyclerView?
+            mQueueCountTv = mBottomQueueContentView?.findViewById(R.id.control_queue_count) as TextView?
         } else {
             val parent = mBottomQueueContentView?.parent as ViewGroup
             parent.removeView(mBottomQueueContentView)
@@ -451,7 +455,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     private fun createTimeClockDialog() {
         mTimeClockDialog = BottomSheetDialog(this)
         mTimeContentView = LayoutInflater.from(this).inflate(R.layout.layout_time_lock, null)
-        mTimeClockRecycler = mTimeContentView?.findViewById(R.id.time_selector_recycler)
+        mTimeClockRecycler = mTimeContentView?.findViewById(R.id.time_selector_recycler) as RecyclerView?
         mTimeClockRecycler?.layoutManager = LinearLayoutManager(this)
         mTimeClockAdapter = TimeClockAdapter()
         mTimeClockAdapter?.setOnItemClickListener { _, position ->
@@ -472,20 +476,20 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
         mTimeClockRecycler?.adapter = mTimeClockAdapter
 
-        val lengthSeekBar = mTimeContentView?.findViewById<SeekBar>(R.id.time_selector_seek_bar)
-        val progressHintTv = mTimeContentView?.findViewById<TextView>(R.id.time_selector_progress_hint_tv)
-        progressHintTv?.visibility = View.VISIBLE
-        progressHintTv?.text = String.format(Locale.CHINA, "%d", (lengthSeekBar!!.progress + 1))
+        val lengthSeekBar = mTimeContentView?.findViewById(R.id.time_selector_seek_bar) as SeekBar
+        val progressHintTv = mTimeContentView?.findViewById(R.id.time_selector_progress_hint_tv) as TextView
+        progressHintTv.visibility = View.VISIBLE
+        progressHintTv.text = String.format(Locale.CHINA, "%d", (lengthSeekBar.progress + 1))
         lengthSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             var percent = 0f
             override fun onProgressChanged(s: SeekBar?, progress: Int, fromUser: Boolean) {
-                progressHintTv?.translationX = percent * progress
-                progressHintTv?.text = String.format(Locale.CHINA, "%d", (progress + 1))
+                progressHintTv.translationX = percent * progress
+                progressHintTv.text = String.format(Locale.CHINA, "%d", (progress + 1))
             }
 
             override fun onStartTrackingTouch(s: SeekBar?) {
                 val transXRound = (s!!.measuredWidth - s.paddingLeft - s.paddingRight
-                        + progressHintTv!!.measuredWidth / 2).toFloat()
+                        + progressHintTv.measuredWidth / 2).toFloat()
                 val mMaxProgress = s.max.toFloat()
                 percent = transXRound / mMaxProgress
                 progressHintTv.visibility = View.VISIBLE
@@ -493,11 +497,11 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
             override fun onStopTrackingTouch(s: SeekBar?) {
                 mTimeClockRecycler?.postDelayed({
-                    progressHintTv?.visibility = View.INVISIBLE
+                    progressHintTv.visibility = View.INVISIBLE
                 }, 1000)
             }
         })
-        val btnSure = mTimeContentView?.findViewById<View>(R.id.time_selector_sure_btn)
+        val btnSure = mTimeContentView?.findViewById<Button>(R.id.time_selector_sure_btn)
         btnSure?.setOnClickListener {
             val bundle = Bundle()
             bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME,
@@ -508,6 +512,14 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
         mTimeClockDialog?.setContentView(mTimeContentView)
         mTimeClockDialog?.show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        //延迟加载数据
+        vp_show_media_head.postDelayed({
+            mPresenter?.refreshQueue(this, false)
+        }, 100)
     }
 
     /**
@@ -570,25 +582,19 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 首次加载完成
      */
     override fun loadFinished() {
+        connectMediaService()
+    }
+
+    private fun connectMediaService() {
         if (mMediaBrowser == null) {
             val serviceComponentName = ComponentName(this, MediaService::class.java)
             mMediaBrowser = MediaBrowserCompat(this, serviceComponentName, mConnectionCallBack, null)
         }
-        if (mMediaBrowser!!.isConnected) {
-            mMediaBrowser?.disconnect()
-        }
-        mMediaBrowser?.connect()
+        mMediaBrowser!!.disconnect()
+        mMediaBrowser!!.connect()
     }
 
-    override fun onStart() {
-        super.onStart()
-        //延迟加载数据
-        vp_show_media_head.postDelayed({
-            mPresenter?.refreshQueue(this, false)
-        }, 100)
-    }
-
-    private var mLoadingDialogFragment:LoadingDialogFragment ?= null
+    private var mLoadingDialogFragment: LoadingDialogFragment? = null
 
     /**
      * 显示加载框
@@ -600,11 +606,15 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 //        }
 //        mLoadingDialog?.setCancelable(false)
 //        mLoadingDialog!!.show()
-        if(mLoadingDialogFragment == null){
+
+        if (mLoadingDialogFragment == null) {
             mLoadingDialogFragment = LoadingDialogFragment()
         }
         mLoadingDialogFragment?.isCancelable = false
-        mLoadingDialogFragment?.show(supportFragmentManager,"loading")
+        //判断当前页面的状态是否不可见
+        if (!supportFragmentManager.isStateSaved && !mLoadingDialogFragment!!.isAdded) {
+            mLoadingDialogFragment?.show(supportFragmentManager, "loading")
+        }
     }
 
     /**
@@ -613,7 +623,9 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     override fun hideLoading() {
         PrintLog.d("hideLoading")
         if (mLoadingDialogFragment != null && mLoadingDialogFragment!!.isVisible) {
+//            if (!supportFragmentManager.isStateSaved) {
             mLoadingDialogFragment!!.dismiss()
+//            }
         }
     }
 
@@ -646,6 +658,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         override fun onConnectionFailed() {
             super.onConnectionFailed()
             PrintLog.print("onConnectionFailed.....")
+            connectMediaService()
         }
     }
 
@@ -874,8 +887,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
     private fun createModelIfNeed() {
         if (mPlayStateModel == null) {
-            val provider = ViewModelProvider(this,
-                    ViewModelProvider.AndroidViewModelFactory(App.getInstance()))
+            val viewModelStore = ViewModelStore()
+            val provider = ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(App.getInstance()))
             mPlayStateModel = provider.get(HeadViewModel::class.java)
         }
     }
@@ -930,21 +943,21 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 断开媒体服务
      */
     private fun disConnectService() {
+        //停止进度更新
+        stopLoop()
         //释放控制器
         if (mMediaController != null) {
             mMediaController!!.unregisterCallback(mControllerCallBack)
             mMediaController = null
             MediaControllerCompat.setMediaController(this, null)
         }
-        //停止进度更新
-        stopLoop()
         //取消播放状态监听
         if (mMediaBrowser != null) {
             if (mMediaBrowser?.root != null) {
-                mMediaBrowser?.unsubscribe(mMediaBrowser!!.root, subscriptionCallBack)
+                mMediaBrowser!!.unsubscribe(mMediaBrowser!!.root, subscriptionCallBack)
             }
             //断开与媒体服务的链接
-            mMediaBrowser?.disconnect()
+            mMediaBrowser!!.disconnect()
             mMediaBrowser = null
         }
     }
@@ -953,9 +966,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         super.onStop()
         PrintLog.print("onStop called")
         //正常按键返回退出调用
-        if (isFinishing) {
-            disConnectService()
-        }
+        disConnectService()
     }
 
     override fun onDestroy() {
@@ -980,8 +991,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             mBottomQueueDialog = null
             mBottomQueueAdapter = null
         }
-        //释放加载中弹窗
-        findViewById<FrameLayout>(android.R.id.content).removeAllViews()
         //释放循环模式弹窗
         if (mBottomLoopModePop != null) {
             if (mBottomLoopModePop!!.isShowing) {

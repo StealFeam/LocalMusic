@@ -35,6 +35,7 @@ public class LoopService extends IntentService{
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
+        PrintLog.e("onHandleIntent....."+(intent == null?"intent为空":intent.toString()));
         while(loopStart){
             LocalBroadcastManager.getInstance(this).sendBroadcast(
                     new Intent(ACTION));
@@ -50,12 +51,17 @@ public class LoopService extends IntentService{
     @Override
     public boolean stopService(Intent name) {
         loopStart = false;
+        PrintLog.e("stopService....."+name.toString());
         return super.stopService(name);
     }
 
     @Override
     public void onDestroy() {
+        if(loopStart){
+            loopStart = false;
+            stopSelf();
+        }
         super.onDestroy();
-        PrintLog.i("loop stop ... ");
+        PrintLog.i("loop destroy ... "+loopStart);
     }
 }

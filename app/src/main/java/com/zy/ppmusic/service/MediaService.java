@@ -32,9 +32,11 @@ import com.zy.ppmusic.receiver.AudioBecomingNoisyReceiver;
 import com.zy.ppmusic.receiver.LoopReceiver;
 import com.zy.ppmusic.utils.DataTransform;
 import com.zy.ppmusic.utils.FileUtils;
+import com.zy.ppmusic.utils.LocalCacheMediaLoader;
 import com.zy.ppmusic.utils.NotificationUtils;
 import com.zy.ppmusic.utils.PlayBack;
 import com.zy.ppmusic.utils.PrintLog;
+import com.zy.ppmusic.utils.ScanMusicFile;
 import com.zy.ppmusic.utils.StringUtils;
 import com.zy.ppmusic.utils.TimerUtils;
 
@@ -165,12 +167,15 @@ public class MediaService extends MediaBrowserServiceCompat {
     /**
      * 当前播放的媒体
      */
-    private MediaSessionCompat.QueueItem mCurrentMedia;
+    private volatile MediaSessionCompat.QueueItem mCurrentMedia;
     /**
      * 音频监听
      */
     private AudioBecomingNoisyReceiver mAudioReceiver;
-    private boolean mServiceStarted;
+    /**
+     * 纪录service启动状态，若启动后被杀死则不会重启
+     */
+    private static boolean IS_SERVICE_STARTED = false;
     /**
      * 倒计时
      */
@@ -195,8 +200,6 @@ public class MediaService extends MediaBrowserServiceCompat {
     private IntentFilter filter = new IntentFilter(LoopService.ACTION);
     private LoopReceiver receiver;
     private Handler mHandler = new Handler();
-
-
     private AudioNoisyCallBack audioCallBack = new AudioNoisyCallBack() {
         @Override
         public void comingNoisy() {
@@ -228,6 +231,13 @@ public class MediaService extends MediaBrowserServiceCompat {
     @Override
     public void onCreate() {
         super.onCreate();
+        PrintLog.e("onCreate----------");
+        if (!IS_SERVICE_STARTED) {
+            PrintLog.e("启动Service。。。。。");
+            stopSelf();
+            startService(new Intent(getBaseContext(), MediaService.class));
+            IS_SERVICE_STARTED = true;
+        }
         if (mMediaSessionCompat == null) {
             mMediaSessionCompat = new MediaSessionCompat(this, TAG);
         }
@@ -244,11 +254,6 @@ public class MediaService extends MediaBrowserServiceCompat {
 
         mMediaSessionCompat.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE);
 
-        if (!mServiceStarted) {
-            startService(new Intent(getBaseContext(), MediaService.class));
-            mServiceStarted = true;
-        }
-
         if (!mMediaSessionCompat.isActive()) {
             mMediaSessionCompat.setActive(true);
         }
@@ -261,20 +266,19 @@ public class MediaService extends MediaBrowserServiceCompat {
 
         mAudioReceiver = new AudioBecomingNoisyReceiver(this);
 
-        mBackgroundPool = new ThreadPoolExecutor(2, 2,
-                0L, TimeUnit.MILLISECONDS,
+        mBackgroundPool = new ThreadPoolExecutor(2, 2, 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
             @Override
             public Thread newThread(@NonNull Runnable r) {
                 return new Thread(r, TAG);
             }
         });
-
     }
+
 
     @Override
     public IBinder onBind(Intent intent) {
-        PrintLog.e("服务已绑定");
+        PrintLog.e("onBind-----" + intent.toString());
         return super.onBind(intent);
     }
 
@@ -309,16 +313,17 @@ public class MediaService extends MediaBrowserServiceCompat {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        PrintLog.e("service onStartCommand");
+        Log.d(TAG, "onStartCommand() called with: intent = [" + intent + "], flags = [" + flags + "], startId = [" + startId + "]");
         initPlayBack();
         //也可以在这接收通知按钮的event事件
         MediaButtonReceiver.handleIntent(mMediaSessionCompat, intent);
-        return START_NOT_STICKY;
+        return START_STICKY;
     }
 
     @Nullable
     @Override
     public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUId, @Nullable Bundle bundle) {
+        Log.d(TAG, "onGetRoot() called with: clientPackageName = [" + clientPackageName + "], clientUId = [" + clientUId + "], bundle = [" + bundle + "]");
         if (clientPackageName.equals(getPackageName())) {
             return new BrowserRoot(clientPackageName, bundle);
         } else {
@@ -335,9 +340,31 @@ public class MediaService extends MediaBrowserServiceCompat {
                 ArrayList<MediaBrowserCompat.MediaItem> list = DataTransform.getInstance().getMediaItemList();
                 if (list != null) {
                     mMediaItemList = list;
+                    result.sendResult(list);
                     PrintLog.print("load list size ... " + mMediaItemList.size());
+                } else {
+                    mBackgroundPool.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            LocalCacheMediaLoader localCacheMediaLoader = new LocalCacheMediaLoader();
+                            List<String> mediaPaths = localCacheMediaLoader.getMediaPaths();
+                            if (mediaPaths != null) {
+                                PrintLog.e("加载本地数据了");
+                                mMediaItemList = DataTransform.getInstance().getMediaItemList();
+                                result.sendResult(mMediaItemList);
+                            } else {
+                                ScanMusicFile.getInstance().setOnScanComplete(new ScanMusicFile.AbstractOnScanComplete() {
+                                    @Override
+                                    protected void onComplete(ArrayList<String> paths) {
+                                        PrintLog.e("扫描本地数据了");
+                                        DataTransform.getInstance().transFormData(getApplicationContext(), paths);
+                                        result.sendResult(mMediaItemList);
+                                    }
+                                }).scanMusicFile(getApplicationContext());
+                            }
+                        }
+                    });
                 }
-                result.sendResult(list);
             } else {
                 result.sendResult(mMediaItemList);
             }
@@ -362,7 +389,9 @@ public class MediaService extends MediaBrowserServiceCompat {
                 handlePlayOrPauseRequest();
             }
             savePlayingRecord();
-            mBackgroundPool.submit(mUpdateQueueRunnable);
+            if (mUpdateQueueRunnable != null) {
+                mBackgroundPool.submit(mUpdateQueueRunnable);
+            }
             NotificationUtils.cancelNotify(this, NotificationUtils.NOTIFY_ID);
             mMediaSessionCompat.setActive(false);
             mMediaSessionCompat.release();
@@ -379,6 +408,14 @@ public class MediaService extends MediaBrowserServiceCompat {
      * @param isComplete 调用是否来自歌曲播放完成
      */
     private void changeMediaByMode(boolean isNext, boolean isComplete) {
+        if (mPlayBack == null) {
+            Log.e(TAG, "changeMediaByMode: playback is null");
+            PrintLog.d("尝试启动界面");
+            stopSelf();
+            startActivity(new Intent(getApplicationContext(),MediaActivity.class));
+            IS_SERVICE_STARTED = false;
+            return;
+        }
         Log.e(TAG, "changeMediaByMode: " + mMediaSessionCompat.getController().getRepeatMode());
         //判断重复模式，单曲重复，随机播放，列表播放
         switch (mMediaSessionCompat.getController().getRepeatMode()) {
@@ -422,7 +459,7 @@ public class MediaService extends MediaBrowserServiceCompat {
         cacheEntity.setLastMediaId(mPlayBack.getCurrentMediaId());
         if (mCurrentMedia != null && mCurrentMedia.getDescription() != null) {
             if (mCurrentMedia.getDescription().getMediaUri() != null) {
-                cacheEntity.setLastMediaPath(mCurrentMedia.getDescription().getMediaUri().getPath());
+                    cacheEntity.setLastMediaPath(mCurrentMedia.getDescription().getMediaUri().getPath());
             }
             cacheEntity.setLastPlayAuthor(String.valueOf(mCurrentMedia.getDescription().getSubtitle()));
             cacheEntity.setLastPlayName(String.valueOf(mCurrentMedia.getDescription().getTitle()));
@@ -546,6 +583,9 @@ public class MediaService extends MediaBrowserServiceCompat {
      */
     public void handlePlayOrPauseRequest() {
         if (mCurrentMedia == null) {
+            stopSelf();
+            startActivity(new Intent(getApplicationContext(),MediaActivity.class));
+            IS_SERVICE_STARTED = false;
             return;
         }
         if (mPlayBack != null) {
@@ -555,10 +595,11 @@ public class MediaService extends MediaBrowserServiceCompat {
 
     @Override
     public boolean onUnbind(Intent intent) {
+        Log.d(TAG, "onUnbind() called with: intent = [" + intent + "]");
         //TODO 如果前台退出绑定，且没有播放媒体就让服务停止
-        if (mPlayBack != null && !mPlayBack.isPlaying()) {
-            handleStopRequest(true);
-        }
+//        if (mPlayBack != null && !mPlayBack.isPlaying()) {
+//            handleStopRequest(true);
+//        }
         return super.onUnbind(intent);
     }
 
@@ -566,6 +607,7 @@ public class MediaService extends MediaBrowserServiceCompat {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy() called");
+        IS_SERVICE_STARTED = false;
         NotificationUtils.cancelAllNotify(this);
         DataBaseManager.getInstance().closeConn();
         mAudioReceiver.unregister();
@@ -574,8 +616,10 @@ public class MediaService extends MediaBrowserServiceCompat {
             mCountDownTimer.stopTik();
             mCountDownTimer = null;
         }
-        mPlayBack.stopPlayer();
-        mPlayBack = null;
+        if (mPlayBack != null) {
+            mPlayBack.stopPlayer();
+            mPlayBack = null;
+        }
     }
 
     public void stopLoop() {
@@ -589,6 +633,7 @@ public class MediaService extends MediaBrowserServiceCompat {
         if (receiver == null) {
             receiver = new LoopReceiver(this);
         }
+        stopLoop();
         startService(new Intent(this, LoopService.class));
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver, filter);
     }
@@ -658,6 +703,10 @@ public class MediaService extends MediaBrowserServiceCompat {
                 return;
             }
             final MediaService mediaService = mWeakService.get();
+            final String mediaId = this.mediaId;
+            if (mediaId == null || mediaService.mPlayBack == null) {
+                return;
+            }
             //TODO 设置媒体信息
             MediaMetadataCompat track = DataTransform.getInstance().getMetadataCompatList().get(mediaId);
             //TODO 触发MediaControllerCompat.Callback->onMetadataChanged方法
@@ -865,6 +914,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                     case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                     case KeyEvent.KEYCODE_MEDIA_PAUSE:
                     case KeyEvent.KEYCODE_MEDIA_PLAY:
+                        Log.e(TAG, "onMediaButtonEvent: 点击了播放按钮");
                         handlePlayOrPauseRequest();
                         break;
                     default:
@@ -875,9 +925,12 @@ public class MediaService extends MediaBrowserServiceCompat {
                 if (notificationKeyEvent.getKeyCode() == KeyEvent.KEYCODE_HEADSETHOOK &&
                         notificationKeyEvent.getAction() == KeyEvent.ACTION_UP) {
                     long secondMis = 300;
+                    PrintLog.d("按钮抬起走了这里");
                     if (notificationKeyEvent.getEventTime() - mHeadSetDownTime > secondMis) {
                         changeMediaByMode(true, false);
+                        PrintLog.d("之后下一首");
                     } else {
+                        PrintLog.d("之后暂停或者播放");
                         handlePlayOrPauseRequest();
                     }
                 }
