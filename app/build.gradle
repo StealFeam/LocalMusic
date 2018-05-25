@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "com.zy.ppmusic"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 27
         versionCode 8
         versionName "1.0.7"

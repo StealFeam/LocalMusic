@@ -48,7 +48,6 @@ public class EasyPermissions {
         void onPermissionsGranted(int requestCode, List<String> perms);
 
         void onPermissionsDenied(int requestCode, List<String> perms);
-
     }
 
     private static final String TAG = "EasyPermissions";

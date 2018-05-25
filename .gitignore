@@ -10,9 +10,6 @@
 /bugreport.txt
 /.gradle
 
-#生成的apk
-*.apk
-
 #编译的字节文件
 *.class
 

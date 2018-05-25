@@ -1,18 +1,23 @@
 <resources>
 
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppBaseV21Theme" parent="AppBaseTheme">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorTheme</item>
-        <item name="colorPrimaryDark">@color/colorThemeDark</item>
-        <item name="colorAccent">@color/colorTheme</item>
-        <item name="android:windowBackground">@null</item>
         <item name="android:statusBarColor">@color/colorTheme</item>
         <item name="android:navigationBarColor">@color/colorTheme</item>
+        <item name="android:windowActivityTransitions">true</item>
+        <item name="android:windowContentTransitions">true</item>
+        <item name="android:windowAllowEnterTransitionOverlap">false</item>
+        <item name="android:windowAllowReturnTransitionOverlap">false</item>
     </style>
 
-    <style name="AppTheme.NoActionBar" parent="AppTheme">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+    <style name="AppTheme" parent="AppBaseV21Theme">
+
+    </style>
+
+    <style name="AppBaseNoBarV21Theme" parent="AppBaseNoBarTheme">
         <item name="android:statusBarColor">@color/colorTheme</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar" parent="AppBaseNoBarV21Theme">
     </style>
 </resources>

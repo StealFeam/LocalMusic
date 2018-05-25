@@ -24,6 +24,8 @@ import android.support.v7.view.menu.MenuBuilder
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.ListPopupWindow
 import android.support.v7.widget.RecyclerView
+import android.transition.Explode
+import android.transition.Slide
 import android.view.*
 import android.widget.Button
 import android.widget.SeekBar
@@ -52,7 +54,7 @@ import java.util.*
  *      2.SessionCompat.sendCommand(String,Bundle,ResultReceiver);//需要获取结果
  */
 class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActivityContract.IMediaActivityView {
-    private var mMediaBrowser: MediaBrowserCompat? = null
+    private var mMediaBrowser: MediaBrowserCompat ?= null
     /**
      * 媒体控制器
      */
@@ -64,7 +66,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     /**
      * 播放列表的recycler
      */
-    private var mQueueRecycler: RecyclerView? = null
+    private lateinit var mQueueRecycler: RecyclerView
     /**
      * 展示播放列表的dialog
      */
@@ -72,7 +74,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     /**
      * 播放列表的适配器
      */
-    private var mBottomQueueAdapter: PlayQueueAdapter? = null
+    private var mBottomQueueAdapter: PlayQueueAdapter?= null
     /**
      * 当前播放的媒体id
      */
@@ -124,11 +126,11 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     /**
      * 播放列表弹窗的contentView
      */
-    private var mBottomQueueContentView: View? = null
+    private var mBottomQueueContentView: View ?= null
     /**
      * 显示播放列表数量
      */
-    private var mQueueCountTv: TextView? = null
+    private lateinit var mQueueCountTv: TextView
     /**
      * 歌曲图片适配器
      */
@@ -147,18 +149,14 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      */
     class MediaResultReceive(activity: MediaActivity, handler: Handler) : ResultReceiver(handler) {
 
-        private var mWeakView: WeakReference<MediaActivity>? = null
-
-        init {
-            this.mWeakView = WeakReference(activity)
-        }
+        private var mWeakView: WeakReference<MediaActivity> = WeakReference(activity)
 
         override fun onReceiveResult(resultCode: Int, resultData: Bundle) {
             super.onReceiveResult(resultCode, resultData)
-            if (mWeakView!!.get() == null) {
+            if (mWeakView.get() == null) {
                 return
             }
-            val activity = mWeakView!!.get()
+            val activity = mWeakView.get()
             when (resultCode) {
                 MediaService.COMMAND_POSITION_CODE -> {
                     val position = resultData.getInt("position").toLong()
@@ -198,6 +196,13 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
 
         setSupportActionBar(tb_media)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val slide = Slide(Gravity.END)
+            slide.duration = 1000
+            window.enterTransition = slide
+            window.reenterTransition = Explode().setDuration(1000)
+        }
+
 
         //斜边View的背景
         val drawable = TimBackGroundDrawable()
@@ -356,22 +361,22 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
         if (mBottomQueueContentView == null) {
             mBottomQueueContentView = LayoutInflater.from(this).inflate(R.layout.play_queue_layout, null)
-            mQueueRecycler = mBottomQueueContentView?.findViewById(R.id.control_queue_recycle) as RecyclerView?
-            mQueueCountTv = mBottomQueueContentView?.findViewById(R.id.control_queue_count) as TextView?
+            mQueueRecycler = mBottomQueueContentView!!.findViewById(R.id.control_queue_recycle)
+            mQueueCountTv = mBottomQueueContentView!!.findViewById(R.id.control_queue_count)
         } else {
-            val parent = mBottomQueueContentView?.parent as ViewGroup
+            val parent = mBottomQueueContentView!!.parent as ViewGroup
             parent.removeView(mBottomQueueContentView)
         }
 
         if (mCurrentMediaIdStr != null && mBottomQueueAdapter != null) {
             mBottomQueueAdapter?.selectIndex = DataTransform.getInstance().getMediaIndex(mCurrentMediaIdStr)
         }
-        mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
+        mQueueCountTv.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
                 (mBottomQueueAdapter!!.selectIndex + 1), if (mPlayQueueList == null) 0 else mPlayQueueList?.size)
         mBottomQueueDialog?.setContentView(mBottomQueueContentView)
-        mQueueRecycler?.adapter = mBottomQueueAdapter
-        mQueueRecycler?.layoutManager = LinearLayoutManager(applicationContext)
-        mQueueRecycler?.addItemDecoration(RecycleViewDecoration(this, LinearLayoutManager.VERTICAL,
+        mQueueRecycler.adapter = mBottomQueueAdapter
+        mQueueRecycler.layoutManager = LinearLayoutManager(applicationContext)
+        mQueueRecycler.addItemDecoration(RecycleViewDecoration(this, LinearLayoutManager.VERTICAL,
                 R.drawable.recyclerview_vertical_line, UiUtils.dp2px(this, 25)))
         mBottomQueueAdapter?.setData(mPlayQueueList)
         mBottomQueueDialog?.show()
@@ -419,7 +424,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             mPlayQueueList?.removeAt(position)
             mBottomQueueAdapter?.setData(mPlayQueueList)
             mBottomQueueAdapter?.notifyItemRemoved(position)
-            mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
+            mQueueCountTv.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
                     (mBottomQueueAdapter!!.selectIndex + 1), mPlayQueueList?.size)
         }
         dialog.setNegativeButton(getString(R.string.string_cancel)) { d, _ ->
@@ -986,7 +991,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             if (mBottomQueueDialog!!.isShowing) {
                 mBottomQueueDialog!!.dismiss()
             }
-            mQueueCountTv = null
             mBottomQueueContentView = null
             mBottomQueueDialog = null
             mBottomQueueAdapter = null
