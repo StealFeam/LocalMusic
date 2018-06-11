@@ -12,7 +12,8 @@ public abstract class AbstractMultipleTypeAdapter extends AbstractExpandableAdap
 
     @Override
     public ExpandableViewHolder setupViewHolder(ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext()).inflate(getItemLayoutIdByType(viewType),
+        View itemView = LayoutInflater.from(parent.getContext()).
+                inflate(getItemLayoutIdByType(viewType),
                 parent, false);
         return new ExpandableViewHolder(itemView);
     }

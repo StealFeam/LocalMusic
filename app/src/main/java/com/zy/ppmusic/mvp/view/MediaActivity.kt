@@ -958,7 +958,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
         //取消播放状态监听
         if (mMediaBrowser != null) {
-            if (mMediaBrowser?.root != null) {
+            //在一些特殊情况，状态还是正在连接时调用getRoot会出现状态错误
+            if (mMediaBrowser!!.isConnected && mMediaBrowser?.root != null) {
                 mMediaBrowser!!.unsubscribe(mMediaBrowser!!.root, subscriptionCallBack)
             }
             //断开与媒体服务的链接

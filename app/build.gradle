@@ -84,7 +84,7 @@ dependencies {
     //  kotlin支持
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     //    constraint库
-    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.1'
     //    greendao数据库
     implementation 'org.greenrobot:greendao:3.2.2'
     //    权限申请库
