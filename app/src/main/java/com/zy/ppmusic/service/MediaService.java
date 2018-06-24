@@ -501,7 +501,9 @@ public class MediaService extends MediaBrowserServiceCompat {
             stateBuilder.setActiveQueueItemId(mCurrentMedia.getQueueId());
         }
         mMediaSessionCompat.setPlaybackState(stateBuilder.build());
-        postNotifyByStyle(-1);
+
+        postNotifyByStyle();
+
         if (state == PlaybackStateCompat.STATE_PLAYING) {
             mAudioReceiver.register(audioCallBack);
         } else {
@@ -680,14 +682,9 @@ public class MediaService extends MediaBrowserServiceCompat {
 
     /**
      * 根据类型选择指定的通知样式
-     * @param style -1 读取本地缓存的值
      */
-    public void postNotifyByStyle(int style){
-        if(style == -1){
-            SharedPreferences sp = getSharedPreferences(Constant.LOCAL_CHOOSE_FILE,MODE_PRIVATE);
-            style = sp.getInt(Constant.LOCAL_STYLE_NAME, R.id.rb_choose_custom);
-        }
-
+    public void postNotifyByStyle(){
+        int style = NotificationUtils.getNotifyStyle(getApplicationContext());
         Notification notification;
 
         if(style == R.id.rb_choose_system){
@@ -705,7 +702,7 @@ public class MediaService extends MediaBrowserServiceCompat {
         }
     }
 
-    private static class UpdateRunnable extends Thread {
+    private static class UpdateRunnable implements Runnable {
         private WeakReference<MediaService> mWeakService;
         private boolean isShouldPlay;
         private int seekToPosition;
@@ -771,6 +768,43 @@ public class MediaService extends MediaBrowserServiceCompat {
             }
         }
     }
+
+//    private volatile PlayMediaRunnable runnable = new PlayMediaRunnable(this);
+//
+//
+//
+//    private static class PlayMediaRunnable implements Runnable {
+//        private WeakReference<MediaService> mWeakService;
+//        private String mediaId;
+//        private boolean isShouldPlay;
+//
+//
+//        private PlayMediaRunnable(MediaService mWeakService) {
+//            this.mWeakService = new WeakReference<>(mWeakService);
+//        }
+//
+//        public void setMediaId(String mediaId){
+//            this.mediaId = mediaId;
+//        }
+//
+//        public void setShouldPlay(boolean isShouldPlay){
+//            this.isShouldPlay = isShouldPlay;
+//        }
+//
+//        @Override
+//        public void run() {
+//            MediaService service = mWeakService.get();
+//            if(service == null){
+//                return;
+//            }
+//            if (isShouldPlay) {
+//                service.mPlayBack.playMediaIdAutoStart(mediaId);
+//            } else {
+//                service.mPlayBack.preparedWithMediaId(mediaId);
+//            }
+//        }
+//
+//    }
 
     /**
      * 更新播放列表
@@ -1009,7 +1043,8 @@ public class MediaService extends MediaBrowserServiceCompat {
                     break;
                 case COMMAND_CHANGE_NOTIFY_STYLE:
                     int style = reqExtra.getInt(Constant.CHOOSE_STYLE_EXTRA,0);
-                    postNotifyByStyle(style);
+                    NotificationUtils.setNotifyStyle(style);
+                    postNotifyByStyle();
                     break;
                 default:
                     PrintLog.print("onCommand no match");

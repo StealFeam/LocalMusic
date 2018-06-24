@@ -3,8 +3,10 @@ package com.zy.ppmusic.utils;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
@@ -24,6 +26,10 @@ import android.widget.Toast;
 
 import com.zy.ppmusic.R;
 
+import java.util.Currency;
+
+import static android.content.Context.MODE_PRIVATE;
+
 /**
  * @author ZhiTouPC
  */
@@ -33,6 +39,26 @@ public class NotificationUtils {
      * 通知的id
      */
     public static final int NOTIFY_ID = 40012;
+
+    private static int CURRENT_STYLE = -1;
+
+
+    public static int getNotifyStyle(Context context){
+        int style = CURRENT_STYLE;
+        if(style == -1){
+            SharedPreferences sp = context.getSharedPreferences(Constant.LOCAL_CHOOSE_FILE,MODE_PRIVATE);
+            style = sp.getInt(Constant.LOCAL_STYLE_NAME, R.id.rb_choose_custom);
+        }
+        return style;
+    }
+
+    public static void setNotifyStyle(int style){
+        if(style == CURRENT_STYLE){
+            return;
+        }
+        CURRENT_STYLE = style;
+    }
+
 
     public static Notification createSystemNotify(Context c, MediaSessionCompat mediaSession, boolean isPlaying) {
         Context context = c.getApplicationContext();
@@ -85,11 +111,10 @@ public class NotificationUtils {
         builder.setSmallIcon(R.drawable.ic_small_notify);
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
             builder.setColorized(true);
-            builder.setColor(ContextCompat.getColor(context,R.color.colorTheme));
+            builder.setColor(ContextCompat.getColor(context,R.color.colorBlack));
         }else{
             builder.setColorized(true);
             builder.setColor(ContextCompat.getColor(context,R.color.colorTheme));
-
         }
 
         //设置显示的按钮信息
