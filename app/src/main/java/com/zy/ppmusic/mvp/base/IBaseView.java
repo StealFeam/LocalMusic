@@ -6,4 +6,5 @@ package com.zy.ppmusic.mvp.base;
  */
 
 public interface IBaseView {
+
 }

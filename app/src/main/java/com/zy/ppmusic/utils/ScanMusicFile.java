@@ -98,8 +98,11 @@ public class ScanMusicFile {
                             mPathList.clear();
                         }
                         Log.d(TAG, "run: 扫描开始");
-                        searchFile(new File(mInnerStoragePath));
-                        Log.e(TAG, "run: 扫描内部存储结束");
+                        if (mInnerStoragePath != null) {
+                            searchFile(new File(mInnerStoragePath));
+                            Log.e(TAG, "run: 扫描内部存储结束");
+                        }
+
                         if (mExternalStoragePath != null) {
                             searchFile(new File(mExternalStoragePath));
                             Log.e(TAG, "run: 扫描外部存储结束");

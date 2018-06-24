@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,6 +24,7 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 
+import com.zy.ppmusic.R;
 import com.zy.ppmusic.callback.AudioNoisyCallBack;
 import com.zy.ppmusic.callback.TimeTikCallBack;
 import com.zy.ppmusic.data.db.DataBaseManager;
@@ -111,6 +113,10 @@ public class MediaService extends MediaBrowserServiceCompat {
      * 更新播放列表resultCode
      */
     public static final int COMMAND_UPDATE_QUEUE_CODE = 0x002;
+    /**
+     * 修改通知的样式
+     */
+    public static final String COMMAND_CHANGE_NOTIFY_STYLE = "COMMAND_CHANGE_NOTIFY_STYLE";
     /*-------------------command action end--------------------------*/
     /*-------------------custom action start--------------------------*/
     /**
@@ -232,7 +238,11 @@ public class MediaService extends MediaBrowserServiceCompat {
         if (!Constant.INSTANCE.getIS_STARTED()) {
             PrintLog.e("启动Service。。。。。");
             stopSelf();
-            startService(new Intent(getBaseContext(), MediaService.class));
+            try {
+                startService(new Intent(getBaseContext(), MediaService.class));
+            } catch (Exception e) {
+                PrintLog.e("启动失败");
+            }
             Constant.INSTANCE.setIS_STARTED(true);
         }
         if (mMediaSessionCompat == null) {
@@ -491,10 +501,7 @@ public class MediaService extends MediaBrowserServiceCompat {
             stateBuilder.setActiveQueueItemId(mCurrentMedia.getQueueId());
         }
         mMediaSessionCompat.setPlaybackState(stateBuilder.build());
-        Notification notification = NotificationUtils.createNotify(this, mMediaSessionCompat, mPlayBack.isPlaying());
-        if (notification != null) {
-            startForeground(NOTIFY_ID, notification);
-        }
+        postNotifyByStyle(-1);
         if (state == PlaybackStateCompat.STATE_PLAYING) {
             mAudioReceiver.register(audioCallBack);
         } else {
@@ -668,6 +675,33 @@ public class MediaService extends MediaBrowserServiceCompat {
             mBackgroundPool.submit(mUpdateRunnable);
         } else {
             mPlayBack.stopPlayer();
+        }
+    }
+
+    /**
+     * 根据类型选择指定的通知样式
+     * @param style -1 读取本地缓存的值
+     */
+    public void postNotifyByStyle(int style){
+        if(style == -1){
+            SharedPreferences sp = getSharedPreferences(Constant.LOCAL_CHOOSE_FILE,MODE_PRIVATE);
+            style = sp.getInt(Constant.LOCAL_STYLE_NAME, R.id.rb_choose_custom);
+        }
+
+        Notification notification;
+
+        if(style == R.id.rb_choose_system){
+            notification = NotificationUtils.createSystemNotify(MediaService.this,
+                    mMediaSessionCompat, mPlayBack.isPlaying());
+            PrintLog.d("系统通知");
+        }else{
+            notification = NotificationUtils.createCustomNotify(MediaService.this,
+                    mMediaSessionCompat, mPlayBack.isPlaying());
+            PrintLog.d("自定义通知");
+        }
+
+        if (notification != null) {
+            startForeground(NOTIFY_ID, notification);
         }
     }
 
@@ -938,9 +972,9 @@ public class MediaService extends MediaBrowserServiceCompat {
 
         @Override
         public void onCommand(String command, Bundle reqExtra, ResultReceiver cb) {
-            final Bundle resultExtra = new Bundle();
             switch (command) {
                 case COMMAND_POSITION:
+                    final Bundle resultExtra = new Bundle();
                     resultExtra.putInt("position", mPlayBack.getCurrentStreamPosition());
                     if (cb != null) {
                         cb.send(COMMAND_POSITION_CODE, resultExtra);
@@ -962,7 +996,7 @@ public class MediaService extends MediaBrowserServiceCompat {
                         onMediaChange(mPlayQueueMediaId.get(0), false);
                     }
                     if (cb != null) {
-                        cb.send(COMMAND_UPDATE_QUEUE_CODE, resultExtra);
+                        cb.send(COMMAND_UPDATE_QUEUE_CODE, new Bundle());
                     }
                     break;
                 //TODO 开始循环获取当前播放位置
@@ -972,6 +1006,10 @@ public class MediaService extends MediaBrowserServiceCompat {
                 //TODO 结束获取当前播放位置
                 case COMMAND_STOP_LOOP:
                     stopLoop();
+                    break;
+                case COMMAND_CHANGE_NOTIFY_STYLE:
+                    int style = reqExtra.getInt(Constant.CHOOSE_STYLE_EXTRA,0);
+                    postNotifyByStyle(style);
                     break;
                 default:
                     PrintLog.print("onCommand no match");

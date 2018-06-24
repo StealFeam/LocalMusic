@@ -17,6 +17,10 @@ class ExampleUnitTest {
         println(countPositionInSize(true))
     }
 
+     fun Any.valueOf(msg:Any?):String{
+        return "$msg"
+    }
+
     @Test
     fun testMapValue() {
         val list = ArrayList<String>()

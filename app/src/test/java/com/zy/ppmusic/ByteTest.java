@@ -24,6 +24,7 @@ public class ByteTest {
         System.out.println("gbkLength="+aGBk.length);
     }
 
+
     @Test
     public void testIntegerLength(){
         int min = Integer.MIN_VALUE;

@@ -8,19 +8,25 @@
         android:title="@string/scan_media"
         app:showAsAction="never" />
     <!--<item-->
-        <!--android:id="@+id/menu_blue_connect"-->
-        <!--android:checkable="false"-->
-        <!--android:checked="false"-->
-        <!--android:enabled="true"-->
-        <!--android:icon="@drawable/ic_menu_connect_bl"-->
-        <!--android:menuCategory="container"-->
-        <!--android:title="@string/connect_bluetooth"-->
-        <!--android:titleCondensed="@string/app_name"-->
-        <!--android:visible="true"-->
-        <!--app:showAsAction="never" />-->
+    <!--android:id="@+id/menu_blue_connect"-->
+    <!--android:checkable="false"-->
+    <!--android:checked="false"-->
+    <!--android:enabled="true"-->
+    <!--android:icon="@drawable/ic_menu_connect_bl"-->
+    <!--android:menuCategory="container"-->
+    <!--android:title="@string/connect_bluetooth"-->
+    <!--android:titleCondensed="@string/app_name"-->
+    <!--android:visible="true"-->
+    <!--app:showAsAction="never" />-->
     <item
         android:id="@+id/menu_count_time"
-        android:title="@string/set_time_to_come_down"
         android:icon="@drawable/ic_menu_time_to_close"
+        android:title="@string/set_time_to_come_down"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_notify_style"
+        android:icon="@drawable/ic_choose_notify_style"
+        android:title="@string/choose_notify_style"
         app:showAsAction="never" />
 </menu>

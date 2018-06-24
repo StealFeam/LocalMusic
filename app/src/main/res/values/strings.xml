@@ -60,4 +60,7 @@
     <string name="unsupport_bluetooth">您的设备不支持蓝牙</string>
     <string name="dialog_error_content_msg">抱歉，应用出现了点问题，请清除缓存后重新试一下吧(*^▽^*)</string>
     <string name="dialog_error_sure">我知道了</string>
+    <string name="choose_notify_style">通知样式</string>
+    <string name="choose_custom_style">自定义样式</string>
+    <string name="choose_system_style">系统样式</string>
 </resources>
