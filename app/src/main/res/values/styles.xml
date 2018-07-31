@@ -1,6 +1,7 @@
 <resources>
 
-    <style name="AppBaseTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Base.Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorTheme</item>
         <item name="colorPrimaryDark">@color/colorThemeDark</item>
@@ -8,22 +9,21 @@
         <item name="colorControlHighlight">@color/colorTheme</item>
         <item name="colorControlActivated">@color/colorTheme</item>
         <item name="android:windowBackground">@null</item>
-        <item name="windowNoTitle">true</item>
-        <item name="windowActionBar">false</item>
         <item name="android:configChanges">fontScale</item>
+        <item name="windowActionBar">false</item>
     </style>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="AppBaseTheme">
-
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="colorControlHighlight">@color/colorTheme</item>
+        <item name="colorControlActivated">@color/colorTheme</item>
     </style>
 
-    <style name="AppBaseNoBarTheme" parent="AppTheme">
-
-    </style>
-
-    <style name="AppTheme.NoActionBar" parent="AppBaseNoBarTheme">
-
+    <style name="AppTheme.SplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowBackground">@color/colorTheme</item>
     </style>
 
     <style name="AppTheme.NoActionBar.Translate" parent="AppTheme.NoActionBar">
@@ -36,10 +36,8 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.SplashTheme" parent="AppTheme.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:windowBackground">@color/colorTheme</item>
+    <style name="NotifyDialogStyle" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />

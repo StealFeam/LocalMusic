@@ -23,6 +23,16 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
 
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.zy.ppmusic.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider" />
+        </provider>
+
         <activity
             android:name=".mvp.view.BlScanActivity"
             android:theme="@style/AppTheme.NoActionBar.Translate" />
@@ -60,9 +70,11 @@
 
         </activity>
 
-        <activity android:name=".mvp.view.ErrorActivity"/>
+        <activity android:name=".mvp.view.ErrorActivity" />
 
-        <meta-data android:name="android.max_aspect" android:value="2.8" />
+        <meta-data
+            android:name="android.max_aspect"
+            android:value="2.8" />
 
     </application>
 

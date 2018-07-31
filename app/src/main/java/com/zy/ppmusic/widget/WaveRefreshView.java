@@ -65,7 +65,7 @@ public class WaveRefreshView extends View {
         whiteWidth /= lineRectF.length;
 
         minWidth = (int) ((getScreenParams(0) * MIN_WIDTH_PERCENT) / getScreenParams(2));
-        PrintLog.print("最小宽度计算值：" + minWidth);
+        PrintLog.INSTANCE.print("最小宽度计算值：" + minWidth);
 
         for (int i = 0; i < lineRectF.length; i++) {
             lineRectF[i] = new RectF((lineWidth + whiteWidth) * i, maxChange,

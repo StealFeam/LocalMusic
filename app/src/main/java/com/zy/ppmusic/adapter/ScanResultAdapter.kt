@@ -1,5 +1,6 @@
 package com.zy.ppmusic.adapter
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.os.Build
 import android.support.v7.widget.RecyclerView
@@ -45,7 +46,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
     }
 
     fun foundNewDevice(entity: ScanResultEntity) {
-        if (isInList(entity.device)) {
+        if (isInList(entity.device!!)) {
             println("该设备已经存在列表了")
             return
         }
@@ -73,9 +74,9 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
     fun deviceDisappeared(device: BluetoothDevice) {
         mScanDevices.forEachIndexed { index, scanResultEntity ->
             if (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                        Objects.equals(scanResultEntity.device.address, device.address)
+                        Objects.equals(scanResultEntity.device?.address, device.address)
                     } else {
-                        device.address == scanResultEntity.device.address
+                        device.address == scanResultEntity.device?.address
                     }) {
                 mScanDevices.removeAt(index)
                 return
@@ -103,6 +104,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
         return TitleHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_scan_title, parent, false))
     }
 
+    @SuppressLint("MissingPermission")
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, p1: Int) {
         if (holder is TitleHolder) {
             holder.title!!.text = mBondDevices[p1].title
@@ -112,16 +114,16 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
             } else {
                 mScanDevices[p1 - mBondDevices.size]
             }
-            holder.name!!.text = if(entity!!.device.name == null){
+            holder.name!!.text = if(entity!!.device?.name == null){
                 "unknown"
             }else{
-                entity.device.name
+                entity.device?.name
             }
             holder.name!!.tag = entity.device
             println("position=" + p1 + "," + entity.state)
             if (mBondDevices.contains(entity)) {
                 if (!TextUtils.isEmpty(entity.state)) {
-                    holder.showState(entity.state)
+                    holder.showState(entity.state!!)
                 } else {
                     holder.hideState()
                 }

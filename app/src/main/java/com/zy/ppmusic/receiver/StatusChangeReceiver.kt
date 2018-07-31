@@ -13,10 +13,8 @@ import java.lang.ref.WeakReference
  * 监听蓝牙的状态修改
  */
 class StatusChangeReceiver(ref: BlScanActivity) : BroadcastReceiver() {
-    private var reference: WeakReference<BlScanActivity>? = null
-
-    init {
-        reference = WeakReference(ref)
+    private val reference: WeakReference<BlScanActivity>? by lazy {
+        WeakReference(ref)
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -32,11 +30,11 @@ class StatusChangeReceiver(ref: BlScanActivity) : BroadcastReceiver() {
                     val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.BOND_NONE)
                     val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                     if (reference!!.get() != null) {
-                        reference!!.get()?.onDeviceBondStateChanged(bondState,device)
+                        reference!!.get()?.onDeviceBondStateChanged(bondState, device)
                     }
 
                 }
-                //连接状态广播
+            //连接状态广播
                 BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED, BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED -> {
 //                    val state = intent.extras.getInt(BluetoothA2dp.EXTRA_STATE)
 //                    val device = intent.extras.getParcelable<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
@@ -44,13 +42,13 @@ class StatusChangeReceiver(ref: BlScanActivity) : BroadcastReceiver() {
                         reference!!.get()?.connectStateChanged()
                     }
                 }
-                //扫描开始广播
+            //扫描开始广播
                 BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
                     if (reference!!.get() != null) {
                         reference!!.get()?.discoveryStateChange(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
                     }
                 }
-                //扫描结束广播
+            //扫描结束广播
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
                     if (reference!!.get() != null) {
                         reference!!.get()?.discoveryStateChange(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)

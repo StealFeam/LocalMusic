@@ -63,4 +63,5 @@
     <string name="choose_notify_style">通知样式</string>
     <string name="choose_custom_style">自定义样式</string>
     <string name="choose_system_style">系统样式</string>
+    <string name="notification_sub_text">无乐不欢</string>
 </resources>

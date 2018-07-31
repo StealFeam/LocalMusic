@@ -1,5 +1,6 @@
 package com.zy.ppmusic.adapter
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.text.TextUtils
 import android.view.View
@@ -40,7 +41,7 @@ class ScanResultCopyAdapter(mData: ArrayList<ScanResultEntity>) : AbstractMultip
     }
 
     fun foundNewDevice(entity: ScanResultEntity) {
-        if (isInList(entity.device)) {
+        if (isInList(entity.device!!)) {
             println("该设备已经存在列表了")
             return
         }
@@ -110,6 +111,7 @@ class ScanResultCopyAdapter(mData: ArrayList<ScanResultEntity>) : AbstractMultip
         }
     }
 
+    @SuppressLint("MissingPermission")
     override fun setupItemData(holder: ExpandableViewHolder?, position: Int) {
         when (getItemTypeByPosition(position)) {
             R.layout.item_scan_title -> {
@@ -123,10 +125,10 @@ class ScanResultCopyAdapter(mData: ArrayList<ScanResultEntity>) : AbstractMultip
                     mScanDevices[position - mBondDevices.size]
                 }
                 val nameTv = holder!!.getView<TextView>(R.id.tv_scan_result_name)
-                nameTv.text = if (entity!!.device.name == null) {
+                nameTv.text = if (entity!!.device?.name == null) {
                     "unknown"
                 } else {
-                    entity.device.name
+                    entity.device?.name
                 }
                 nameTv.tag = entity.device
                 println("position=" + position + "," + entity.state)

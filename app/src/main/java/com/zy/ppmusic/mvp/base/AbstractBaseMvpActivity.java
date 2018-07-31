@@ -1,18 +1,15 @@
 package com.zy.ppmusic.mvp.base;
 
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
 import com.zy.ppmusic.App;
-import com.zy.ppmusic.utils.PrintLog;
 
 /**
  * @author ZhiTouPC
  * @date 2018/1/12
  */
-
 public abstract class AbstractBaseMvpActivity<P extends AbstractBasePresenter> extends AppCompatActivity {
     private static final String TAG = "AbstractBaseMvpActivity";
     protected P mPresenter;
@@ -20,16 +17,12 @@ public abstract class AbstractBaseMvpActivity<P extends AbstractBasePresenter> e
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        App.setCustomDensity(this);
         App.getInstance().createActivity(this);
         featureBeforeCreate();
         setContentView(getContentViewId());
         mPresenter = createPresenter();
         initViews();
-    }
-
-    @Override
-    public Resources getResources() {
-        return App.getInstance().getResources();
     }
 
     @Override

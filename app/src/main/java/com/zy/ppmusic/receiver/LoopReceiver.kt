@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.zy.ppmusic.service.MediaService
-import com.zy.ppmusic.utils.PrintLog
 import java.lang.ref.WeakReference
 
 /**
@@ -14,16 +13,12 @@ import java.lang.ref.WeakReference
  */
 class LoopReceiver(service: MediaService) : BroadcastReceiver() {
 
-    private var serviceWeakReference: WeakReference<MediaService>? = null
-
-    init {
-        this.serviceWeakReference = WeakReference(service)
+    private val serviceWeakReference: WeakReference<MediaService>? by lazy {
+        WeakReference(service)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (serviceWeakReference!!.get() != null) {
-            serviceWeakReference!!.get()?.updatePositionToSession()
-        }
+        serviceWeakReference!!.get()?.updatePositionToSession()
     }
 
 }

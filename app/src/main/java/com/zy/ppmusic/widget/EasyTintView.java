@@ -127,7 +127,7 @@ public class EasyTintView extends AppCompatTextView {
                 DisplayMetrics metrics = new DisplayMetrics();
                 Display defaultDisplay = manager.getDefaultDisplay();
                 defaultDisplay.getMetrics(metrics);
-                PrintLog.print(String.format(Locale.CHINA, "%f,%d,%f",
+                PrintLog.INSTANCE.print(String.format(Locale.CHINA, "%f,%d,%f",
                         metrics.density, metrics.densityDpi, metrics.scaledDensity));
                 screenParams[0] = metrics.widthPixels;
                 screenParams[1] = metrics.heightPixels;
@@ -163,7 +163,7 @@ public class EasyTintView extends AppCompatTextView {
             return;
         }
         if (isVisible) {
-            PrintLog.print("view is already showing in screen");
+            PrintLog.INSTANCE.print("view is already showing in screen");
             return;
         }
 

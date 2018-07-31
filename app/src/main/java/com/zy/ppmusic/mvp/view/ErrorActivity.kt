@@ -8,7 +8,11 @@ import android.os.Process
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatDialogFragment
 import com.zy.ppmusic.R
-import com.zy.ppmusic.utils.PrintLog
+import com.zy.ppmusic.utils.DateUtil
+import com.zy.ppmusic.utils.FileUtils
+import com.zy.ppmusic.utils.StreamUtils
+import java.io.File
+import java.io.PrintWriter
 
 /**
  * @author y-slience
@@ -17,7 +21,7 @@ import com.zy.ppmusic.utils.PrintLog
  */
 class ErrorActivity : AppCompatActivity() {
     companion object {
-        val ERROR_INFO = "ERROR_INFO"
+        const val ERROR_INFO = "ERROR_INFO"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,23 +29,31 @@ class ErrorActivity : AppCompatActivity() {
         supportActionBar?.hide()
         window.decorView.setBackgroundColor(Color.WHITE)
 
-        val errorInfo = intent.getSerializableExtra(ERROR_INFO) as Throwable
-        errorInfo.printStackTrace()
+        writeMsgToLocal()
 
         val dialog = ErrorDialog()
-        dialog.show(supportFragmentManager,"error")
+        dialog.show(supportFragmentManager, ERROR_INFO)
+    }
+
+    private fun writeMsgToLocal() {
+        val errorInfo = intent.getSerializableExtra(ERROR_INFO) as Throwable
+        val writer = PrintWriter(File(FileUtils.downloadFile +"/music_error_log.txt"))
+        writer.println("---- "+DateUtil.get().getTime(System.currentTimeMillis())+" ----")
+        errorInfo.printStackTrace(writer)
+        writer.flush()
+        writer.close()
+        StreamUtils.closeIo(writer)
     }
 
     class ErrorDialog : AppCompatDialogFragment() {
-
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = AlertDialog.Builder(context!!)
                         .setTitle(R.string.app_name)
                         .setMessage(R.string.dialog_error_content_msg)
-                        .setNegativeButton(R.string.dialog_error_sure, { _, _->
+                        .setNegativeButton(R.string.dialog_error_sure) { _, _->
                             activity?.finish()
                             dismiss()
                             Process.killProcess(Process.myPid())
                             System.exit(0)
-                        }).create()
+                        }.create()
     }
 }

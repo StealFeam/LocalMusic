@@ -1,5 +1,6 @@
 package com.zy.ppmusic.mvp.view
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothA2dp
 import android.bluetooth.BluetoothAdapter
@@ -55,8 +56,8 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
     private var mRefreshScanMenu: View? = null
 
     override fun initViews() {
-        mToolBar = findViewById(R.id.toolbar_bl) as Toolbar?
-        mScanResultRecycler = findViewById(R.id.show_device_recycler) as RecyclerView?
+        mToolBar = findViewById<Toolbar>(R.id.toolbar_bl)
+        mScanResultRecycler = findViewById<RecyclerView>(R.id.show_device_recycler)
         if (mPresenter!!.isSupportBl().not()) {
             Toast.makeText(this, UiUtils.getString(R.string.unsupport_bluetooth), Toast.LENGTH_SHORT).show()
             finish()
@@ -75,7 +76,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
         }
         setSupportActionBar(mToolBar)
         checkLocationPermission()
-        mBlueToothOpenSwitch!!.setOnCheckedChangeListener({ _, isChecked ->
+        mBlueToothOpenSwitch!!.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 // 打开蓝牙
                 if (mPresenter!!.isEnable().not()) {
@@ -87,7 +88,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
             } else {
                 mPresenter!!.disable()
             }
-        })
+        }
 
         root_bl_content.setDragFinishListener {
             finish()
@@ -159,6 +160,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
         finish()
     }
 
+    @SuppressLint("MissingPermission")
     override fun setExitsDevices(exitList: MutableList<ScanResultEntity>) {
         mScanDeviceList!!.clear()
         mScanDeviceList!!.add(ScanResultEntity(R.layout.item_scan_title, "已配对的设备"))
@@ -175,16 +177,16 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
                     val state = device.bondState
                     if (state == BluetoothDevice.BOND_BONDED) {
                         var realPosition = 0
-                        if(!mScanResultAdapter!!.isBondedDevice(position)){
+                        if (!mScanResultAdapter!!.isBondedDevice(position)) {
                         }
-                        if (mPresenter!!.removeBondDevice(mScanDeviceList!![realPosition].device)) {
+                        if (mPresenter!!.removeBondDevice(mScanDeviceList!![realPosition].device!!)) {
                             mScanDeviceList!!.removeAt(realPosition)
                             println("移除配对")
                             mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
                         }
                     }
                     PrintLog.d("点击Item")
-                }else{
+                } else {
                     PrintLog.d("点击title了")
                 }
             })
@@ -346,9 +348,10 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
         }
     }
 
-    /**
-     * 当设备配对状态变化时回调
-     */
+    @SuppressLint("MissingPermission")
+            /**
+             * 当设备配对状态变化时回调
+             */
     fun onDeviceBondStateChanged(state: Int, device: BluetoothDevice) {
         when (state) {
             BluetoothDevice.BOND_BONDED -> {
@@ -376,7 +379,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
         //未知原因：连接上设备之后总是会最后调用一次断开连接，会导致状态显示错误，所以遍历整个设备列表查询一次
         mScanDeviceList!!.forEachIndexed { _, entity ->
             if (entity.device != null) {
-                val connectState = mPresenter!!.getConnectState(entity.device)
+                val connectState = mPresenter!!.getConnectState(entity.device!!)
                 when (connectState) {
                     BluetoothA2dp.STATE_CONNECTING -> {
                         entity.state = "正在连接"
@@ -425,7 +428,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
         if (mPresenter!!.getConnectDevice() != null) {
             mScanDeviceList!!.forEachIndexed { _, scanResultEntity ->
                 if (scanResultEntity.device != null) {
-                    val state = mPresenter!!.getConnectState(scanResultEntity.device)
+                    val state = mPresenter!!.getConnectState(scanResultEntity.device!!)
                     when (state) {
                         BluetoothA2dp.STATE_CONNECTING -> {
                             scanResultEntity.state = "正在连接"

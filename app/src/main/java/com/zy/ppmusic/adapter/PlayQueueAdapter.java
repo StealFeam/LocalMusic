@@ -59,11 +59,11 @@ public class PlayQueueAdapter extends AbstractSingleTypeAdapter {
     public void setupItemData(ExpandableViewHolder holder, int position) {
         MediaDescriptionCompat description = mData.get(position).getDescription();
         TextView tvSubTitle = holder.getView(R.id.queue_item_display_sub_title);
-        tvSubTitle.setText(StringUtils.Companion.ifEmpty(String.valueOf(description.getSubtitle()),
-                UiUtils.getString(R.string.unknown_author)));
+        tvSubTitle.setText(StringUtils.ifEmpty(String.valueOf(description.getSubtitle()),
+                UiUtils.INSTANCE.getString(R.string.unknown_author)));
         TextView tvTitle = holder.getView(R.id.queue_item_display_title);
-        tvTitle.setText(StringUtils.Companion.ifEmpty(String.valueOf(description.getTitle())
-                ,UiUtils.getString(R.string.unknown_name)));
+        tvTitle.setText(StringUtils.ifEmpty(String.valueOf(description.getTitle())
+                , UiUtils.INSTANCE.getString(R.string.unknown_name)));
         TextView tvPosition = holder.getView(R.id.queue_item_position);
         if (selectIndex == position) {
             holder.getView(R.id.queue_item_selected_line).setVisibility(View.VISIBLE);

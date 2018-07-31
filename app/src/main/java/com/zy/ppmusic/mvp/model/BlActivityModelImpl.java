@@ -1,5 +1,6 @@
 package com.zy.ppmusic.mvp.model;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -17,6 +18,7 @@ import java.util.Set;
 
 /**
  * @author ZhiTouPC
+ *
  */
 public class BlActivityModelImpl implements IBLActivityContract.IBLActivityModel{
 
@@ -28,7 +30,7 @@ public class BlActivityModelImpl implements IBLActivityContract.IBLActivityModel
     public List<ScanResultEntity> getExitsDevices(@NotNull BluetoothAdapter mBlueAdapter,@NotNull
             BluetoothA2dp mBlueA2dp) {
         List<ScanResultEntity> list = new ArrayList<>();
-        Set<BluetoothDevice> bondedDevices = mBlueAdapter.getBondedDevices();
+        @SuppressLint("MissingPermission") Set<BluetoothDevice> bondedDevices = mBlueAdapter.getBondedDevices();
         for (BluetoothDevice bondedDevice : bondedDevices) {
             ScanResultEntity entity = new ScanResultEntity(R.layout.item_scan_child, bondedDevice);
             list.add(entity);
@@ -36,6 +38,7 @@ public class BlActivityModelImpl implements IBLActivityContract.IBLActivityModel
         return list;
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public boolean connectDevice(@NotNull BluetoothDevice device,@NotNull BluetoothAdapter mBlueAdapter,@NotNull BluetoothA2dp mBlueA2dp) {
         if (mBlueAdapter.isDiscovering()) {

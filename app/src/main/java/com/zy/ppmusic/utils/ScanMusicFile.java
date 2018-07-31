@@ -4,17 +4,11 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 扫描本地音乐文件
@@ -31,16 +25,7 @@ public class ScanMusicFile {
      * 扫描完成
      */
     private static final int SCAN_COMPLETE = 0X000;
-    /**
-     * 单一线程池
-     */
-    private ExecutorService executor = new ThreadPoolExecutor(1, 1, 0L,
-            TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>(), new ThreadFactory() {
-        @Override
-        public Thread newThread(@NonNull Runnable r) {
-            return new Thread(r);
-        }
-    });
+
     private volatile ArrayList<AbstractOnScanComplete> callBackList = new ArrayList<>();
     /**
      * 扫描到的音乐路径集合
@@ -65,7 +50,7 @@ public class ScanMusicFile {
     private Runnable mScanTask;
 
     private static class ScanInstance {
-        private volatile static ScanMusicFile scanMusicFile = new ScanMusicFile();
+        private static ScanMusicFile scanMusicFile = new ScanMusicFile();
     }
 
     private ScanMusicFile() {
@@ -86,35 +71,33 @@ public class ScanMusicFile {
     public void scanMusicFile(final Context c) {
         final Context context = c.getApplicationContext();
         if (mInnerStoragePath == null) {
-            mInnerStoragePath = FileUtils.getStoragePath(context, false);
-            mExternalStoragePath = FileUtils.getStoragePath(context, true);
+            mInnerStoragePath = FileUtils.INSTANCE.getStoragePath(context, false);
+            mExternalStoragePath = FileUtils.INSTANCE.getStoragePath(context, true);
         }
-        synchronized (this){
-            if(mScanTask == null){
-                mScanTask = new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mPathList != null && mPathList.size() > 0) {
-                            mPathList.clear();
-                        }
-                        Log.d(TAG, "run: 扫描开始");
-                        if (mInnerStoragePath != null) {
-                            searchFile(new File(mInnerStoragePath));
-                            Log.e(TAG, "run: 扫描内部存储结束");
-                        }
-
-                        if (mExternalStoragePath != null) {
-                            searchFile(new File(mExternalStoragePath));
-                            Log.e(TAG, "run: 扫描外部存储结束");
-                        }
-                        Log.d(TAG, "run: 扫描结束");
-                        mHandler.sendEmptyMessage(SCAN_COMPLETE);
+        if (mScanTask == null) {
+            mScanTask = new Runnable() {
+                @Override
+                public void run() {
+                    if (mPathList != null && mPathList.size() > 0) {
+                        mPathList.clear();
                     }
-                };
-                mHandler = new ScanHandler(this);
-            }
-            executor.execute(mScanTask);
+                    Log.d(TAG, "run: 扫描开始");
+                    if (mInnerStoragePath != null) {
+                        searchFile(new File(mInnerStoragePath));
+                        Log.e(TAG, "run: 扫描内部存储结束");
+                    }
+
+                    if (mExternalStoragePath != null) {
+                        searchFile(new File(mExternalStoragePath));
+                        Log.e(TAG, "run: 扫描外部存储结束");
+                    }
+                    Log.d(TAG, "run: 扫描结束");
+                    mHandler.sendEmptyMessage(SCAN_COMPLETE);
+                }
+            };
+            mHandler = new ScanHandler(this);
         }
+        TaskPool.INSTANCE.getBackgroundPool().execute(mScanTask);
     }
 
     private static class ScanHandler extends Handler {
@@ -173,7 +156,7 @@ public class ScanMusicFile {
             return;
         }
         //判断文件的类型是否支持
-        for (String format : SupportMediaType.SUPPORT_TYPE) {
+        for (String format : SupportMediaType.INSTANCE.getSUPPORT_TYPE()) {
             if (file.getName().endsWith(format)) {
                 // * 1L  1M的大小
                 long size = 1024L * 1024L;

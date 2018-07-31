@@ -4,11 +4,14 @@
 /.idea/workspace.xml
 /.idea/gradle.xml
 /.idea/libraries
+/.idea/
 .DS_Store
 /captures
 /.externalNativeBuild
 /bugreport.txt
 /.gradle
+
+#生成的apk
 
 #编译的字节文件
 *.class

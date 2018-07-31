@@ -1,14 +1,13 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion build_versions.target_sdk
-    buildToolsVersion build_versions.build_tools
+    compileSdkVersion build_versions.compileSdkVersion
 
     defaultConfig {
-        minSdkVersion build_versions.min_sdk
-        targetSdkVersion build_versions.target_sdk
-        versionCode build_versions.version_code
-        versionName build_versions.version_name
+        minSdkVersion build_versions.minSdkVersion
+        targetSdkVersion build_versions.targetSdkVersion
+        versionCode build_versions.versionCode
+        versionName build_versions.versionName
     }
 
     buildTypes {
@@ -20,7 +19,8 @@ android {
 }
 
 dependencies {
-    implementation "com.android.support:appcompat-v7:${build_versions.support_version}"
+    api "com.android.support:appcompat-v7:${build_versions.compileToolsVersion}"
+    api "com.android.support:support-v4:${build_versions.compileToolsVersion}"
 }
 
 

@@ -4,12 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.os.Bundle
-import android.support.constraint.ConstraintLayout
-import android.support.constraint.ConstraintSet
 import android.support.v7.app.AppCompatActivity
-import android.transition.ChangeBounds
-import android.transition.TransitionManager
-import android.view.animation.BounceInterpolator
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.view.animation.AnimationSet
 import com.zy.ppmusic.App
 import com.zy.ppmusic.R
 import com.zy.ppmusic.utils.PrintLog
@@ -18,79 +16,49 @@ import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 
 class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
-    private val requestCode = 0x010
+    val requestCode = 0x010
     private val mPreferenceName = "SPLASH"
-    private val mStartSet = ConstraintSet()
-    private val mEndSet = ConstraintSet()
-    private lateinit var mRootLayout: ConstraintLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
+        App.setCustomDensity(this)
         App.getInstance().createActivity(this)
-        mRootLayout = findViewById(R.id.root_splash)
-        mEndSet.clone(this, R.layout.activity_splash_end)
-        mStartSet.clone(mRootLayout)
-    }
 
-    override fun onResume() {
-        super.onResume()
-        mRootLayout.post({
-            startTransition()
+        val alphaAnim = AlphaAnimation(0.4f, 1f)
+        alphaAnim.fillAfter = true
+        alphaAnim.duration = 1500
+        alphaAnim.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationRepeat(a: Animation?) = PrintLog.e("onAnimationRepeat....")
+
+            override fun onAnimationStart(a: Animation?) = PrintLog.e("onAnimationStart....")
+
+
+            override fun onAnimationEnd(a: Animation?){
+                PrintLog.e("onAnimationEnd......")
+                if (EasyPermissions.hasPermissions(applicationContext, getString(R.string.string_read_external)
+                                , getString(R.string.string_write_external))) {
+                    actionToMain()
+                } else {
+                    EasyPermissions.requestPermissions(this@SplashActivity,
+                            getString(R.string.string_permission_read), requestCode,
+                            getString(R.string.string_read_external)
+                            , getString(R.string.string_write_external))
+                }
+            }
         })
-    }
-
-    private fun startTransition() {
-        val changeBounds = ChangeBounds()
-        changeBounds.duration = 1200
-        changeBounds.interpolator = BounceInterpolator()
-        changeBounds.addListener(object : android.transition.Transition.TransitionListener {
-            override fun onTransitionEnd(transition: android.transition.Transition?) {
-                PrintLog.e("onTransitionEnd....")
-                transition?.removeListener(this)
-                transition?.removeTarget(mRootLayout)
-                actionToMain()
-            }
-
-            override fun onTransitionResume(transition: android.transition.Transition?) {
-                PrintLog.e("onTransitionResume....")
-            }
-
-            override fun onTransitionPause(transition: android.transition.Transition?) {
-                PrintLog.e("onTransitionPause....")
-            }
-
-            override fun onTransitionCancel(transition: android.transition.Transition?) {
-                PrintLog.e("onTransitionCancel....")
-                transition?.removeListener(this)
-                transition?.removeTarget(mRootLayout)
-                actionToMain()
-            }
-
-            override fun onTransitionStart(transition: android.transition.Transition?) {
-                PrintLog.e("startTransition....")
-            }
-
-        })
-
-        TransitionManager.beginDelayedTransition(mRootLayout, changeBounds)
-        mEndSet.applyTo(mRootLayout)
+        tv_splash_open.animation = alphaAnim
+        alphaAnim.start()
+        PrintLog.e("onCreate......")
     }
 
     override fun getResources(): Resources = App.getInstance().resources
 
-    private fun actionToMain() {
-        if (EasyPermissions.hasPermissions(applicationContext, getString(R.string.string_read_external)
-                        , getString(R.string.string_write_external))) {
-            val mediaIntent = Intent(this, MediaActivity::class.java)
-            startActivity(mediaIntent)
-            finish()
-        } else {
-            EasyPermissions.requestPermissions(this@SplashActivity,
-                    getString(R.string.string_permission_read), requestCode,
-                    getString(R.string.string_read_external)
-                    , getString(R.string.string_write_external))
-        }
+    fun actionToMain() {
+        PrintLog.e("actionToMain......")
+        val mediaIntent = Intent(this, MediaActivity::class.java)
+        startActivity(mediaIntent)
+        finish()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -145,10 +113,21 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
 
     override fun onPermissionsGranted(requestCode: Int, perms: List<String>?) = actionToMain()
 
+    override fun onStop() {
+        super.onStop()
+        if (tv_splash_open.animation != null) {
+            tv_splash_open.animation.cancel()
+            tv_splash_open.animation = null
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         App.getInstance().destroyActivity(this)
-
+        if (tv_splash_open.animation != null) {
+            tv_splash_open.animation.cancel()
+            tv_splash_open.animation = null
+        }
     }
 
 }
