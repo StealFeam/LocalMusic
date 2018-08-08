@@ -73,7 +73,6 @@ class DataTransform private constructor() {
 
     /**
      * 从系统媒体库获取信息
-     *
      * @param context   context
      * @param localList 路径列表
      */
@@ -93,7 +92,8 @@ class DataTransform private constructor() {
             }
             //根据音频地址获取uri，区分为内部存储和外部存储
             val audioUri = MediaStore.Audio.Media.getContentUriForPath(itemPath)
-            val query = contentResolver.query(audioUri, null, null, null, null)
+            //仅查询是音乐的文件
+            val query = contentResolver.query(audioUri, null,  MediaStore.Audio.Media.IS_MUSIC+"=?", arrayOf("1"), null)
             if (query != null) {
                 //判断如果是上次扫描的uri则跳过，系统分为内部存储uri的音频和外部存储的uri
                 if (oldUri != null && oldUri == audioUri) {
@@ -107,22 +107,23 @@ class DataTransform private constructor() {
                         val duration = query.getLong(query.getColumnIndex(MediaStore.Audio.Media.DURATION))
                         val size = query.getString(query.getColumnIndex(MediaStore.Audio.Media.SIZE))
                         val queryPath = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DATA))
-                        mediaMetadataRetriever.setDataSource(queryPath)
-                        val mBitmap: Bitmap? = mediaMetadataRetriever.embeddedPicture?.let {
-                            BitmapFactory.decodeByteArray(it, 0, it.size)
-                        }
-
-                        //过滤小于30s的文件
-                        if (duration < 30L * 1000L) {
-                            continue
-                        }
                         //过滤本地不存在的媒体文件
                         if (!FileUtils.isExits(queryPath)) {
                             continue
                         }
+                        //过滤小于30s的文件
+                        if (duration < 30L * 1000L) {
+                            continue
+                        }
+
                         //过滤系统媒体库中其他类型的媒体文件
                         if (!isSupportMediaType(queryPath)) {
                             continue
+                        }
+
+                        mediaMetadataRetriever.setDataSource(queryPath)
+                        val mBitmap: Bitmap? = mediaMetadataRetriever.embeddedPicture?.let {
+                            BitmapFactory.decodeByteArray(it, 0, it.size)
                         }
 
                         builder = MediaMetadataCompat.Builder()
@@ -167,11 +168,12 @@ class DataTransform private constructor() {
                         pathList.remove(itemPath)
                         isNeedRe = true
                     }
-                    query.close()
                 }
+
             } else {
                 isNeedRe = true
             }
+            StreamUtils.closeIo(query)
             oldUri = audioUri
         }
 
@@ -223,7 +225,7 @@ class DataTransform private constructor() {
                 builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE,
                         StringUtils.ifEmpty(titleS, musicName))
 
-                val bitmap: Bitmap? = retriever.embeddedPicture.let {
+                val bitmap: Bitmap? = retriever.embeddedPicture?.let {
                     BitmapFactory.decodeByteArray(it, 0, it.size)
                 }
 

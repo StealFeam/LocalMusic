@@ -138,7 +138,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
             }
         } else {
             if (mAudioFocus == AUDIO_NO_FOCUS_CAN_DUCK) {
-                mMediaPlayer?.setVolume(0.2f, 0.2f)
+                mMediaPlayer?.setVolume(0.1f, 0.1f)
             } else {
                 mMediaPlayer?.setVolume(1.0f, 1.0f)
             }

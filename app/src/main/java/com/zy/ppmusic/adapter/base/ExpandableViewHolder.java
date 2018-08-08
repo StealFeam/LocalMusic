@@ -33,7 +33,7 @@ public class ExpandableViewHolder extends RecyclerView.ViewHolder
     public void attachOnLongClickListener(OnItemViewLongClickListener l, View... views) {
         this.mItemLongClickListener = l;
         for (View itemView : views) {
-            itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
         }
     }
 

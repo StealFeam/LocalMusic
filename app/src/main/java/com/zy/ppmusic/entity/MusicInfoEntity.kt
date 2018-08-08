@@ -28,7 +28,7 @@ class MusicInfoEntity : Serializable {
 
     constructor() {}
 
-    constructor(mediaId: String, musicName: String, artist: String, queryPath: String,
+    constructor(mediaId: String?, musicName: String?, artist: String?, queryPath: String?,
                 size: Long, duration: Long, iconData: ByteArray?) {
         this.mediaId = mediaId
         this.musicName = musicName

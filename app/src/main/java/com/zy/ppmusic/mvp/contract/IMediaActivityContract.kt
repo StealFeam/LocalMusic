@@ -1,16 +1,15 @@
 package com.zy.ppmusic.mvp.contract
 
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.os.ResultReceiver
 import android.support.v4.media.session.MediaControllerCompat
-
 import com.zy.ppmusic.mvp.base.AbstractBasePresenter
 import com.zy.ppmusic.mvp.base.IBaseModel
 import com.zy.ppmusic.mvp.base.IBaseView
 import com.zy.ppmusic.utils.ScanMusicFile
-
-import java.util.ArrayList
+import java.util.*
 
 /**
  * @author ZhiTouPC
@@ -50,6 +49,12 @@ interface IMediaActivityContract {
 
         abstract fun attachModelController(controller: MediaControllerCompat?)
 
+        abstract fun getGrantedRootUri():String
+
+        abstract fun getChildrenUri():String
+
+        abstract fun setGrantedRootUri(uri:String,child:String)
+
         /**
          * 刷新列表
          *
@@ -88,8 +93,7 @@ interface IMediaActivityContract {
          * @param params 参数
          * @param resultReceiver 接受回调的对象
          */
-        abstract fun sendCommand(method: String, params: Bundle,
-                                 resultReceiver: ResultReceiver)
+        abstract fun sendCommand(method: String, params: Bundle, resultReceiver: ResultReceiver)
 
         /**
          * 播放指定的媒体
@@ -128,6 +132,7 @@ interface IMediaActivityContract {
          * 上一首
          */
         abstract fun skipPrevious()
+
     }
 
     interface IMediaActivityModel : IBaseModel {

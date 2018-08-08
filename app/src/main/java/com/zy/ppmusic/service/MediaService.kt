@@ -99,19 +99,20 @@ class MediaService : MediaBrowserServiceCompat() {
     private val timeTikCallBack = object : TimeTikCallBack {
 
         override fun onTik(mis: Long) {
-            //如果页面绑定时
-            if (mMediaSessionCompat!!.controller != null) {
-                if (mis != 0L) {
-                    val bundle = Bundle()
-                    bundle.putLong(ACTION_COUNT_DOWN_TIME, mis)
-                    mMediaSessionCompat!!.sendSessionEvent(ACTION_COUNT_DOWN_TIME, bundle)
-                } else {
-                    if (mMediaSessionCompat!!.controller != null) {
-                        mMediaSessionCompat!!.sendSessionEvent(ACTION_COUNT_DOWN_END, null)
+            mMediaSessionCompat?.apply {
+                //如果页面绑定时
+                if (this.controller != null) {
+                    if (mis != 0L) {
+                        val bundle = Bundle()
+                        bundle.putLong(ACTION_COUNT_DOWN_TIME, mis)
+                        this.sendSessionEvent(ACTION_COUNT_DOWN_TIME, bundle)
+                    } else {
+                        this.sendSessionEvent(ACTION_COUNT_DOWN_END, null)
+                        handleStopRequest(true)
                     }
-                    handleStopRequest(true)
                 }
             }
+
         }
     }
 
@@ -284,11 +285,11 @@ class MediaService : MediaBrowserServiceCompat() {
         Log.e(TAG, "changeMediaByMode: " + mMediaSessionCompat!!.controller.repeatMode)
         //判断重复模式，单曲重复，随机播放，列表播放
         when (mMediaSessionCompat!!.controller.repeatMode) {
-        //随机播放：自动下一首  ----暂改为列表循环
+            //随机播放：自动下一首  ----暂改为列表循环
             PlaybackStateCompat.REPEAT_MODE_ALL -> onMediaChange(mPlayBack!!.onSkipToNext(), true)
-        //单曲重复：重复当前的歌曲
+            //单曲重复：重复当前的歌曲
             PlaybackStateCompat.REPEAT_MODE_ONE -> onMediaChange(mCurrentMedia!!.description.mediaId, true)
-        //列表播放：判断是否播放到列表的最后
+            //列表播放：判断是否播放到列表的最后
             PlaybackStateCompat.REPEAT_MODE_NONE -> if (isNext) {
                 val position = mQueueItemList.indexOf(mCurrentMedia)
                 //如果不是当前歌曲播放完成自动调用的话，就直接播放下一首
@@ -316,7 +317,7 @@ class MediaService : MediaBrowserServiceCompat() {
         }
         val cacheEntity = MusicDbEntity()
         cacheEntity.lastMediaId = mPlayBack!!.currentMediaId
-        if (mCurrentMedia != null && mCurrentMedia!!.description != null) {
+        if (mCurrentMedia!!.description != null) {
             if (mCurrentMedia!!.description.mediaUri != null) {
                 cacheEntity.lastMediaPath = mCurrentMedia!!.description.mediaUri!!.path
             }
@@ -725,13 +726,13 @@ class MediaService : MediaBrowserServiceCompat() {
                 Log.w(TAG, "onMediaButtonEvent: up=" + keyEvent.action +
                         ",code=" + keyEvent.keyCode)
                 when (keyEvent.keyCode) {
-                //点击下一首
+                    //点击下一首
                     KeyEvent.KEYCODE_MEDIA_NEXT -> changeMediaByMode(true, false)
-                //点击关闭
+                    //点击关闭
                     KeyEvent.KEYCODE_MEDIA_STOP -> handleStopRequest(true)
-                //点击上一首（目前没有）
+                    //点击上一首（目前没有）
                     KeyEvent.KEYCODE_MEDIA_PREVIOUS -> changeMediaByMode(false, false)
-                //点击播放按钮
+                    //点击播放按钮
                     KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY -> {
                         Log.e(TAG, "onMediaButtonEvent: 点击了播放按钮")
                         handlePlayOrPauseRequest()
@@ -745,10 +746,10 @@ class MediaService : MediaBrowserServiceCompat() {
                     val secondMis: Long = 300
                     PrintLog.d("按钮抬起走了这里")
                     loge(keyEvent.toString())
-                    mHandler.postDelayed(playRunnable,300)
-                    if(mLastHeadSetEventTime > 0 && (keyEvent.eventTime - mLastHeadSetEventTime) < secondMis){
+                    mHandler.postDelayed(playRunnable, 300)
+                    if (mLastHeadSetEventTime > 0 && (keyEvent.eventTime - mLastHeadSetEventTime) < secondMis) {
                         mHandler.removeCallbacks(playRunnable)
-                        changeMediaByMode(true,false)
+                        changeMediaByMode(true, false)
                     }
                     loge("last=$mLastHeadSetEventTime,current=${keyEvent.eventTime}")
                     mLastHeadSetEventTime = keyEvent.eventTime
@@ -793,9 +794,9 @@ class MediaService : MediaBrowserServiceCompat() {
                     }
                     cb?.send(COMMAND_UPDATE_QUEUE_CODE, Bundle())
                 }
-            //TODO 开始循环获取当前播放位置
+                //TODO 开始循环获取当前播放位置
                 COMMAND_START_LOOP -> startLoop()
-            //TODO 结束获取当前播放位置
+                //TODO 结束获取当前播放位置
                 COMMAND_STOP_LOOP -> stopLoop()
                 COMMAND_CHANGE_NOTIFY_STYLE -> {
                     val style = reqExtra!!.getInt(Constant.CHOOSE_STYLE_EXTRA, 0)
@@ -823,7 +824,7 @@ class MediaService : MediaBrowserServiceCompat() {
         override fun onCustomAction(action: String?, extras: Bundle?) {
             super.onCustomAction(action, extras)
             when (action) {
-            //TODO 开始倒计时
+                //TODO 开始倒计时
                 ACTION_COUNT_DOWN_TIME -> {
                     if (mCountDownTimer != null) {
                         mCountDownTimer?.stopTik()
@@ -832,7 +833,7 @@ class MediaService : MediaBrowserServiceCompat() {
                     mCountDownTimer = TimerUtils(extras!!.getLong(ACTION_COUNT_DOWN_TIME), 1000)
                     mCountDownTimer?.startTik(timeTikCallBack)
                 }
-            //TODO 结束倒计时
+                //TODO 结束倒计时
                 ACTION_STOP_COUNT_DOWN -> if (mCountDownTimer != null) {
                     mCountDownTimer?.stopTik()
                     mCountDownTimer = null
@@ -842,6 +843,7 @@ class MediaService : MediaBrowserServiceCompat() {
             }
         }
     }
+
     private val playRunnable by lazy {
         DoublePlayRunnable()
     }

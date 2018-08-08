@@ -2,6 +2,7 @@ package com.zy.ppmusic.mvp.presenter
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.*
 import android.support.v4.media.session.MediaControllerCompat
 import android.util.Log
@@ -19,7 +20,9 @@ import java.lang.ref.WeakReference
  */
 class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         IMediaActivityContract.AbstractMediaActivityPresenter(view) {
-    private var mModeCachePreference: SharedPreferences? = null
+
+
+    private var mCachePreference: SharedPreferences? = null
     private var isScanning = false
     private val mMainHandler = Handler(Looper.getMainLooper())
 
@@ -34,6 +37,18 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
             mView.get()?.hideLoading()
         }
     }
+    override fun getChildrenUri(): String {
+        return mCachePreference?.getString(CACHE_CHILD_URI, "") ?: ""
+    }
+
+    override fun getGrantedRootUri(): String {
+        return mCachePreference?.getString(CACHE_ROOT_URI, "") ?: ""
+    }
+
+    override fun setGrantedRootUri(uri: String,child:String) {
+        mCachePreference?.edit()?.putString(CACHE_ROOT_URI, uri)?.putString(CACHE_CHILD_URI,child)?.apply()
+    }
+
 
     override fun createModel(): IMediaActivityContract.IMediaActivityModel {
         return MediaActivityModelImpl()
@@ -84,23 +99,22 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         }
     }
 
-    override fun changeMode(c: Context, mode: Int) {
-        if (mModeCachePreference == null) {
-            mModeCachePreference = c.getSharedPreferences(CACHE_MODE_NAME, Context.MODE_PRIVATE)
+    private fun initCachePreference(context: Context) {
+        if (mCachePreference == null) {
+            mCachePreference = context.getSharedPreferences(CACHE_MODE_NAME, Context.MODE_PRIVATE)
         }
-        val edit = mModeCachePreference!!.edit()
+    }
+
+    override fun changeMode(c: Context, mode: Int) {
+        initCachePreference(c)
+        val edit = mCachePreference!!.edit()
         edit.putInt(CACHE_MODE_KEY, mode)
         edit.apply()
     }
 
     override fun getLocalMode(c: Context): Int {
-        if (mModeCachePreference == null) {
-            mModeCachePreference = c.getSharedPreferences(CACHE_MODE_NAME, Context.MODE_PRIVATE)
-            if (!mModeCachePreference!!.contains(CACHE_MODE_KEY)) {
-                return 0
-            }
-        }
-        return mModeCachePreference!!.getInt(CACHE_MODE_KEY, 0)
+        initCachePreference(c)
+        return mCachePreference?.getInt(CACHE_MODE_KEY, 0)?:0
     }
 
     override fun deleteFile(path: String?): Boolean {
@@ -234,9 +248,11 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
     }
 
     companion object {
-        private val TAG = "MediaPresenterImpl"
-        private val CACHE_MODE_NAME = "CACHE_MODE"
-        private val CACHE_MODE_KEY = "MODE_KEY"
+        private const val TAG = "MediaPresenterImpl"
+        private const val CACHE_MODE_NAME = "CACHE_MODE"
+        private const val CACHE_MODE_KEY = "MODE_KEY"
+        private const val CACHE_ROOT_URI = "root_uri"
+        private const val CACHE_CHILD_URI = "child_uri"
     }
 
 }

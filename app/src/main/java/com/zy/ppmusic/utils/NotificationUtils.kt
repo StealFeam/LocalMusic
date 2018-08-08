@@ -25,12 +25,12 @@ import android.content.Context.MODE_PRIVATE
  * @author ZhiTouPC
  */
 object NotificationUtils {
-    private val TAG = "NotificationUtils"
+    private const val TAG = "NotificationUtils"
     /**
      * 通知的id
      */
-    val NOTIFY_ID = 40012
-    val NOTIFY_CHANNEL_ID = "notify_channel_id"
+    const val NOTIFY_ID = 40012
+    const val NOTIFY_CHANNEL_ID = "notify_channel_id"
 
     private var CURRENT_STYLE = -1
 

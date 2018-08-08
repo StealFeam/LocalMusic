@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Environment
 import android.os.storage.StorageManager
 import android.os.storage.StorageVolume
+import android.support.v4.provider.DocumentFile
 import android.text.TextUtils
 import android.util.Log
 
@@ -44,7 +45,6 @@ object FileUtils {
      */
     fun getStoragePath(mContext: Context, isExternalStorage: Boolean): String? {
         val mStorageManager = mContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager
-                ?: return null
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             val storageVolumes = mStorageManager.storageVolumes
             for (storageVolume in storageVolumes) {
@@ -218,16 +218,16 @@ object FileUtils {
             return null
         }
         var inputStream: ObjectInputStream? = null
-        try {
+        return try {
             inputStream = ObjectInputStream(FileInputStream(file))
             PrintLog.print("read object success")
-            return inputStream.readObject()
+            inputStream.readObject()
         } catch (e: IOException) {
             PrintLog.e("read cache has a error :" + e.message)
-            return null
+            null
         } catch (e: ClassNotFoundException) {
             PrintLog.e("read cache has a error :" + e.message)
-            return null
+            null
         } finally {
             StreamUtils.closeIo(inputStream!!)
         }
@@ -237,17 +237,16 @@ object FileUtils {
         return path != null && File(path).exists()
     }
 
-    fun deleteFile(path: String?): Boolean {
+    fun deleteFile(path: String?):Boolean{
         if (TextUtils.isEmpty(path)) {
             System.err.println("删除文件失败，路径为空")
-            return false
         }
         val file = File(path)
-        if (!file.exists()) {
-            System.err.println("删除文件失败，找不到该文件")
-            return false
+        file.setWritable(true)
+        if(file.exists()){
+            return file.delete()
         }
-        return file.delete()
+        return false
     }
 
 
