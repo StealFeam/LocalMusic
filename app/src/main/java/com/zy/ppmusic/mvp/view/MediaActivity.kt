@@ -299,8 +299,13 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                     return
                 }
                 vp_show_media_head.postDelayed({
-                    mPresenter!!.skipToPosition(vp_show_media_head.currentItem.toLong())
+                    mPresenter?.skipToPosition(vp_show_media_head.currentItem.toLong())
                     updateQueueSize(mPlayQueueList!!.size, vp_show_media_head.currentItem + 1)
+                    val mediaItem = DataTransform.get().mediaItemList[vp_show_media_head.currentItem]
+                    setMediaInfo(mediaItem.description.title?.toString()
+                            ?: UiUtils.getString(R.string.unknown_author)
+                            , mediaItem.description.subtitle?.toString()
+                            ?: UiUtils.getString(R.string.unknown_author))
                 }, 200)
             }
         }
@@ -697,13 +702,16 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     }
 
     private fun connectMediaService() {
+        if (mMediaBrowser?.isConnected == true) {
+            mMediaBrowser?.disconnect()
+            mMediaBrowser = null
+        }
+
         if (mMediaBrowser == null) {
             val serviceComponentName = ComponentName(this, MediaService::class.java)
             mMediaBrowser = MediaBrowserCompat(this, serviceComponentName, mConnectionCallBack, null)
         }
-        if (mMediaBrowser?.isConnected == true) {
-            mMediaBrowser?.disconnect()
-        }
+
         mMediaBrowser?.connect()
     }
 
@@ -748,7 +756,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     private val mConnectionCallBack = object : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
             super.onConnected()
-            PrintLog.print("connected service....")
+            PrintLog.print("已连接服务....")
             //mMediaBrowser!!.root 对应service的BrowserRoot 可以是包名
             mMediaBrowser?.subscribe(mMediaBrowser!!.root, subscriptionCallBack)
             mMediaController = MediaControllerCompat(this@MediaActivity, mMediaBrowser!!.sessionToken)
@@ -761,17 +769,20 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
         override fun onConnectionSuspended() {
             super.onConnectionSuspended()
-            PrintLog.print("onConnectionSuspended....")
-            mMediaBrowser?.unsubscribe(mMediaBrowser!!.root, subscriptionCallBack)
-            if (mMediaController != null) {
-                mMediaController?.unregisterCallback(mControllerCallBack)
-                MediaControllerCompat.setMediaController(this@MediaActivity, null)
+            PrintLog.print("服务已断开....")
+//            mMediaBrowser?.unsubscribe(mMediaBrowser!!.root, subscriptionCallBack)
+//            if (mMediaController != null) {
+//                mMediaController?.unregisterCallback(mControllerCallBack)
+//                MediaControllerCompat.setMediaController(this@MediaActivity, null)
+//            }
+            if (!isFinishing) {
+                connectMediaService()
             }
         }
 
         override fun onConnectionFailed() {
             super.onConnectionFailed()
-            PrintLog.print("onConnectionFailed.....")
+            PrintLog.print("连接服务失败.....")
             connectMediaService()
         }
     }
@@ -980,6 +991,10 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                         finish()
                     }
                 }
+                "s1234" -> {
+                    println("重新连接服务")
+                    connectMediaService()
+                }
                 MediaService.UPDATE_POSITION_EVENT -> {
                     val position = extras?.getInt(MediaService.UPDATE_POSITION_EVENT, 0)
                     startPosition = position?.toLong() ?: 0
@@ -1089,8 +1104,10 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     override fun onStop() {
         super.onStop()
         PrintLog.print("onStop called")
-        //正常按键返回退出调用
-        disConnectService()
+        if (isFinishing) {
+            //正常按键返回退出调用
+            disConnectService()
+        }
     }
 
     override fun onDestroy() {

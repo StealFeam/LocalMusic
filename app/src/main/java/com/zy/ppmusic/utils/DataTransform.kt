@@ -117,9 +117,9 @@ class DataTransform private constructor() {
                         }
 
                         //过滤系统媒体库中其他类型的媒体文件
-                        if (!isSupportMediaType(queryPath)) {
-                            continue
-                        }
+//                        if (!isSupportMediaType(queryPath)) {
+//                            continue
+//                        }
 
                         mediaMetadataRetriever.setDataSource(queryPath)
                         val mBitmap: Bitmap? = mediaMetadataRetriever.embeddedPicture?.let {

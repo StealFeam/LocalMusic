@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
+import android.os.Process
 import android.os.ResultReceiver
 import android.os.SystemClock
 import android.support.v4.content.LocalBroadcastManager
@@ -119,15 +120,14 @@ class MediaService : MediaBrowserServiceCompat() {
     override fun onCreate() {
         super.onCreate()
         PrintLog.e("onCreate----------")
-        if (!Constant.IS_STARTED) {
+        if (!Constant.IS_STARTED && applicationContext != null) {
             PrintLog.e("启动Service。。。。。")
             stopSelf()
             try {
-                startService(Intent(baseContext, MediaService::class.java))
+                startService(Intent(applicationContext, MediaService::class.java))
             } catch (e: Exception) {
                 PrintLog.e("启动失败")
             }
-
             Constant.IS_STARTED = true
         }
         if (mMediaSessionCompat == null) {
@@ -146,9 +146,9 @@ class MediaService : MediaBrowserServiceCompat() {
         mMediaSessionCompat?.setPlaybackToLocal(AudioManager.STREAM_MUSIC)
         mMediaSessionCompat?.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE)
 
-        val it = Intent(baseContext, MediaActivity::class.java)
-        it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        val pendingIntent = PendingIntent.getActivity(baseContext, 1, it,
+        val it = Intent(applicationContext, MediaActivity::class.java)
+        it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP and Intent.FLAG_ACTIVITY_NEW_TASK)
+        val pendingIntent = PendingIntent.getActivity(applicationContext, 1, it,
                 PendingIntent.FLAG_UPDATE_CURRENT)
         mMediaSessionCompat?.setSessionActivity(pendingIntent)
 
@@ -263,8 +263,10 @@ class MediaService : MediaBrowserServiceCompat() {
             mMediaSessionCompat!!.isActive = false
             mMediaSessionCompat!!.release()
             mAudioReceiver!!.unregister()
-            stopForeground(false)
+            stopForeground(true)
             stopSelf()
+            android.os.Process.killProcess(Process.myPid())
+            System.exit(-1)
         }
     }
 
@@ -278,7 +280,10 @@ class MediaService : MediaBrowserServiceCompat() {
         if (mPlayBack == null) {
             Log.e(TAG, "changeMediaByMode: playback is null")
             PrintLog.d("尝试启动界面")
-            startService(Intent(applicationContext, MediaService::class.java))
+            Intent(applicationContext, MediaActivity::class.java).apply {
+                this.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(this)
+            }
             Constant.IS_STARTED = false
             return
         }
@@ -353,7 +358,9 @@ class MediaService : MediaBrowserServiceCompat() {
         if (mCurrentMedia != null) {
             stateBuilder.setActiveQueueItemId(mCurrentMedia!!.queueId)
         }
-        mMediaSessionCompat!!.setPlaybackState(stateBuilder.build())
+        mMediaSessionCompat?.setPlaybackState(stateBuilder.build()) ?: apply {
+            println("MediaSessionCompat is null.....")
+        }
 
         postNotifyByStyle()
 
@@ -430,10 +437,18 @@ class MediaService : MediaBrowserServiceCompat() {
      * 处理播放或者暂停请求
      */
     fun handlePlayOrPauseRequest() {
-        if (mCurrentMedia == null) {
-            startActivity(Intent(applicationContext, MediaActivity::class.java))
-            Constant.IS_STARTED = false
-            PrintLog.d("由后台启动界面")
+        if (mCurrentMedia == null ) {
+            if(mMediaSessionCompat!!.sessionToken != null){
+                mMediaSessionCompat!!.sendSessionEvent("s1234",Bundle())
+                initPlayBack()
+            }else{
+                Intent(applicationContext, MediaActivity::class.java).apply {
+                    this.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(this)
+                }
+                Constant.IS_STARTED = false
+                PrintLog.d("由后台启动界面")
+            }
             return
         }
         if (mPlayBack == null) {
@@ -501,7 +516,6 @@ class MediaService : MediaBrowserServiceCompat() {
      * @param mediaId                曲目id
      * @param shouldPlayWhenPrepared 是否需要准备完成后播放
      */
-    @JvmOverloads
     fun onMediaChange(mediaId: String?, shouldPlayWhenPrepared: Boolean, shouldSeekToPosition: Int = 0) {
         if (mediaId != null && !DataTransform.get().pathList.isEmpty()) {
             if (mUpdateRunnable == null) {
@@ -568,6 +582,8 @@ class MediaService : MediaBrowserServiceCompat() {
             //TODO 触发MediaControllerCompat.Callback->onMetadataChanged方法
             if (track != null) {
                 mediaService.mMediaSessionCompat?.setMetadata(track)
+            }else{
+                println("----track is null----")
             }
 
             val index = DataTransform.get().getMediaIndex(mediaId)
@@ -722,50 +738,52 @@ class MediaService : MediaBrowserServiceCompat() {
 
         override fun onMediaButtonEvent(mediaButtonEvent: Intent): Boolean {
             val keyEvent = mediaButtonEvent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT)
-            if (keyEvent.action == KeyEvent.ACTION_DOWN) {
-                Log.w(TAG, "onMediaButtonEvent: up=" + keyEvent.action +
-                        ",code=" + keyEvent.keyCode)
-                when (keyEvent.keyCode) {
-                    //点击下一首
-                    KeyEvent.KEYCODE_MEDIA_NEXT -> changeMediaByMode(true, false)
-                    //点击关闭
-                    KeyEvent.KEYCODE_MEDIA_STOP -> handleStopRequest(true)
-                    //点击上一首（目前没有）
-                    KeyEvent.KEYCODE_MEDIA_PREVIOUS -> changeMediaByMode(false, false)
-                    //点击播放按钮
-                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY -> {
-                        Log.e(TAG, "onMediaButtonEvent: 点击了播放按钮")
-                        handlePlayOrPauseRequest()
-                    }
-                    else -> {
+            when {
+                keyEvent.action == KeyEvent.ACTION_DOWN -> {
+                    Log.w(TAG, "onMediaButtonEvent: up=" + keyEvent.action +
+                            ",code=" + keyEvent.keyCode)
+                    when (keyEvent.keyCode) {
+                        //点击下一首
+                        KeyEvent.KEYCODE_MEDIA_NEXT -> changeMediaByMode(true, false)
+                        //点击关闭
+                        KeyEvent.KEYCODE_MEDIA_STOP -> handleStopRequest(true)
+                        //点击上一首（目前没有）
+                        KeyEvent.KEYCODE_MEDIA_PREVIOUS -> changeMediaByMode(false, false)
+                        //点击播放按钮
+                        KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                            Log.e(TAG, "onMediaButtonEvent: 点击了播放按钮")
+                            handlePlayOrPauseRequest()
+                        }
+                        else -> {
+                        }
                     }
                 }
-            } else if (keyEvent.action == KeyEvent.ACTION_UP) {
-                //TODO 如果有线耳机上的播放键快速点击两次且时间在300毫秒以内，则视为下一首
-                if (keyEvent.keyCode == KeyEvent.KEYCODE_HEADSETHOOK) {
-                    val secondMis: Long = 300
-                    PrintLog.d("按钮抬起走了这里")
-                    loge(keyEvent.toString())
-                    mHandler.postDelayed(playRunnable, 300)
-                    if (mLastHeadSetEventTime > 0 && (keyEvent.eventTime - mLastHeadSetEventTime) < secondMis) {
-                        mHandler.removeCallbacks(playRunnable)
-                        changeMediaByMode(true, false)
-                    }
-                    loge("last=$mLastHeadSetEventTime,current=${keyEvent.eventTime}")
-                    mLastHeadSetEventTime = keyEvent.eventTime
+                keyEvent.action == KeyEvent.ACTION_UP -> {
+                    //TODO 如果有线耳机上的播放键快速点击两次且时间在300毫秒以内，则视为下一首
+                    if (keyEvent.keyCode == KeyEvent.KEYCODE_HEADSETHOOK) {
+                        val secondMis: Long = 300
+                        PrintLog.d("按钮抬起走了这里")
+                        loge(keyEvent.toString())
+                        mHandler.postDelayed(playRunnable, 300)
+                        if (mLastHeadSetEventTime > 0 && (keyEvent.eventTime - mLastHeadSetEventTime) < secondMis) {
+                            mHandler.removeCallbacks(playRunnable)
+                            changeMediaByMode(true, false)
+                        }
+                        loge("last=$mLastHeadSetEventTime,current=${keyEvent.eventTime}")
+                        mLastHeadSetEventTime = keyEvent.eventTime
 
-//                    if (keyEvent.eventTime - mLastHeadSetEventTime > secondMis) {
-//                        changeMediaByMode(true, false)
-//                        PrintLog.d("之后下一首")
-//                    } else {
-//                        PrintLog.d("之后暂停或者播放")
-//                        handlePlayOrPauseRequest()
-//                    }
+    //                    if (keyEvent.eventTime - mLastHeadSetEventTime > secondMis) {
+    //                        changeMediaByMode(true, false)
+    //                        PrintLog.d("之后下一首")
+    //                    } else {
+    //                        PrintLog.d("之后暂停或者播放")
+    //                        handlePlayOrPauseRequest()
+    //                    }
+                    }
+                    Log.w(TAG, "onMediaButtonEvent: action=" + keyEvent.action +
+                            ",code=" + keyEvent.keyCode)
                 }
-                Log.w(TAG, "onMediaButtonEvent: action=" + keyEvent.action +
-                        ",code=" + keyEvent.keyCode)
-            } else {
-                loge(keyEvent.toString())
+                else -> loge(keyEvent.toString())
             }
             return true
         }
