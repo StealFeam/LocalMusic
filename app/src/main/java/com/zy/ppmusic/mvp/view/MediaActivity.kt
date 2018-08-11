@@ -2,9 +2,8 @@ package com.zy.ppmusic.mvp.view
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.arch.lifecycle.ViewModelProvider
-import android.arch.lifecycle.ViewModelStore
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
@@ -194,10 +193,17 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
     }
 
+    companion object {
+        fun action(context: Context){
+            Intent(context,MediaActivity::class.java).apply {
+                context.startActivity(this)
+            }
+        }
+    }
+
     override fun getContentViewId(): Int = R.layout.activity_media_linear
 
     override fun createPresenter(): MediaPresenterImpl = MediaPresenterImpl(this)
-
 
     private fun initTitleBar() {
         tb_media.setBackgroundColor(ContextCompat.getColor(this, R.color.colorTheme))
@@ -433,35 +439,36 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      */
     @SuppressLint("InflateParams")
     private fun createDelQueueItemDialog(position: Int) {
-        val dialog = AlertDialog.Builder(this)
-        dialog.setTitle(getString(R.string.string_sure_del))
         val delContentView = LayoutInflater.from(this).inflate(R.layout.dl_content_del_item, null)
         delContentView.setPadding(UiUtils.dp2px(this, 20), UiUtils.dp2px(this, 20),
                 UiUtils.dp2px(this, 10), UiUtils.dp2px(this, 10))
-        dialog.setView(delContentView)
-        dialog.setPositiveButton(getString(R.string.string_del)) { _, _ ->
-            if (delContentView.checkbox_dl_content_message.isChecked) {
-                val itemPath = DataTransform.get().getPath(position)
-                if (mPresenter!!.deleteFile(itemPath)) {
-                    Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(DataTransform.get().getPath(position))).apply {
-                        sendBroadcast(this)
+        AlertDialog.Builder(this)
+                .setTitle(getString(R.string.string_sure_del))
+                .setView(delContentView)
+                .setPositiveButton(getString(R.string.string_del)) { _, _ ->
+                    if (delContentView.checkbox_dl_content_message.isChecked) {
+                        val itemPath = DataTransform.get().getPath(position)
+                        if (mPresenter!!.deleteFile(itemPath)) {
+                            Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(DataTransform.get().getPath(position))).apply {
+                                sendBroadcast(this)
+                            }
+                            notifyDelItem(position)
+                        } else {
+                            itemPath?.takeIf { it.isNotEmpty() }?.apply {
+                                doSupportDelAction(this, position)
+                            }
+                                    ?: Toast.makeText(this@MediaActivity, "删除失败", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        notifyDelItem(position)
                     }
-                    notifyDelItem(position)
-                } else {
-                    itemPath?.takeIf { it.isNotEmpty() }?.apply {
-                        doSupportDelAction(this, position)
-                    } ?: Toast.makeText(this@MediaActivity, "删除失败", Toast.LENGTH_SHORT).show()
                 }
-            } else {
-                notifyDelItem(position)
-            }
-
-        }
-        dialog.setNegativeButton(getString(R.string.string_cancel)) { d, _ ->
-            d.cancel()
-            d.dismiss()
-        }
-        dialog.create().show()
+                .setNegativeButton(getString(R.string.string_cancel)) { d, _ ->
+                    d.cancel()
+                    d.dismiss()
+                }
+                .create()
+                .show()
     }
 
     /**
@@ -477,9 +484,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                     Toast.makeText(this@MediaActivity, "删除失败", Toast.LENGTH_SHORT).show()
                     return
                 }
-                println("根id-----$rootId")
                 val path = itemPath.substringAfter(rootId)
-                println("根id后的路径-----$path")
                 val delUri = DocumentsContract.buildDocumentUriUsingTree(Uri.parse(mPresenter.getChildrenUri()),
                         "$rootId:$path")
                 println("删除的uri----$delUri")
@@ -991,7 +996,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                         finish()
                     }
                 }
-                "s1234" -> {
+                MediaService.RESET_SESSION_EVENT -> {
                     println("重新连接服务")
                     connectMediaService()
                 }
@@ -1020,32 +1025,19 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         tv_show_position.text = String.format(Locale.CHINA, "%2d/%2d", current, total)
     }
 
-    private var mPlayStateModel: HeadViewModel? = null
-
-    private fun createModelIfNeed() {
-        if (mPlayStateModel == null) {
-            val viewModelStore = ViewModelStore()
-            val provider = ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory(App.getInstance()))
-            mPlayStateModel = provider.get(HeadViewModel::class.java)
-        }
-    }
-
     /**
      * 播放器状态处理
      */
     fun handlePlayState(state: Int) {
         PrintLog.print("handlePlayState=$state")
-        createModelIfNeed()
         if (state != PlaybackStateCompat.STATE_PLAYING) {
             stopLoop()
-            mPlayStateModel?.setPlayState(false)
             control_action_play_pause.setImageResource(R.drawable.ic_black_play)
             if (state == PlaybackStateCompat.STATE_STOPPED) {
                 control_display_progress.progress = 0
             }
         } else {
             startLoop()
-            mPlayStateModel?.setPlayState(true)
             control_action_play_pause.setImageResource(R.drawable.ic_black_pause)
         }
     }

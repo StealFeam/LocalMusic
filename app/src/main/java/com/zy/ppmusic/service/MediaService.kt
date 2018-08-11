@@ -6,11 +6,7 @@ import android.app.Service
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
-import android.os.Bundle
-import android.os.Handler
-import android.os.Process
-import android.os.ResultReceiver
-import android.os.SystemClock
+import android.os.*
 import android.support.v4.content.LocalBroadcastManager
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaBrowserServiceCompat
@@ -35,10 +31,7 @@ import java.util.*
 /**
  * @author ZhiTouPC
  */
-
 class MediaService : MediaBrowserServiceCompat() {
-    private val MY_ROOT_ID = "my_root_id"
-    private val EMPTY_ROOT_ID = "empty_root_id"
     /**
      * 保持后台运行且与前台进行通信
      */
@@ -153,8 +146,8 @@ class MediaService : MediaBrowserServiceCompat() {
         mMediaSessionCompat?.setSessionActivity(pendingIntent)
 
         mAudioReceiver = AudioBecomingNoisyReceiver(this)
-    }
 
+    }
 
     private fun initPlayBack() {
         if (mPlayBack != null) {
@@ -212,7 +205,7 @@ class MediaService : MediaBrowserServiceCompat() {
                     result.sendResult(list)
                     PrintLog.print("load list size ... " + mMediaItemList.size)
                 } else {
-                    TaskPool.backgroundPool.submit {
+                    TaskPool.execute(Runnable {
                         val localCacheMediaLoader = LocalCacheMediaLoader()
                         val mediaPaths = localCacheMediaLoader.mediaPaths
                         if (mediaPaths != null) {
@@ -220,7 +213,7 @@ class MediaService : MediaBrowserServiceCompat() {
                             mMediaItemList = DataTransform.get().mediaItemList
                             result.sendResult(mMediaItemList)
                         } else {
-                            ScanMusicFile.getInstance().setOnScanComplete(object : ScanMusicFile.AbstractOnScanComplete() {
+                            ScanMusicFile.get().setOnScanComplete(object : ScanMusicFile.AbstractOnScanComplete() {
                                 override fun onComplete(paths: ArrayList<String>) {
                                     PrintLog.e("扫描本地数据了")
                                     DataTransform.get().transFormData(applicationContext, paths)
@@ -228,7 +221,7 @@ class MediaService : MediaBrowserServiceCompat() {
                                 }
                             }).scanMusicFile(applicationContext)
                         }
-                    }
+                    })
                 }
             } else {
                 result.sendResult(mMediaItemList)
@@ -236,7 +229,7 @@ class MediaService : MediaBrowserServiceCompat() {
             if (mUpdateQueueRunnable == null) {
                 mUpdateQueueRunnable = UpdateQueueRunnable(this)
             }
-            TaskPool.backgroundPool.submit(mUpdateQueueRunnable!!)
+            TaskPool.execute(mUpdateQueueRunnable!!)
         } else {
             result.sendResult(null)
         }
@@ -257,12 +250,12 @@ class MediaService : MediaBrowserServiceCompat() {
             }
             savePlayingRecord()
             if (mUpdateQueueRunnable != null) {
-                TaskPool.backgroundPool.submit(mUpdateQueueRunnable!!)
+                TaskPool.execute(mUpdateQueueRunnable!!)
             }
             NotificationUtils.cancelAllNotify(applicationContext)
             mMediaSessionCompat!!.isActive = false
-            mMediaSessionCompat!!.release()
-            mAudioReceiver!!.unregister()
+            mMediaSessionCompat?.release()
+            mAudioReceiver?.unregister()
             stopForeground(true)
             stopSelf()
             android.os.Process.killProcess(Process.myPid())
@@ -287,10 +280,10 @@ class MediaService : MediaBrowserServiceCompat() {
             Constant.IS_STARTED = false
             return
         }
-        Log.e(TAG, "changeMediaByMode: " + mMediaSessionCompat!!.controller.repeatMode)
+        Log.e(TAG, "changeMediaByMode: ")
         //判断重复模式，单曲重复，随机播放，列表播放
         when (mMediaSessionCompat!!.controller.repeatMode) {
-            //随机播放：自动下一首  ----暂改为列表循环
+            //暂改为列表循环
             PlaybackStateCompat.REPEAT_MODE_ALL -> onMediaChange(mPlayBack!!.onSkipToNext(), true)
             //单曲重复：重复当前的歌曲
             PlaybackStateCompat.REPEAT_MODE_ONE -> onMediaChange(mCurrentMedia!!.description.mediaId, true)
@@ -406,8 +399,8 @@ class MediaService : MediaBrowserServiceCompat() {
         }
         //如果删除的是当前播放的歌曲，则播放新的曲目
         if (mPlayBack?.currentIndex == removeIndex) {
-            DataTransform.get().removeItem(applicationContext, removeIndex)
-            TaskPool.backgroundPool.submit(mUpdateQueueRunnable!!)
+            DataTransform.get().removeItem(removeIndex)
+            TaskPool.execute(mUpdateQueueRunnable!!)
             if (mPlayQueueMediaId!!.isNotEmpty()) {
                 //删除的是前列表倒数第二个曲目的时候直接播放替代的曲目
                 if (removeIndex <= mPlayQueueMediaId!!.size - 1) {
@@ -421,8 +414,8 @@ class MediaService : MediaBrowserServiceCompat() {
         } else {//如果不是当前曲目，不能影响当前播放,记录下播放进度，更新列表后继续播放
             val currentIndex = mPlayBack?.currentIndex ?: 0
             val position = mPlayBack?.currentStreamPosition ?: 0
-            DataTransform.get().removeItem(applicationContext, removeIndex)
-            TaskPool.backgroundPool.submit(mUpdateQueueRunnable!!)
+            DataTransform.get().removeItem(removeIndex)
+            TaskPool.execute(mUpdateQueueRunnable!!)
             if (currentIndex < removeIndex) {
                 onMediaChange(mPlayQueueMediaId!![currentIndex],
                         state == PlaybackStateCompat.STATE_PLAYING, position)
@@ -437,11 +430,11 @@ class MediaService : MediaBrowserServiceCompat() {
      * 处理播放或者暂停请求
      */
     fun handlePlayOrPauseRequest() {
-        if (mCurrentMedia == null ) {
-            if(mMediaSessionCompat!!.sessionToken != null){
-                mMediaSessionCompat!!.sendSessionEvent("s1234",Bundle())
+        if (mCurrentMedia == null) {
+            if (mMediaSessionCompat!!.sessionToken != null) {
+                mMediaSessionCompat!!.sendSessionEvent("s1234", Bundle())
                 initPlayBack()
-            }else{
+            } else {
                 Intent(applicationContext, MediaActivity::class.java).apply {
                     this.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     startActivity(this)
@@ -464,8 +457,8 @@ class MediaService : MediaBrowserServiceCompat() {
         Log.d(TAG, "onDestroy() called")
         NotificationUtils.cancelAllNotify(this)
         DataBaseManager.getInstance().closeConn()
-        mAudioReceiver!!.unregister()
-        mMediaSessionCompat!!.release()
+        mAudioReceiver?.unregister()
+        mMediaSessionCompat?.release()
         if (mCountDownTimer != null) {
             mCountDownTimer!!.stopTik()
             mCountDownTimer = null
@@ -524,9 +517,9 @@ class MediaService : MediaBrowserServiceCompat() {
             mUpdateRunnable?.setMediaId(mediaId)
             mUpdateRunnable?.setSeekToPosition(shouldSeekToPosition)
             mUpdateRunnable?.isPlayWhenPrepared(shouldPlayWhenPrepared)
-            TaskPool.backgroundPool.submit(mUpdateRunnable!!)
+            TaskPool.execute(mUpdateRunnable!!)
         } else {
-            mPlayBack!!.stopPlayer()
+            mPlayBack?.stopPlayer()
         }
     }
 
@@ -542,16 +535,13 @@ class MediaService : MediaBrowserServiceCompat() {
             NotificationUtils.createCustomNotify(this@MediaService,
                     mMediaSessionCompat, mPlayBack!!.isPlaying)
         }
-        notification?.let {
+        notification?.also {
             startForeground(NotificationUtils.NOTIFY_ID, it)
         }
     }
 
     private class UpdateRunnable constructor(service: MediaService) : Runnable {
-        private val mWeakService: WeakReference<MediaService> by lazy {
-            WeakReference(service)
-        }
-
+        private val mWeakService: WeakReference<MediaService> = WeakReference(service)
         private var isShouldPlay: Boolean = false
         private var seekToPosition: Int = 0
         private var mediaId: String? = null
@@ -571,18 +561,16 @@ class MediaService : MediaBrowserServiceCompat() {
         override fun run() {
             val mediaService = mWeakService.get()
             val mediaId = this.mediaId
-            PrintLog.e("初始化播放器准备操作")
             if (mediaId == null || mediaService?.mPlayBack == null) {
                 PrintLog.e("mediaId is $mediaId,player is ${mediaService?.mPlayBack}")
                 return
             }
-            PrintLog.e("开始---")
             //TODO 设置媒体信息
             val track = DataTransform.get().metadataCompatList[mediaId]
             //TODO 触发MediaControllerCompat.Callback->onMetadataChanged方法
             if (track != null) {
                 mediaService.mMediaSessionCompat?.setMetadata(track)
-            }else{
+            } else {
                 println("----track is null----")
             }
 
@@ -607,7 +595,6 @@ class MediaService : MediaBrowserServiceCompat() {
                     }
                 }
             }
-            PrintLog.e("结束---")
         }
     }
 
@@ -661,7 +648,7 @@ class MediaService : MediaBrowserServiceCompat() {
                         if (mPlayQueueMediaId != null && mPlayQueueMediaId!!.isNotEmpty()) {
                             onMediaChange(mPlayQueueMediaId!![0], false)
                         } else {
-                            mMediaSessionCompat!!.sendSessionEvent(ERROR_PLAY_QUEUE_EVENT, null)
+                            mMediaSessionCompat?.sendSessionEvent(ERROR_PLAY_QUEUE_EVENT, null)
                         }
                     } else {
                         onMediaChange(mediaId, false)
@@ -687,7 +674,7 @@ class MediaService : MediaBrowserServiceCompat() {
                     }
                 } else if (ACTION_SEEK_TO == action) {
                     val seekPosition = extras.getInt(SEEK_TO_POSITION_PARAM)
-                    mPlayBack!!.seekTo(seekPosition, true)
+                    mPlayBack?.seekTo(seekPosition, true)
                     Log.e(TAG, "onPlayFromMediaId: $seekPosition")
                 } else {
                     PrintLog.i("unknown event")
@@ -706,8 +693,8 @@ class MediaService : MediaBrowserServiceCompat() {
         override fun onPause() {
             super.onPause()
             Log.d(TAG, "onPause() called")
-            mPlayBack!!.pause()
-            mPlayBack!!.setIsUserPause(true)
+            mPlayBack?.pause()
+            mPlayBack?.setIsUserPause(true)
         }
 
         override fun onStop() {
@@ -772,13 +759,13 @@ class MediaService : MediaBrowserServiceCompat() {
                         loge("last=$mLastHeadSetEventTime,current=${keyEvent.eventTime}")
                         mLastHeadSetEventTime = keyEvent.eventTime
 
-    //                    if (keyEvent.eventTime - mLastHeadSetEventTime > secondMis) {
-    //                        changeMediaByMode(true, false)
-    //                        PrintLog.d("之后下一首")
-    //                    } else {
-    //                        PrintLog.d("之后暂停或者播放")
-    //                        handlePlayOrPauseRequest()
-    //                    }
+                        //                    if (keyEvent.eventTime - mLastHeadSetEventTime > secondMis) {
+                        //                        changeMediaByMode(true, false)
+                        //                        PrintLog.d("之后下一首")
+                        //                    } else {
+                        //                        PrintLog.d("之后暂停或者播放")
+                        //                        handlePlayOrPauseRequest()
+                        //                    }
                     }
                     Log.w(TAG, "onMediaButtonEvent: action=" + keyEvent.action +
                             ",code=" + keyEvent.keyCode)
@@ -797,7 +784,7 @@ class MediaService : MediaBrowserServiceCompat() {
                 }
                 COMMAND_UPDATE_QUEUE -> {
                     savePlayingRecord()
-                    TaskPool.backgroundPool.submit(mUpdateQueueRunnable!!)
+                    TaskPool.execute(mUpdateQueueRunnable!!)
                     val entity = DataBaseManager.getInstance()
                             .initDb(applicationContext).entity
                     if (entity.size > 0) {
@@ -829,8 +816,7 @@ class MediaService : MediaBrowserServiceCompat() {
         }
 
         override fun onSetRepeatMode(repeatMode: Int) {
-            super.onSetRepeatMode(repeatMode)
-            mMediaSessionCompat!!.setRepeatMode(repeatMode)
+            mMediaSessionCompat?.setRepeatMode(repeatMode)
         }
 
         override fun onRemoveQueueItem(description: MediaDescriptionCompat?) {
@@ -868,7 +854,6 @@ class MediaService : MediaBrowserServiceCompat() {
 
 
     inner class DoublePlayRunnable : Runnable {
-
         override fun run() {
             handlePlayOrPauseRequest()
         }
@@ -956,6 +941,8 @@ class MediaService : MediaBrowserServiceCompat() {
          */
         const val UPDATE_POSITION_EVENT = "UPDATE_POSITION_EVENT"
 
+        const val RESET_SESSION_EVENT = "reset_session_event"
+
         /**
          * 开始倒计时
          */
@@ -973,6 +960,10 @@ class MediaService : MediaBrowserServiceCompat() {
          * -------------------custom action end--------------------------
          */
         private const val TAG = "MediaService"
+
+
+        private const val MY_ROOT_ID = "my_root_id"
+        private const val EMPTY_ROOT_ID = "empty_root_id"
     }
 
 }

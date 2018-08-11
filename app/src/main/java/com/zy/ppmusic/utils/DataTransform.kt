@@ -93,7 +93,8 @@ class DataTransform private constructor() {
             //根据音频地址获取uri，区分为内部存储和外部存储
             val audioUri = MediaStore.Audio.Media.getContentUriForPath(itemPath)
             //仅查询是音乐的文件
-            val query = contentResolver.query(audioUri, null,  MediaStore.Audio.Media.IS_MUSIC+"=?", arrayOf("1"), null)
+            val query = contentResolver.query(audioUri, null,
+                    MediaStore.Audio.Media.IS_MUSIC+"=?", arrayOf("1"), null)
             if (query != null) {
                 //判断如果是上次扫描的uri则跳过，系统分为内部存储uri的音频和外部存储的uri
                 if (oldUri != null && oldUri == audioUri) {
@@ -111,16 +112,6 @@ class DataTransform private constructor() {
                         if (!FileUtils.isExits(queryPath)) {
                             continue
                         }
-                        //过滤小于30s的文件
-                        if (duration < 30L * 1000L) {
-                            continue
-                        }
-
-                        //过滤系统媒体库中其他类型的媒体文件
-//                        if (!isSupportMediaType(queryPath)) {
-//                            continue
-//                        }
-
                         mediaMetadataRetriever.setDataSource(queryPath)
                         val mBitmap: Bitmap? = mediaMetadataRetriever.embeddedPicture?.let {
                             BitmapFactory.decodeByteArray(it, 0, it.size)
@@ -186,17 +177,8 @@ class DataTransform private constructor() {
         Log.d(TAG, "queryResolver() called with: context = [$context]")
     }
 
-    private fun isSupportMediaType(queryPath: String): Boolean {
-        for (type in SupportMediaType.SUPPORT_TYPE) {
-            if (queryPath.endsWith(type)) {
-                return true
-            }
-        }
-        return false
-    }
-
     /**
-     * 重新对数据遍历，筛选出系统ContentProvider中不存在的媒体
+     * 重新对数据遍历，筛选出系统媒体库中不存在的媒体
      * @param list 扫描到的数据列表
      */
     private fun reQueryList(list: List<String>) {
@@ -206,6 +188,10 @@ class DataTransform private constructor() {
         for (i in 0 until listSize) {
             val itemPath = list[i]
             if (!this.pathList.contains(itemPath)) {
+                //过滤本地不存在的媒体文件
+                if (!FileUtils.isExits(itemPath)) {
+                    continue
+                }
                 retriever.setDataSource(itemPath)
                 //METADATA_KEY_ALBUM 专辑
                 val titleS = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
@@ -253,8 +239,8 @@ class DataTransform private constructor() {
                 mediaItemList.add(mediaItem)
 
                 val infoEntity = MusicInfoEntity(itemPath.hashCode().toString(),
-                        musicName!!, artistS, itemPath, 0, length, retriever.embeddedPicture)
-                musicInfoEntities!!.add(infoEntity)
+                        musicName, artistS, itemPath, 0, length, retriever.embeddedPicture)
+                musicInfoEntities?.add(infoEntity)
                 pathList.add(itemPath)
                 mediaIdList.add(itemPath.hashCode().toString())
             }
@@ -302,7 +288,7 @@ class DataTransform private constructor() {
             mapMetadataArray[itemEntity.mediaId] = metadataCompatItem
 
             val queueItem = MediaSessionCompat.QueueItem(
-                    metadataCompatItem.description, java.lang.Long.parseLong(itemEntity.mediaId))
+                    metadataCompatItem.description, itemEntity.mediaId?.toLong()?:0)
             queueItemList.add(queueItem)
 
             val mediaItem = MediaBrowserCompat.MediaItem(
@@ -311,16 +297,7 @@ class DataTransform private constructor() {
         }
     }
 
-    fun removeItem(context: Context, index: Int) {
-        val path = pathList[index]
-        val file = File(path)
-        file.deleteOnExit()
-        if (!file.exists()) {
-            val contentResolver = context.contentResolver
-            val audioUri = MediaStore.Audio.Media.getContentUriForPath(path)
-            val where = MediaStore.Images.Media.DATA + "='" + path + "'"
-            contentResolver.delete(audioUri, where, null)
-        }
+    fun removeItem(index: Int) {
         this.pathList.removeAt(index)
         musicInfoEntities!!.removeAt(index)
         mapMetadataArray.remove(this.mediaIdList[index])

@@ -9,7 +9,7 @@ import android.arch.lifecycle.ViewModel
  * 如果需要context则继承AndroidViewModel
  */
 class HeadViewModel : ViewModel() {
-    val playState = MutableLiveData<Boolean>()
+    private val playState = MutableLiveData<Boolean>()
 
     fun setPlayState(isPlaying: Boolean) {
         playState.value = isPlaying

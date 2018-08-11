@@ -25,27 +25,27 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
     }
 
     override fun refreshQueue(context: Context, l: ScanMusicFile.AbstractOnScanComplete) {
-        ScanMusicFile.getInstance().setOnScanComplete(l).scanMusicFile(context)
+        ScanMusicFile.get().setOnScanComplete(l).scanMusicFile(context)
     }
 
     override fun loadLocalData(path: String, callback: IMediaActivityContract.IMediaActivityModel.IOnLocalDataLoadFinished) {
-        TaskPool.backgroundPool.execute {
+        TaskPool.execute(Runnable {
             val localData = FileUtils.readObject(path)
             callback.callBack(localData)
-        }
+        })
     }
 
     override fun postSendCommand(method: String, params: Bundle,
                                  resultReceiver: ResultReceiver) {
-        TaskPool.backgroundPool.execute {
+        TaskPool.execute(Runnable {
             mControllerWeak?.get()?.sendCommand(method, params, resultReceiver)
-        }
+        })
     }
 
     override fun postPlayWithId(mediaId: String, extra: Bundle) {
-        TaskPool.backgroundPool.execute {
+        TaskPool.execute(Runnable {
             mControllerWeak?.get()?.transportControls?.playFromMediaId(mediaId, extra)
-        }
+        })
     }
 
     override fun postSendCustomAction(action: String, extra: Bundle) {
@@ -53,27 +53,27 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
     }
 
     override fun postSetRepeatMode(mode: Int) {
-        TaskPool.backgroundPool.execute {
+        TaskPool.execute(Runnable {
             mControllerWeak?.get()?.transportControls?.setRepeatMode(mode)
-        }
+        })
     }
 
     override fun postSkipNext() {
-        TaskPool.backgroundPool.execute {
+        TaskPool.execute(Runnable {
             mControllerWeak?.get()?.transportControls?.skipToNext()
-        }
+        })
     }
 
     override fun postSkipPrevious() {
-        TaskPool.backgroundPool.execute {
+        TaskPool.execute(Runnable {
             mControllerWeak?.get()?.transportControls?.skipToPrevious()
-        }
+        })
     }
 
     override fun postSkipToPosition(id: Long?) {
-        TaskPool.backgroundPool.execute {
+        TaskPool.execute(Runnable {
             mControllerWeak?.get()?.transportControls?.skipToQueueItem(id!!)
-        }
+        })
     }
 
     override fun shutdown() {

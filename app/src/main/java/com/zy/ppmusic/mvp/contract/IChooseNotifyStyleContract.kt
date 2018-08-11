@@ -18,8 +18,8 @@ interface IChooseNotifyStyleContract {
         fun getLocalStyle():Int
     }
 
-    abstract class AbsChooseNotifyStylePresenter(view:IChooseNotifyStyleView):AbstractBasePresenter<IChooseNotifyStyleView,
-            IChooseNotifyStyleModel>(view){
+    abstract class AbsChooseNotifyStylePresenter(view:IChooseNotifyStyleView):
+            AbstractBasePresenter<IChooseNotifyStyleView, IChooseNotifyStyleModel>(view){
         abstract fun changeStyle(styleId:Int)
 
         abstract fun getLocalStyle():Int

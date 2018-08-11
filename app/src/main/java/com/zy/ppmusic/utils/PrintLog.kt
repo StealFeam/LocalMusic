@@ -22,7 +22,6 @@ object PrintLog {
         mMethodName = elements[1].methodName
         mLineNumber = elements[1].lineNumber
         mDetailInfo = String.format(Locale.CHINA, "%s : %s : %s \n", mClassName, mMethodName, mLineNumber)
-        println("--**--")
     }
 
     fun print(msg: Any) {

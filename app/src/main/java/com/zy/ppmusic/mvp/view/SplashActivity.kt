@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
-import android.view.animation.AnimationSet
 import com.zy.ppmusic.App
 import com.zy.ppmusic.R
 import com.zy.ppmusic.utils.PrintLog
@@ -16,7 +15,7 @@ import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 
 class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
-    val requestCode = 0x010
+    private val requestCode = 0x010
     private val mPreferenceName = "SPLASH"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,40 +23,42 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         setContentView(R.layout.activity_splash)
         App.setCustomDensity(this)
         App.getInstance().createActivity(this)
+    }
 
-        val alphaAnim = AlphaAnimation(0.4f, 1f)
-        alphaAnim.fillAfter = true
-        alphaAnim.duration = 1500
-        alphaAnim.setAnimationListener(object : Animation.AnimationListener {
-            override fun onAnimationRepeat(a: Animation?) = PrintLog.e("onAnimationRepeat....")
+    override fun onResume() {
+        super.onResume()
+        tv_splash_open.startAnimation(createLoadingAnim())
+    }
 
-            override fun onAnimationStart(a: Animation?) = PrintLog.e("onAnimationStart....")
+    private fun createLoadingAnim(): Animation {
+        return AlphaAnimation(0.4f, 1f).apply {
+            this.fillAfter = true
+            this.duration = 1500
+            this.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationRepeat(a: Animation?) = PrintLog.e("onAnimationRepeat....")
 
+                override fun onAnimationStart(a: Animation?) = PrintLog.e("onAnimationStart....")
 
-            override fun onAnimationEnd(a: Animation?){
-                PrintLog.e("onAnimationEnd......")
-                if (EasyPermissions.hasPermissions(applicationContext, getString(R.string.string_read_external)
-                                , getString(R.string.string_write_external))) {
-                    actionToMain()
-                } else {
-                    EasyPermissions.requestPermissions(this@SplashActivity,
-                            getString(R.string.string_permission_read), requestCode,
-                            getString(R.string.string_read_external)
-                            , getString(R.string.string_write_external))
+                override fun onAnimationEnd(a: Animation?) {
+                    PrintLog.e("onAnimationEnd......")
+                    if (EasyPermissions.hasPermissions(applicationContext, getString(R.string.string_read_external)
+                                    , getString(R.string.string_write_external))) {
+                        actionToMain()
+                    } else {
+                        EasyPermissions.requestPermissions(this@SplashActivity,
+                                getString(R.string.string_permission_read), requestCode,
+                                getString(R.string.string_read_external)
+                                , getString(R.string.string_write_external))
+                    }
                 }
-            }
-        })
-        tv_splash_open.animation = alphaAnim
-        alphaAnim.start()
-        PrintLog.e("onCreate......")
+            })
+        }
     }
 
     override fun getResources(): Resources = App.getInstance().resources
 
     fun actionToMain() {
-        PrintLog.e("actionToMain......")
-        val mediaIntent = Intent(this, MediaActivity::class.java)
-        startActivity(mediaIntent)
+        MediaActivity.action(this)
         finish()
     }
 

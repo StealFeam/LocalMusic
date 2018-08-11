@@ -31,33 +31,32 @@ public class ScanMusicFile {
      * 扫描到的音乐路径集合
      */
     private volatile ArrayList<String> mPathList = new ArrayList<>();
-
     /**
      * 内部存储路径
      */
-    private volatile String mInnerStoragePath;
+    private String mInnerStoragePath;
     /**
      * 外部存储路径
      */
-    private volatile String mExternalStoragePath;
+    private String mExternalStoragePath;
     /**
      * 线程回调的handler
      */
-    private volatile ScanHandler mHandler;
+    private ScanHandler mHandler;
     /**
      * 扫描任务
      */
     private Runnable mScanTask;
 
     private static class ScanInstance {
-        private static ScanMusicFile scanMusicFile = new ScanMusicFile();
+        private static ScanMusicFile instance = new ScanMusicFile();
     }
 
     private ScanMusicFile() {
     }
 
-    public static ScanMusicFile getInstance() {
-        return ScanInstance.scanMusicFile;
+    public static ScanMusicFile get() {
+        return ScanInstance.instance;
     }
 
     public ScanMusicFile setOnScanComplete(AbstractOnScanComplete complete) {
@@ -97,7 +96,7 @@ public class ScanMusicFile {
             };
             mHandler = new ScanHandler(this);
         }
-        TaskPool.INSTANCE.getBackgroundPool().execute(mScanTask);
+        TaskPool.INSTANCE.execute(mScanTask);
     }
 
     private static class ScanHandler extends Handler {
@@ -153,6 +152,12 @@ public class ScanMusicFile {
         String dot = ".";
         //过滤没有后缀名的文件
         if (!file.getName().contains(dot)) {
+            return;
+        }
+        int index = file.getName().indexOf(dot);
+        int length = file.getName().length();
+        //xxx.x以及xxx.xxxxx格式不支持
+        if(index > (length -2) || index < (length - 4)){
             return;
         }
         //判断文件的类型是否支持

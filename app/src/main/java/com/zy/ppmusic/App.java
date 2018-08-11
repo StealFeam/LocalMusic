@@ -7,10 +7,8 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.os.StrictMode;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 
 import com.squareup.leakcanary.LeakCanary;
@@ -27,7 +25,7 @@ import java.util.LinkedHashMap;
  */
 public class App extends Application {
     public static final String LOCAL_DATA_TABLE_NAME = "CACHE_PATH_LIST";
-    private LinkedHashMap<String,WeakReference<Activity>> mActivityLists = new LinkedHashMap<>();
+    private LinkedHashMap<String, WeakReference<Activity>> mActivityLists = new LinkedHashMap<>();
 
     public static App getInstance() {
         return mAppInstance;
@@ -45,9 +43,9 @@ public class App extends Application {
         return 1;
     }
 
-
     public static void setCustomDensity(@NonNull Activity activity) {
-        final DisplayMetrics appDisplayMetrics = App.getInstance().getResources().getDisplayMetrics();
+        final Application application = App.getInstance();
+        final DisplayMetrics appDisplayMetrics = application.getResources().getDisplayMetrics();
 
         //px = density * dp
         //density= dpi / 160
@@ -59,11 +57,11 @@ public class App extends Application {
 
         appDisplayMetrics.density = targetDensity;
         appDisplayMetrics.densityDpi = targetDensityDpi;
+        appDisplayMetrics.scaledDensity = targetDensity;
 
         final DisplayMetrics activityDisplayMetrics = activity.getResources().getDisplayMetrics();
         activityDisplayMetrics.density = activityDisplayMetrics.scaledDensity = targetDensity;
         activityDisplayMetrics.densityDpi = targetDensityDpi;
-
     }
 
 

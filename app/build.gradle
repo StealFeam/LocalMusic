@@ -86,6 +86,7 @@ dependencies {
 //    annotationProcessor 'com.github.bumptech.glide:compiler:4.7.1'
     //  kotlin支持 双引号代表可以使用表达式
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:0.22.5'
     //    constraint库
     implementation 'com.android.support.constraint:constraint-layout:1.1.2'
     //    greendao数据库

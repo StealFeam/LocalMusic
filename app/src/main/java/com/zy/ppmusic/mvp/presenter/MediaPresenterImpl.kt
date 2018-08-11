@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.os.*
 import android.support.v4.media.session.MediaControllerCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import com.zy.ppmusic.entity.MusicInfoEntity
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract
@@ -20,8 +21,6 @@ import java.lang.ref.WeakReference
  */
 class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         IMediaActivityContract.AbstractMediaActivityPresenter(view) {
-
-
     private var mCachePreference: SharedPreferences? = null
     private var isScanning = false
     private val mMainHandler = Handler(Looper.getMainLooper())
@@ -107,6 +106,9 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
 
     override fun changeMode(c: Context, mode: Int) {
         initCachePreference(c)
+        if(mCachePreference!!.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE) == mode){
+            return
+        }
         val edit = mCachePreference!!.edit()
         edit.putInt(CACHE_MODE_KEY, mode)
         edit.apply()
@@ -114,7 +116,7 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
 
     override fun getLocalMode(c: Context): Int {
         initCachePreference(c)
-        return mCachePreference?.getInt(CACHE_MODE_KEY, 0)?:0
+        return mCachePreference?.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE)?:PlaybackStateCompat.REPEAT_MODE_NONE
     }
 
     override fun deleteFile(path: String?): Boolean {

@@ -30,7 +30,7 @@ object NotificationUtils {
      * 通知的id
      */
     const val NOTIFY_ID = 40012
-    const val NOTIFY_CHANNEL_ID = "notify_channel_id"
+    private const val NOTIFY_CHANNEL_ID = "notify_channel_id"
 
     private var CURRENT_STYLE = -1
 
@@ -49,7 +49,6 @@ object NotificationUtils {
         }
         CURRENT_STYLE = style
     }
-
 
     fun createSystemNotify(c: Context, mediaSession: MediaSessionCompat?, isPlaying: Boolean): Notification? {
         val context = c.applicationContext
