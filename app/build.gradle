@@ -37,12 +37,10 @@ android {
                     }
                     name += ".apk"
                     output.outputFileName = name
-//                    output.outputFile = new File(output.outputFile.parent, name)
                 }
                 if (variant.buildType.name == 'debug') {
                     String name = "love_music_d_${variant.versionCode}_${time}.apk"
                     output.outputFileName = name
-//                    output.outputFile = new File(output.outputFile.parent, name)
                 }
             }
         }
@@ -61,6 +59,12 @@ android {
         sourceCompatibility 1.7
         targetCompatibility 1.7
     }
+
+    kotlin {
+        experimental {
+            coroutines "enable"
+        }
+    }
 }
 
 dependencies {
@@ -74,7 +78,6 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:2.19.0'
     testImplementation 'org.powermock:powermock-module-junit4:1.7.3'
     testImplementation 'org.powermock:powermock-module-junit4-rule:1.7.3'
-    //注意这里是mockito2
     testImplementation 'org.powermock:powermock-api-mockito2:1.7.3'
     testImplementation 'org.powermock:powermock-classloading-xstream:1.7.3'
 
@@ -99,3 +102,4 @@ dependencies {
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.5.4'
     releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
 }
+

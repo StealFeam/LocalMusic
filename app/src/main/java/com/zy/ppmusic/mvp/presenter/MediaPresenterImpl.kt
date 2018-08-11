@@ -2,19 +2,19 @@ package com.zy.ppmusic.mvp.presenter
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.net.Uri
-import android.os.*
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.ResultReceiver
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
-import com.zy.ppmusic.entity.MusicInfoEntity
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract
 import com.zy.ppmusic.mvp.model.MediaActivityModelImpl
 import com.zy.ppmusic.utils.DataTransform
 import com.zy.ppmusic.utils.FileUtils
 import com.zy.ppmusic.utils.PrintLog
 import com.zy.ppmusic.utils.ScanMusicFile
-import java.lang.ref.WeakReference
 
 /**
  * @author ZhiTouPC
@@ -25,17 +25,6 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
     private var isScanning = false
     private val mMainHandler = Handler(Looper.getMainLooper())
 
-    private val finishedListener = object : OnTaskFinishedListener {
-        override fun onRefreshQueue(paths: ArrayList<String>?) {
-            mView.get()?.refreshQueue(paths, true)
-            mView.get()?.hideLoading()
-        }
-
-        override fun loadFinished() {
-            mView.get()?.loadFinished()
-            mView.get()?.hideLoading()
-        }
-    }
     override fun getChildrenUri(): String {
         return mCachePreference?.getString(CACHE_CHILD_URI, "") ?: ""
     }
@@ -44,10 +33,9 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         return mCachePreference?.getString(CACHE_ROOT_URI, "") ?: ""
     }
 
-    override fun setGrantedRootUri(uri: String,child:String) {
-        mCachePreference?.edit()?.putString(CACHE_ROOT_URI, uri)?.putString(CACHE_CHILD_URI,child)?.apply()
+    override fun setGrantedRootUri(uri: String, child: String) {
+        mCachePreference?.edit()?.putString(CACHE_ROOT_URI, uri)?.putString(CACHE_CHILD_URI, child)?.apply()
     }
-
 
     override fun createModel(): IMediaActivityContract.IMediaActivityModel {
         return MediaActivityModelImpl()
@@ -65,7 +53,7 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         mView.get()?.showLoading()
         //重新扫描本地文件或者初次扫描
         if (isRefresh) {
-            refresh(context, true)
+            refresh(context)
         } else {
             //内存有数据
             if (DataTransform.get().mediaItemList.size > 0) {
@@ -76,19 +64,15 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
                 mModel.loadLocalData(context.cacheDir.absolutePath,
                         object : IMediaActivityContract.IMediaActivityModel.IOnLocalDataLoadFinished {
                             override fun callBack(data: Any?) {
-                                data?.let {
-                                    PrintLog.i("读取到本地缓存数据")
-                                    val builder = TransFormTask.Builder()
-                                    builder.listener = finishedListener
-                                    builder.isRefresh = false
-                                    builder.musicInfoEntities = data as ArrayList<MusicInfoEntity>
-                                    builder.context = context
-                                    builder.executeTask()
-                                } ?: let {
-                                    //回到主线程
-                                    mMainHandler.post {
+                                //回到主线程
+                                mMainHandler.post {
+                                    data?.apply {
+                                        PrintLog.i("读取到本地缓存数据")
+                                        mView?.get()?.loadFinished()
+                                        mView?.get()?.hideLoading()
+                                    } ?: let {
                                         PrintLog.i("未读取到本地数据")
-                                        refresh(context, false)
+                                        refresh(context)
                                     }
                                 }
                             }
@@ -106,7 +90,7 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
 
     override fun changeMode(c: Context, mode: Int) {
         initCachePreference(c)
-        if(mCachePreference!!.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE) == mode){
+        if (mCachePreference!!.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE) == mode) {
             return
         }
         val edit = mCachePreference!!.edit()
@@ -116,7 +100,8 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
 
     override fun getLocalMode(c: Context): Int {
         initCachePreference(c)
-        return mCachePreference?.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE)?:PlaybackStateCompat.REPEAT_MODE_NONE
+        return mCachePreference?.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE)
+                ?: PlaybackStateCompat.REPEAT_MODE_NONE
     }
 
     override fun deleteFile(path: String?): Boolean {
@@ -152,7 +137,7 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         mModel.postSkipPrevious()
     }
 
-    private fun refresh(context: Context, isRefresh: Boolean) {
+    private fun refresh(context: Context) {
         if (isScanning) {
             return
         }
@@ -162,86 +147,10 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
             override fun onComplete(paths: ArrayList<String>) {
                 isScanning = false
                 Log.e(TAG, "onComplete: 扫描出来的" + paths.toString())
-                val builder = TransFormTask.Builder()
-                builder.context = context
-                builder.isRefresh = isRefresh
-                builder.mPaths = paths
-                builder.listener = finishedListener
-                builder.executeTask()
+                mView?.get()?.refreshQueue(true)
+                mView?.get()?.hideLoading()
             }
         })
-    }
-
-    private interface OnTaskFinishedListener {
-
-        /**
-         * 完成时回调
-         *
-         * @param paths 路径集合
-         */
-        fun onRefreshQueue(paths: ArrayList<String>?)
-
-        /**
-         * 加载完成
-         */
-        fun loadFinished()
-    }
-
-    /**
-     * 负责将本地数据或者扫描到的数据数据转换
-     */
-    private class TransFormTask private constructor(builder: Builder) :
-            AsyncTask<String?, Void, ArrayList<String>?>() {
-        private val mContextWeak: WeakReference<Context>
-        private val mPaths: ArrayList<String>?
-        private val entities: ArrayList<MusicInfoEntity>?
-        private val isRefresh: Boolean
-        private val listener: OnTaskFinishedListener?
-
-        init {
-            this.isRefresh = builder.isRefresh
-            this.listener = builder.listener
-            this.mContextWeak = WeakReference<Context>(builder.context)
-            this.mPaths = builder.mPaths
-            this.entities = builder.musicInfoEntities
-        }
-
-        override fun doInBackground(vararg paths: String?): ArrayList<String>? {
-            if (mPaths == null) {
-                entities?.let {
-                    DataTransform.get().transFormData(it)
-                }
-            } else {
-                mContextWeak.get()?.let {
-                    DataTransform.get().transFormData(it, mPaths)
-                }
-            }
-            return mPaths
-        }
-
-        override fun onPostExecute(strings: ArrayList<String>?) {
-            super.onPostExecute(strings)
-            if (listener != null) {
-                if (isRefresh) {
-                    listener.onRefreshQueue(strings)
-                } else {
-                    listener.loadFinished()
-                }
-            }
-        }
-
-        class Builder {
-            var context: Context? = null
-            var mPaths: ArrayList<String>? = null
-            var isRefresh: Boolean = false
-            var musicInfoEntities: ArrayList<MusicInfoEntity>? = null
-            var listener: OnTaskFinishedListener? = null
-
-            fun executeTask() {
-                val task = TransFormTask(this)
-                task.execute()
-            }
-        }
     }
 
     override fun detachViewAndModel() {

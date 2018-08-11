@@ -23,10 +23,9 @@ interface IMediaActivityContract {
 
         /**
          * 刷新列表
-         * @param mPathList 扫描到的集合
          * @param isRefresh 是否是刷新
          */
-        fun refreshQueue(mPathList: ArrayList<String>?, isRefresh: Boolean)
+        fun refreshQueue(isRefresh: Boolean)
 
         /**
          * 检查服务连接

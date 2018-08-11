@@ -670,11 +670,11 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * IView
      * 刷新列表的回调
      */
-    override fun refreshQueue(mPathList: ArrayList<String>?, isRefresh: Boolean) {
+    override fun refreshQueue(isRefresh: Boolean) {
         if (mMediaController == null)
             return
-        if (mPathList != null && mPathList.size > 0) {
-            showMsg(String.format(Locale.CHINA, getString(R.string.format_string_search_media_count), mPathList.size))
+        if (DataTransform.get().pathList.size > 0) {
+            showMsg(String.format(Locale.CHINA, getString(R.string.format_string_search_media_count), DataTransform.get().pathList.size))
             mPresenter?.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, Bundle(), mResultReceive!!)
         } else {
             showMsg(getString(R.string.no_media_searched))

@@ -77,7 +77,7 @@ public class ScanMusicFile {
             mScanTask = new Runnable() {
                 @Override
                 public void run() {
-                    if (mPathList != null && mPathList.size() > 0) {
+                    if (mPathList.size() > 0) {
                         mPathList.clear();
                     }
                     Log.d(TAG, "run: 扫描开始");
@@ -91,6 +91,9 @@ public class ScanMusicFile {
                         Log.e(TAG, "run: 扫描外部存储结束");
                     }
                     Log.d(TAG, "run: 扫描结束");
+                    if(mPathList.size() > 0){
+                        DataTransform.Companion.get().transFormData(context,mPathList);
+                    }
                     mHandler.sendEmptyMessage(SCAN_COMPLETE);
                 }
             };

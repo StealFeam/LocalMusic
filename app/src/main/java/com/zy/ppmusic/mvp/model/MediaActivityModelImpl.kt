@@ -4,8 +4,10 @@ import android.content.Context
 import android.os.Bundle
 import android.os.ResultReceiver
 import android.support.v4.media.session.MediaControllerCompat
+import com.zy.ppmusic.entity.MusicInfoEntity
 
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract
+import com.zy.ppmusic.utils.DataTransform
 import com.zy.ppmusic.utils.FileUtils
 import com.zy.ppmusic.utils.ScanMusicFile
 import com.zy.ppmusic.utils.TaskPool
@@ -31,6 +33,9 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
     override fun loadLocalData(path: String, callback: IMediaActivityContract.IMediaActivityModel.IOnLocalDataLoadFinished) {
         TaskPool.execute(Runnable {
             val localData = FileUtils.readObject(path)
+            localData?.apply {
+                DataTransform.get().transFormData(localData as ArrayList<MusicInfoEntity>)
+            }
             callback.callBack(localData)
         })
     }
