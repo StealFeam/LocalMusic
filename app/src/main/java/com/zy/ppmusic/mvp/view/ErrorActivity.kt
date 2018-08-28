@@ -2,10 +2,10 @@ package com.zy.ppmusic.mvp.view
 
 import android.app.Dialog
 import android.graphics.Color
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Process
 import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.AppCompatDialogFragment
 import com.zy.ppmusic.R
 import com.zy.ppmusic.utils.DateUtil
@@ -37,8 +37,8 @@ class ErrorActivity : AppCompatActivity() {
 
     private fun writeMsgToLocal() {
         val errorInfo = intent.getSerializableExtra(ERROR_INFO) as Throwable
-        val writer = PrintWriter(File(FileUtils.downloadFile +"/music_error_log.txt"))
-        writer.println("---- "+DateUtil.get().getTime(System.currentTimeMillis())+" ----")
+        val writer = PrintWriter(File(FileUtils.downloadFile + "/music_error_log.txt"))
+        writer.println("---- " + DateUtil.get().getTime(System.currentTimeMillis()) + " ----")
         errorInfo.printStackTrace(writer)
         writer.flush()
         writer.close()
@@ -47,13 +47,13 @@ class ErrorActivity : AppCompatActivity() {
 
     class ErrorDialog : AppCompatDialogFragment() {
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = AlertDialog.Builder(context!!)
-                        .setTitle(R.string.app_name)
-                        .setMessage(R.string.dialog_error_content_msg)
-                        .setNegativeButton(R.string.dialog_error_sure) { _, _->
-                            activity?.finish()
-                            dismiss()
-                            Process.killProcess(Process.myPid())
-                            System.exit(0)
-                        }.create()
+                .setTitle(R.string.app_name)
+                .setMessage(R.string.dialog_error_content_msg)
+                .setNegativeButton(R.string.dialog_error_sure) { _, _ ->
+                    activity?.finish()
+                    dismiss()
+                    Process.killProcess(Process.myPid())
+                    System.exit(0)
+                }.create()
     }
 }

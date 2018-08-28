@@ -2,11 +2,11 @@ package com.zy.ppmusic.widget;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.support.v4.util.SimpleArrayMap;
 import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
+import android.widget.TextView;
 
 /**
  * @author y-slience
@@ -17,18 +17,18 @@ public class SimpleVerticalTextView extends AppCompatTextView {
     private char[] mTexts;
     private int mCharWidth;
     private int mCharHeight;
-    private SimpleArrayMap<Integer,Integer> mColumnHeightMap;
+    private SimpleArrayMap<Integer, Integer> mColumnHeightMap;
     /**
      * 为了实现横向居中
      */
     private int mPaddingLeft;
 
     public SimpleVerticalTextView(Context context) {
-        this(context,null);
+        this(context, null);
     }
 
     public SimpleVerticalTextView(Context context, AttributeSet attrs) {
-        this(context, attrs,-1);
+        this(context, attrs, -1);
     }
 
     public SimpleVerticalTextView(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -37,7 +37,7 @@ public class SimpleVerticalTextView extends AppCompatTextView {
     }
 
     @Override
-    public void setText(CharSequence text, BufferType type) {
+    public void setText(CharSequence text, TextView.BufferType type) {
         super.setText(text, type);
         mTexts = text.toString().toCharArray();
     }
@@ -59,31 +59,32 @@ public class SimpleVerticalTextView extends AppCompatTextView {
         //以当前高度计算需要多少列，以增加宽度
         int columnCount;
         int measureHeightMode = MeasureSpec.getMode(heightMeasureSpec);
-        if(measureHeightMode == MeasureSpec.EXACTLY){
+        if (measureHeightMode == MeasureSpec.EXACTLY) {
             textHeight += MeasureSpec.getSize(heightMeasureSpec);
-        }else{
+        } else {
             int line = 0;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
                 line = getMinLines();
             }
-            line = Math.max(1,line);
+            line = Math.max(1, line);
             textHeight += line * mCharHeight + getPaddingTop() + getPaddingBottom();
         }
         columnCount = getColumnCountByHeight(textHeight);
         int finalMeasureWidth = mCharWidth * columnCount + getPaddingLeft() + getPaddingRight();
         int finalMeasureHeight = textHeight;
-        if(MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.EXACTLY){
+        if (MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.EXACTLY) {
             setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), Math.max(finalMeasureHeight,
                     getMeasuredHeight()));
-        }else {
-            setMeasuredDimension(Math.max(finalMeasureWidth,getMeasuredWidth()),
-                    Math.max(finalMeasureHeight,getMeasuredHeight()));
+        } else {
+            setMeasuredDimension(Math.max(finalMeasureWidth, getMeasuredWidth()),
+                    Math.max(finalMeasureHeight, getMeasuredHeight()));
         }
-        mPaddingLeft = Math.max(0,(getMeasuredWidth() - finalMeasureWidth)/2);
+        mPaddingLeft = Math.max(0, (getMeasuredWidth() - finalMeasureWidth) / 2);
     }
 
     /**
      * 根据测量出来的宽度和高度计算出需要多少列
+     *
      * @param textHeight 当前最大的高度，当大于这个高度需要增加宽度
      * @return 计算出来的列的数量
      */
@@ -92,12 +93,12 @@ public class SimpleVerticalTextView extends AppCompatTextView {
         int columnCount = 1;
         if (mColumnHeightMap == null) {
             mColumnHeightMap = new SimpleArrayMap<>();
-        }else{
+        } else {
             mColumnHeightMap.clear();
         }
         for (char mText : mTexts) {
             currentHeight += mCharHeight;
-            mColumnHeightMap.put(columnCount,currentHeight);
+            mColumnHeightMap.put(columnCount, currentHeight);
             if (currentHeight + getPaddingBottom() >= textHeight) {
                 currentHeight = getPaddingTop() + mCharHeight;
                 columnCount++;
@@ -115,24 +116,24 @@ public class SimpleVerticalTextView extends AppCompatTextView {
         int currentColumn = 1;
         int topMargin;
         //计算高度差，达到垂直居中
-        if(mColumnHeightMap.get(currentColumn) != null && mColumnHeightMap.get(currentColumn) < getMeasuredHeight()){
-            topMargin = Math.max((getMeasuredHeight() - mColumnHeightMap.get(currentColumn))/2,0);
+        if (mColumnHeightMap.get(currentColumn) != null && mColumnHeightMap.get(currentColumn) < getMeasuredHeight()) {
+            topMargin = Math.max((getMeasuredHeight() - mColumnHeightMap.get(currentColumn)) / 2, 0);
             y += topMargin;
         }
-        for(char itemText:mTexts){
+        for (char itemText : mTexts) {
             y += mCharHeight;
-            if(y + getPaddingBottom() > getMeasuredHeight()){
+            if (y + getPaddingBottom() > getMeasuredHeight()) {
                 y = getPaddingTop() + mCharHeight;
                 x += mCharWidth;
-                currentColumn ++;
-                if(mColumnHeightMap.get(currentColumn) < getMeasuredHeight()){
-                    topMargin = Math.max((getMeasuredHeight() - mColumnHeightMap.get(currentColumn))/2,0);
+                currentColumn++;
+                if (mColumnHeightMap.get(currentColumn) < getMeasuredHeight()) {
+                    topMargin = Math.max((getMeasuredHeight() - mColumnHeightMap.get(currentColumn)) / 2, 0);
                     y += topMargin;
                 }
             }
             canvas.save();
-            canvas.translate(x,(y - padding));
-            canvas.drawText(String.valueOf(itemText),0,0,getPaint());
+            canvas.translate(x, (y - padding));
+            canvas.drawText(String.valueOf(itemText), 0, 0, getPaint());
             canvas.restore();
         }
     }

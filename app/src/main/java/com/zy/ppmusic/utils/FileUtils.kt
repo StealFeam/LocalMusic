@@ -4,23 +4,10 @@ import android.content.Context
 import android.os.Build
 import android.os.Environment
 import android.os.storage.StorageManager
-import android.os.storage.StorageVolume
-import android.support.v4.provider.DocumentFile
 import android.text.TextUtils
 import android.util.Log
-
-import java.io.BufferedOutputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
-import java.io.OutputStream
+import java.io.*
 import java.lang.reflect.Array
-import java.lang.reflect.Method
 
 /**
  * 1.获取手机目录所有的音乐文件
@@ -183,8 +170,8 @@ object FileUtils {
         return null
     }
 
-    fun saveObject(obj: Any, dir: String) {
-        val file = File("$dir/cache.obj")
+    fun saveObject(obj: Any, path: String) {
+        val file = File(path)
         if (!file.exists()) {
             try {
                 val createFileResult = file.createNewFile()
@@ -196,7 +183,6 @@ object FileUtils {
             } catch (e: IOException) {
                 e.printStackTrace()
             }
-
         }
         var outputStream: ObjectOutputStream? = null
         try {
@@ -211,9 +197,8 @@ object FileUtils {
         }
     }
 
-
-    fun readObject(dir: String): Any? {
-        val file = File("$dir/cache.obj")
+    fun readObject(path: String): Any? {
+        val file = File(path)
         if (!file.exists()) {
             return null
         }
@@ -233,17 +218,39 @@ object FileUtils {
         }
     }
 
+
+    fun getPathFile(path: String): File {
+        return createFileIfNotExits(path)
+    }
+
+    private fun createFileIfNotExits(path: String): File {
+        if (!isExits(path)) {
+            try {
+                val result = File(path)
+                if (result.createNewFile()) {
+                    PrintLog.print("创建缓存文件成功")
+                } else {
+                    PrintLog.print("创建缓存文件失败")
+                }
+                return result
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+        return File("")
+    }
+
     fun isExits(path: String?): Boolean {
         return path != null && File(path).exists()
     }
 
-    fun deleteFile(path: String?):Boolean{
+    fun deleteFile(path: String?): Boolean {
         if (TextUtils.isEmpty(path)) {
             System.err.println("删除文件失败，路径为空")
         }
         val file = File(path)
         file.setWritable(true)
-        if(file.exists()){
+        if (file.exists()) {
             return file.delete()
         }
         return false

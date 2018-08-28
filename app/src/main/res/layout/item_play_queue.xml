@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?android:attr/selectableItemBackground"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="?attr/selectableItemBackground"
     android:orientation="horizontal"
     android:paddingBottom="@dimen/dp10"
     android:paddingTop="@dimen/dp10">
@@ -17,13 +18,13 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
-    <TextView
+    <android.support.v7.widget.AppCompatTextView
         android:id="@+id/queue_item_position"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:gravity="center"
-        android:text="1"
+        tools:text="1"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/line_13"
@@ -31,7 +32,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
-    <TextView
+    <android.support.v7.widget.AppCompatTextView
         android:id="@+id/queue_item_display_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -39,19 +40,20 @@
         android:gravity="center_vertical"
         android:lines="1"
         android:text="@string/string_del"
-        android:textColor="#000"
+        android:textColor="@color/colorBlack"
         android:textSize="@dimen/sp16"
         app:layout_constraintEnd_toStartOf="@+id/queue_item_del"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="@+id/line_13"/>
 
-    <TextView
+    <android.support.v7.widget.AppCompatTextView
         android:id="@+id/queue_item_display_sub_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_below="@id/queue_item_display_title"
         android:gravity="center_vertical"
         android:ellipsize="end"
+        android:textColor="@color/colorDarkGray"
         android:lines="1"
         android:text="@string/normal_text"
         app:layout_constraintEnd_toStartOf="@+id/queue_item_del"
@@ -59,14 +61,13 @@
         app:layout_constraintStart_toStartOf="@+id/line_13"
         app:layout_constraintTop_toBottomOf="@+id/queue_item_display_title"/>
 
-    <ImageView
+    <android.support.v7.widget.AppCompatImageView
         android:id="@+id/queue_item_del"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/string_del_media"
         android:padding="@dimen/dp5"
-        android:src="@mipmap/ic_del_media"
+        app:srcCompat="@mipmap/ic_del_media"
         app:layout_constraintBottom_toBottomOf="@+id/queue_item_display_sub_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/queue_item_display_title"/>

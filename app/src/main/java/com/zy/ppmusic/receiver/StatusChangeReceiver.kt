@@ -18,45 +18,33 @@ class StatusChangeReceiver(ref: BlScanActivity) : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        if (intent!!.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
-            if (reference!!.get() != null) {
+        when (intent!!.action) {
+            BluetoothAdapter.ACTION_STATE_CHANGED -> {
                 println("bl state changed....")
-                val state = intent.extras.getInt(BluetoothAdapter.EXTRA_STATE)
-                reference!!.get()!!.onBLStateChange(state)
+                val state = intent.extras?.getInt(BluetoothAdapter.EXTRA_STATE) ?: 0
+                reference?.get()?.onBLStateChange(state)
             }
-        } else {
-            when (intent.action) {
-                BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {//蓝牙配对广播
-                    val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.BOND_NONE)
-                    val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                    if (reference!!.get() != null) {
-                        reference!!.get()?.onDeviceBondStateChanged(bondState, device)
-                    }
-
-                }
+            BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {//蓝牙配对广播
+                val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.BOND_NONE)
+                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                reference?.get()?.onDeviceBondStateChanged(bondState, device)
+            }
             //连接状态广播
-                BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED, BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED -> {
+            BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED, BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED -> {
 //                    val state = intent.extras.getInt(BluetoothA2dp.EXTRA_STATE)
 //                    val device = intent.extras.getParcelable<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                    if (reference!!.get() != null) {
-                        reference!!.get()?.connectStateChanged()
-                    }
-                }
+                reference?.get()?.connectStateChanged()
+            }
             //扫描开始广播
-                BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
-                    if (reference!!.get() != null) {
-                        reference!!.get()?.discoveryStateChange(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
-                    }
-                }
+            BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
+                reference?.get()?.discoveryStateChange(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
+            }
             //扫描结束广播
-                BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
-                    if (reference!!.get() != null) {
-                        reference!!.get()?.discoveryStateChange(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
-                    }
-                }
-                else -> {
-                    println("other action=" + intent.action)
-                }
+            BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
+                reference?.get()?.discoveryStateChange(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+            }
+            else -> {
+                println("other action=" + intent.action)
             }
         }
 

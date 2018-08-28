@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context="com.zy.ppmusic.mvp.view.SplashActivity">
 
-    <TextView
+    <android.support.v7.widget.AppCompatTextView
         android:id="@+id/tv_splash_open"
         android:text="@string/app_name"
         android:textColor="@color/colorWhite"

@@ -39,9 +39,7 @@ class AudioBecomingNoisyReceiver(context: Context) : BroadcastReceiver() {
         //当收到耳机被拔出时暂停播放
         if (AudioManager.ACTION_AUDIO_BECOMING_NOISY == intent.action) {
             Log.e(TAG, "拔出耳机了")
-            if (mCallBack != null) {
-                mCallBack!!.comingNoisy()
-            }
+            mCallBack?.comingNoisy()
         }
     }
 

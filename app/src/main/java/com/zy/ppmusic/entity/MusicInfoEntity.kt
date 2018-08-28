@@ -1,5 +1,6 @@
 package com.zy.ppmusic.entity
 
+import com.zy.ppmusic.utils.FileUtils
 import java.io.Serializable
 import java.util.Arrays
 
@@ -25,6 +26,9 @@ class MusicInfoEntity : Serializable {
     var iconData: ByteArray? = null
 
     var isExits: Boolean = false
+            get(){
+            return FileUtils.isExits(queryPath)
+        }
 
     constructor() {}
 

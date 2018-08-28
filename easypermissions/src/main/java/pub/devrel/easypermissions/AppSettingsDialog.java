@@ -29,7 +29,7 @@ public class AppSettingsDialog implements Parcelable, DialogInterface.OnClickLis
     public static final int DEFAULT_SETTINGS_REQ_CODE = 16061;
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static final Parcelable.Creator<AppSettingsDialog> CREATOR = new Parcelable.Creator<AppSettingsDialog>() {
+    public static final Parcelable.Creator<AppSettingsDialog> CREATOR = new Creator<AppSettingsDialog>() {
         @Override
         public AppSettingsDialog createFromParcel(Parcel in) {
             return new AppSettingsDialog(in);

@@ -3,9 +3,6 @@ package com.zy.ppmusic.adapter
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentStatePagerAdapter
-import android.support.v4.media.MediaMetadataCompat
-import android.view.ViewGroup
-
 import com.zy.ppmusic.mvp.view.frag.MediaHeadFragment
 import com.zy.ppmusic.utils.DataTransform
 

@@ -14,6 +14,7 @@ import com.zy.ppmusic.R
 import com.zy.ppmusic.entity.ScanResultEntity
 import java.util.*
 import kotlin.collections.ArrayList
+
 /**
  * @author ZY
  */
@@ -70,6 +71,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
         }
         return false
     }
+
     @SuppressWarnings("unused")
     fun deviceDisappeared(device: BluetoothDevice) {
         mScanDevices.forEachIndexed { index, scanResultEntity ->
@@ -97,8 +99,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
                 return TitleHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_scan_title, parent, false))
             }
             R.layout.item_scan_child -> {
-                return ScanResultHolder(LayoutInflater.from(parent.context).
-                        inflate(R.layout.item_scan_child, parent, false), listener!!)
+                return ScanResultHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_scan_child, parent, false), listener!!)
             }
         }
         return TitleHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_scan_title, parent, false))
@@ -114,9 +115,9 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
             } else {
                 mScanDevices[p1 - mBondDevices.size]
             }
-            holder.name!!.text = if(entity!!.device?.name == null){
+            holder.name!!.text = if (entity!!.device?.name == null) {
                 "unknown"
-            }else{
+            } else {
                 entity.device?.name
             }
             holder.name!!.tag = entity.device
@@ -134,6 +135,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
 
         }
     }
+
     @SuppressWarnings("unused")
     private fun isTitlePosition(position: Int): Boolean {
         if (position == 0 || position == mBondDevices.size - 1) {
@@ -146,6 +148,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
 
     class TitleHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var title: TextView? = null
+
         init {
             title = itemView.findViewById(R.id.tv_scan_result_title) as TextView?
         }
@@ -155,7 +158,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
         override fun onClick(v: View?) {
             if (listener != null) {
                 if (v!!.id == R.id.bl_del_bond_iv) {
-                    listener!!.onItemOtherClick(v,adapterPosition)
+                    listener!!.onItemOtherClick(v, adapterPosition)
                 } else {
                     listener!!.onItemClick(name!!.tag as BluetoothDevice, adapterPosition)
                 }

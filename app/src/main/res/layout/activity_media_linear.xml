@@ -52,7 +52,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <TextView
+        <android.support.v7.widget.AppCompatTextView
             android:id="@+id/control_display_time_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -63,7 +63,7 @@
             android:text="@string/string_time_init"
             android:textSize="@dimen/sp11" />
 
-        <SeekBar
+        <android.support.v7.widget.AppCompatSeekBar
             android:id="@+id/control_display_progress"
             style="@style/SelfSeekBarStyle"
             android:layout_width="0dp"
@@ -73,7 +73,7 @@
             android:max="100"
             android:progress="0" />
 
-        <TextView
+        <android.support.v7.widget.AppCompatTextView
             android:id="@+id/control_display_duration_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -99,17 +99,15 @@
             android:layout_width="@dimen/dp40"
             android:layout_height="@dimen/dp40"
             android:layout_weight="1"
-            android:background="?android:attr/selectableItemBackground"
             android:contentDescription="@string/string_loop_mode"
             android:padding="@dimen/dp8"
-            android:src="@drawable/ic_loop_model_normal" />
+            android:src="@drawable/ic_loop_mode_normal_svg" />
 
         <android.support.v7.widget.AppCompatImageView
             android:id="@+id/control_action_play_pause"
             android:layout_width="@dimen/dp40"
             android:layout_height="@dimen/dp40"
             android:layout_weight="1"
-            android:background="?android:attr/selectableItemBackground"
             android:contentDescription="@string/action_start_pause"
             android:src="@drawable/ic_black_play" />
 
@@ -118,14 +116,13 @@
             android:layout_width="@dimen/dp40"
             android:layout_height="@dimen/dp40"
             android:layout_weight="1"
-            android:background="?android:attr/selectableItemBackground"
             android:contentDescription="@string/action_close_notify"
             android:padding="@dimen/dp5"
             android:src="@drawable/ic_menu" />
 
     </android.support.v7.widget.LinearLayoutCompat>
 
-    <TextView
+    <android.support.v7.widget.AppCompatTextView
         android:id="@+id/tv_show_position"
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp15"

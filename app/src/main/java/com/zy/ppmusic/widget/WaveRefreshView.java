@@ -110,9 +110,9 @@ public class WaveRefreshView extends View {
         for (int i = 0; i < lineRectF.length; i++) {
             RectF itemRect = lineRectF[i];
             if (mDirectionArray.get(i)) {
-                itemRect.top = itemRect.top + maxChange * 0.02f * (i+1);
+                itemRect.top = itemRect.top + maxChange * 0.02f * (i + 1);
             } else {
-                itemRect.top = itemRect.top - maxChange * 0.02f * (i+1);
+                itemRect.top = itemRect.top - maxChange * 0.02f * (i + 1);
             }
             if (itemRect.top <= 0) {
                 itemRect.top = 0;

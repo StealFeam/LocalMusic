@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:background="@color/colorWhite"
@@ -13,7 +14,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:padding="@dimen/dp10"
-        android:src="@drawable/ic_music_normal_round"
+        app:srcCompat="@drawable/ic_music_normal_round"
         android:contentDescription="@string/artist_headset"/>
 
     <TextView
@@ -38,13 +39,10 @@
         android:layout_toRightOf="@id/notify_artist_head_iv"
         android:layout_toEndOf="@id/notify_artist_head_iv"
         android:layout_toStartOf="@id/notify_action_play_pause"
-
         android:layout_alignStart="@id/notify_display_title"
         android:layout_alignLeft="@id/notify_display_title"
-
         android:layout_alignBottom="@id/notify_artist_head_iv"
         android:layout_marginBottom="@dimen/dp8"
-
         android:layout_toLeftOf="@id/notify_action_play_pause"
         android:textColor="@color/colorBlack"
         android:ellipsize="end"
@@ -55,7 +53,7 @@
         android:id="@+id/notify_action_close"
         android:layout_width="@dimen/dp30"
         android:layout_height="@dimen/dp30"
-        android:src="@mipmap/ic_black_close"
+        app:srcCompat="@mipmap/ic_black_close"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
@@ -70,7 +68,7 @@
         android:layout_height="@dimen/dp30"
         android:padding="@dimen/dp2"
         android:layout_centerVertical="true"
-        android:src="@drawable/ic_play"
+        app:srcCompat="@drawable/ic_play"
         android:tint="@color/colorBlack"
         android:layout_toStartOf="@+id/notify_action_next"
         android:layout_toLeftOf="@id/notify_action_next"
@@ -87,5 +85,5 @@
         android:contentDescription="@string/action_next"
         android:layout_toStartOf="@id/notify_action_close"
         android:layout_toLeftOf="@id/notify_action_close"
-        android:src="@drawable/ic_next" />
+        app:srcCompat="@drawable/ic_next" />
 </RelativeLayout>

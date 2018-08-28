@@ -9,6 +9,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.AppCompatTextView;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
@@ -26,8 +27,8 @@ import java.util.Locale;
 
 /**
  * @author ZhiTouPC
- *         问题1:创建多个实例
- *         问题2：每次都要寻找ViewGroup
+ * 问题1:创建多个实例
+ * 问题2：每次都要寻找ViewGroup
  */
 public class EasyTintView extends AppCompatTextView {
     public static final int TINT_LONG = 3000;
@@ -62,7 +63,6 @@ public class EasyTintView extends AppCompatTextView {
         parent.getGlobalVisibleRect(rect);
         //有Toolbar和状态栏高度
         int topWithToolBar = rect.top;
-
         anchorView.getWindowVisibleDisplayFrame(rect);
         //只有状态栏高度
         int topWithTranslateBar = rect.top;
@@ -77,6 +77,7 @@ public class EasyTintView extends AppCompatTextView {
         } else {
             tintView = new EasyTintView(parent.getContext());
         }
+        tintView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         tintView.setText(String.valueOf(msg));
         tintView.topMargin = topMargin;
         tintView.parent = parent;
@@ -110,7 +111,7 @@ public class EasyTintView extends AppCompatTextView {
         setMeasuredDimension(width, height);
     }
 
-    private boolean checkPositionRange(int pos){
+    private boolean checkPositionRange(int pos) {
         int minPos = 0;
         int maxPos = 2;
         return pos < minPos || pos > maxPos;
@@ -209,6 +210,7 @@ public class EasyTintView extends AppCompatTextView {
         });
     }
 
+
     private void hideAnim() {
         if (isVisible) {
             Animation hideAnim = AnimationUtils.loadAnimation(getContext(), R.anim.tint_hide_anim);
@@ -218,14 +220,14 @@ public class EasyTintView extends AppCompatTextView {
             hideAnim.setAnimationListener(new Animation.AnimationListener() {
                 @Override
                 public void onAnimationStart(Animation animation) {
+                    isVisible = false;
+                    mDelayHandler.removeCallbacksAndMessages(null);
                 }
 
                 @Override
                 public void onAnimationEnd(Animation animation) {
                     removeFromParent();
                     setVisibility(View.GONE);
-                    isVisible = false;
-                    mDelayHandler.removeCallbacksAndMessages(null);
                 }
 
                 @Override

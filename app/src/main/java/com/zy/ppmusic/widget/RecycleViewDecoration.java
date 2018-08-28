@@ -62,8 +62,8 @@ public class RecycleViewDecoration extends RecyclerView.ItemDecoration {
 
             final int left = child.getRight();
             final int right = left + mDivider.getIntrinsicWidth();
-            mDivider.setBounds(left+getPaddingSafe(0), top+getPaddingSafe(1), right+getPaddingSafe(2),
-                    bottom+getPaddingSafe(3));
+            mDivider.setBounds(left + getPaddingSafe(0), top + getPaddingSafe(1), right + getPaddingSafe(2),
+                    bottom + getPaddingSafe(3));
             mDivider.draw(c);
         }
     }
@@ -81,8 +81,8 @@ public class RecycleViewDecoration extends RecyclerView.ItemDecoration {
             final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child.getLayoutParams();
             final int top = params.bottomMargin + child.getBottom();
             final int bottom = top + mDivider.getIntrinsicHeight();
-            mDivider.setBounds(left+getPaddingSafe(0), top+getPaddingSafe(1), right+getPaddingSafe(2),
-                    bottom+getPaddingSafe(3));
+            mDivider.setBounds(left + getPaddingSafe(0), top + getPaddingSafe(1), right + getPaddingSafe(2),
+                    bottom + getPaddingSafe(3));
             mDivider.draw(c);
         }
     }

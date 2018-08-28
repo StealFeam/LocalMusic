@@ -28,14 +28,14 @@ public class LoadingDialog extends AppCompatDialog {
         super.show();
     }
 
-    private void showLoadingView(){
+    private void showLoadingView() {
         if (mContextWeak.get() == null) {
             hideLoadingView();
             return;
         }
-        if(mContentView == null){
+        if (mContentView == null) {
             mContentView = LayoutInflater
-                    .from(mContextWeak.get()).inflate(R.layout.loading_layout,null);
+                    .from(mContextWeak.get()).inflate(R.layout.loading_layout, null);
             setContentView(mContentView);
         }
         mContentView.setVisibility(View.VISIBLE);
@@ -53,8 +53,8 @@ public class LoadingDialog extends AppCompatDialog {
         super.cancel();
     }
 
-    private void hideLoadingView(){
-        if(mContentView != null){
+    private void hideLoadingView() {
+        if (mContentView != null) {
             mContentView.setVisibility(View.GONE);
         }
     }

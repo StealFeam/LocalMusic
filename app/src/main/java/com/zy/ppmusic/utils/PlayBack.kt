@@ -17,12 +17,16 @@ import java.util.*
 /**
  * @author ZhiTouPC
  */
-class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnSeekCompleteListener {
+class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeListener,
+        MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener,
+        MediaPlayer.OnPreparedListener, MediaPlayer.OnSeekCompleteListener {
+    @Volatile
     private var mMediaPlayer: MediaPlayer? = null
     /**
      * 当前播放队列
      */
     private var mPlayQueue: List<String>? = null
+    @Volatile
     private var mCurrentPosition: Int = 0
     var currentMediaId: String? = null
         private set
@@ -30,7 +34,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
     private val audioManager: AudioManager
     @Volatile
     private var mAudioFocus = AUDIO_NO_FOCUS_NO_DUCK
-
+    @Volatile
     private var mIsAutoStart = false
 
     /**
@@ -43,18 +47,17 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
     private var mIsPauseCauseAudio = false
 
     private var mPlayOnFocusGain: Boolean = false
+    @Volatile
     var state = PlaybackStateCompat.STATE_NONE
         private set
     private val mContextWeak: WeakReference<MediaService> = WeakReference(mMediaService)
 
-    val currentStreamPosition: Int
-        get() = if (mMediaPlayer != null) mMediaPlayer!!.currentPosition else mCurrentPosition
-
-    val isPlaying: Boolean
-        get() = state == PlaybackStateCompat.STATE_PLAYING || mMediaPlayer != null && mMediaPlayer!!.isPlaying
+    @Volatile
+    var currentStreamPosition: Int  = 0
+            get() = mMediaPlayer?.currentPosition ?: mCurrentPosition
 
     val currentIndex: Int
-        get() = mPlayQueue!!.indexOf(currentMediaId)
+        get() = mPlayQueue?.indexOf(currentMediaId) ?: 0
 
     init {
         val context = mMediaService.applicationContext
@@ -92,6 +95,8 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
             state = PlaybackStateCompat.STATE_STOPPED
             releasePlayer(true)
             val index = DataTransform.get().getMediaIndex(mediaId)
+            PrintLog.d("该歌曲的id====$mediaId")
+            PrintLog.d("该歌曲的位置：：：$index")
             createPlayerIfNeed()
             state = PlaybackStateCompat.STATE_BUFFERING
             val path = DataTransform.get().getPath(index)
@@ -104,26 +109,19 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
                             .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                             .setLegacyStreamType(AudioManager.STREAM_MUSIC)
                             .setFlags(AudioManager.FLAG_ALLOW_RINGER_MODES)
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
                     mMediaPlayer?.setAudioAttributes(builder.build())
                 } else {
                     @Suppress("DEPRECATION")
                     mMediaPlayer?.setAudioStreamType(AudioManager.STREAM_MUSIC)
                 }
-                mMediaPlayer?.setDataSource(mContextWeak.get(), Uri.parse(String.format(Locale.CHINA,
-                        "file://%s", path)))
+                mContextWeak.get()?.applicationContext?.apply {
+                    mMediaPlayer?.setDataSource(this, Uri.parse(String.format(Locale.CHINA, "file://%s", path)))
+                }
                 mMediaPlayer?.prepare()
                 mCallBack?.onPlayBackStateChange(state)
                 PrintLog.e("onPlay: music init complete index=" + index + " path=" + DataTransform.get().getPath(index))
             }
-//            try {
-//
-//            } catch (e: IOException) {
-//                PrintLog.e("preparedWithMediaId error: " + e.message)
-//                if (mCallBack != null) {
-//                    mCallBack!!.onError(0, e.message?:"")
-//                }
-//            }
-
         }
     }
 
@@ -132,7 +130,6 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
         if (mAudioFocus == AUDIO_NO_FOCUS_NO_DUCK) {
             //如果没有获取到硬件的播放权限则暂停播放
             if (state == PlaybackStateCompat.STATE_PLAYING) {
-                PrintLog.e("config:paused")
                 pause()
                 mIsPauseCauseAudio = true
             }
@@ -173,12 +170,12 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
     }
 
     private fun getAudioFocus() {
-        val result: Int
-        result = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        val result: Int = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             val builder = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
             builder.setOnAudioFocusChangeListener(this)
             //设置音频焦点被占用自动暂停
             builder.setWillPauseWhenDucked(true)
+            builder.setAcceptsDelayedFocusGain(true)
             audioManager.requestAudioFocus(builder.build())
         } else {
             @Suppress("DEPRECATION")
@@ -224,7 +221,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
         }
         PrintLog.print("seek to $position,$isAutoStart")
         mIsAutoStart = isAutoStart
-        mMediaPlayer!!.seekTo(position)
+        mMediaPlayer?.seekTo(position)
         state = PlaybackStateCompat.STATE_BUFFERING
 
         mCallBack?.onPlayBackStateChange(state)
@@ -263,7 +260,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
         if (mPlayQueue!!.isEmpty()) {
             return null
         }
-        var queueIndex = mPlayQueue!!.indexOf(currentMediaId)
+        var queueIndex = mPlayQueue?.indexOf(currentMediaId)?:0
         if (queueIndex == 0) {
             queueIndex = mPlayQueue!!.size
         }
@@ -305,7 +302,8 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
         PrintLog.d("onAudioFocusChange() called with: focusChange = [$focusChange]")
         if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
             mAudioFocus = AUDIO_FOCUSED
-        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS || focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
+        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS ||
+                focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
                 || focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
             val canDuck = focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK
             mAudioFocus = if (canDuck) AUDIO_NO_FOCUS_CAN_DUCK else AUDIO_NO_FOCUS_NO_DUCK
@@ -369,7 +367,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
      * @param mp 播放器
      */
     override fun onSeekComplete(mp: MediaPlayer) {
-        mCurrentPosition = mMediaPlayer!!.currentPosition
+        mCurrentPosition = mMediaPlayer?.currentPosition ?: 0
         PrintLog.i("onSeekComplete() called=$mCurrentPosition")
 
         if (state == PlaybackStateCompat.STATE_BUFFERING) {

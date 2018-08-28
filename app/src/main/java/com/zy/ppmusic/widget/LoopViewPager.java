@@ -14,7 +14,7 @@ import android.view.WindowManager;
  * @author ZhiTouPC
  * @date 2018/2/7
  */
-public class LoopViewPager extends ViewPager{
+public class LoopViewPager extends ViewPager {
     private int mLastX;
     private int maxTranslation = 0;
     private boolean mSkipToFirst = false;
@@ -64,7 +64,7 @@ public class LoopViewPager extends ViewPager{
                 if (getCurrentItem() == 0) {
                     //从左往右
                     intercepted = deltaX > 0 && getScrollX() == 0;
-                    if(!intercepted && getTranslationX() > 0){
+                    if (!intercepted && getTranslationX() > 0) {
                         intercepted = true;
                     }
                 }

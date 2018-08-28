@@ -1,10 +1,12 @@
 package com.zy.ppmusic.mvp.base;
 
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
 import com.zy.ppmusic.App;
+import com.zy.ppmusic.BuildConfig;
 
 /**
  * @author ZhiTouPC
@@ -17,8 +19,25 @@ public abstract class AbstractBaseMvpActivity<P extends AbstractBasePresenter> e
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (BuildConfig.IS_DEBUG) {
+            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                    .detectAll()
+                    .detectCustomSlowCalls()
+                    .permitAll()
+                    .detectDiskWrites()
+                    .penaltyDeath()
+                    .penaltyDialog()
+                    .penaltyLog()
+                    .build());
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                    .detectLeakedSqlLiteObjects()
+                    .detectLeakedClosableObjects()
+                    .detectAll()
+                    .penaltyLog()
+                    .penaltyDeath()
+                    .build());
+        }
         App.setCustomDensity(this);
-        App.getInstance().createActivity(this);
         featureBeforeCreate();
         setContentView(getContentViewId());
         mPresenter = createPresenter();
@@ -31,7 +50,6 @@ public abstract class AbstractBaseMvpActivity<P extends AbstractBasePresenter> e
         if (mPresenter != null) {
             mPresenter.detachViewAndModel();
         }
-        App.getInstance().destroyActivity(this);
     }
 
     /**

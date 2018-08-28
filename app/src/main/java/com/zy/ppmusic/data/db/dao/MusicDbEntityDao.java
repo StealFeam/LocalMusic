@@ -27,7 +27,7 @@ public class MusicDbEntityDao extends AbstractDao<MusicDbEntity, String> {
         public final static Property LastMediaId = new Property(0, String.class, "lastMediaId", true, "LAST_MEDIA_ID");
         public final static Property LastPlayName = new Property(1, String.class, "lastPlayName", false, "LAST_PLAY_NAME");
         public final static Property LastPlayIndex = new Property(2, int.class, "lastPlayIndex", false, "LAST_PLAY_INDEX");
-        public final static Property LastPlayedPosition = new Property(3, int.class, "lastPlayedPosition", false, "LAST_PLAYED_POSITION");
+        public final static Property LastPlayedPosition = new Property(3, long.class, "lastPlayedPosition", false, "LAST_PLAYED_POSITION");
         public final static Property LastPlayAuthor = new Property(4, String.class, "lastPlayAuthor", false, "LAST_PLAY_AUTHOR");
         public final static Property LastMediaPath = new Property(5, String.class, "lastMediaPath", false, "LAST_MEDIA_PATH");
     }
@@ -124,7 +124,7 @@ public class MusicDbEntityDao extends AbstractDao<MusicDbEntity, String> {
             cursor.isNull(offset + 0) ? null : cursor.getString(offset + 0), // lastMediaId
             cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // lastPlayName
             cursor.getInt(offset + 2), // lastPlayIndex
-            cursor.getInt(offset + 3), // lastPlayedPosition
+            cursor.getLong(offset + 3), // lastPlayedPosition
             cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // lastPlayAuthor
             cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5) // lastMediaPath
         );
@@ -136,7 +136,7 @@ public class MusicDbEntityDao extends AbstractDao<MusicDbEntity, String> {
         entity.setLastMediaId(cursor.isNull(offset + 0) ? null : cursor.getString(offset + 0));
         entity.setLastPlayName(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
         entity.setLastPlayIndex(cursor.getInt(offset + 2));
-        entity.setLastPlayedPosition(cursor.getInt(offset + 3));
+        entity.setLastPlayedPosition(cursor.getLong(offset + 3));
         entity.setLastPlayAuthor(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
         entity.setLastMediaPath(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
      }

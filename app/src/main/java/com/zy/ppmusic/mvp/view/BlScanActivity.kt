@@ -56,16 +56,16 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
     private var mRefreshScanMenu: View? = null
 
     override fun initViews() {
-        mToolBar = findViewById<Toolbar>(R.id.toolbar_bl)
-        mScanResultRecycler = findViewById<RecyclerView>(R.id.show_device_recycler)
+        mToolBar = findViewById(R.id.toolbar_bl)
+        mScanResultRecycler = findViewById(R.id.show_device_recycler)
         if (mPresenter!!.isSupportBl().not()) {
             Toast.makeText(this, UiUtils.getString(R.string.unsupport_bluetooth), Toast.LENGTH_SHORT).show()
             finish()
             return
         }
         mScanDeviceList = ArrayList()
-        mBlueToothOpenSwitch = findViewById(R.id.switch_bl) as SwitchCompat?
-        mToolBar!!.title = if (mPresenter!!.isEnable()) {
+        mBlueToothOpenSwitch = findViewById(R.id.switch_bl)
+        mToolBar?.title = if (mPresenter!!.isEnable()) {
             mBlueToothOpenSwitch!!.isChecked = true
             mPresenter!!.getExitsDevices()
             mPresenter!!.startDiscovery()

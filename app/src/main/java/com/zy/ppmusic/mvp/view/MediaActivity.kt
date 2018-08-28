@@ -24,23 +24,18 @@ import android.support.v4.view.ViewPager
 import android.support.v7.app.AlertDialog
 import android.support.v7.view.menu.MenuBuilder
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.ListPopupWindow
 import android.support.v7.widget.RecyclerView
 import android.view.*
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
-import android.widget.Toast
-import com.zy.ppmusic.App
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.MediaHeadAdapter
-import com.zy.ppmusic.adapter.MenuAdapter
 import com.zy.ppmusic.adapter.PlayQueueAdapter
 import com.zy.ppmusic.adapter.TimeClockAdapter
 import com.zy.ppmusic.adapter.base.OnItemViewClickListener
 import com.zy.ppmusic.mvp.base.AbstractBaseMvpActivity
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract
-import com.zy.ppmusic.mvp.model.HeadViewModel
 import com.zy.ppmusic.mvp.presenter.MediaPresenterImpl
 import com.zy.ppmusic.service.MediaService
 import com.zy.ppmusic.utils.*
@@ -56,6 +51,7 @@ import java.util.*
  *      2.SessionCompat.sendCommand(String,Bundle,ResultReceiver);//需要获取结果
  */
 class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActivityContract.IMediaActivityView {
+
     private var mMediaBrowser: MediaBrowserCompat? = null
     /**
      * 媒体控制器
@@ -104,11 +100,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     /**
      * 是否正在拖动进度条
      */
-    private var mIsTrackingBar: Boolean? = false
-    /**
-     * 选择播放模式的Pop
-     */
-    private var mBottomLoopModePop: ListPopupWindow? = null
+    private var mIsTrackingBar: Boolean = false
     /**
      * 倒计时选择的dialog
      */
@@ -166,23 +158,17 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             if (mWeakView!!.get() == null) {
                 return
             }
-            val activity = mWeakView!!.get()
+            val activity = mWeakView!!.get() ?: return
             when (resultCode) {
                 MediaService.COMMAND_POSITION_CODE -> {
                     val position = resultData.getInt("position").toLong()
-                    activity!!.startPosition = position
-                    val percent = ((activity.startPosition * 100f) / activity.endPosition * 1.0f)
-                    if (activity.mIsTrackingBar!!.not()) {
-                        activity.control_display_progress.progress = percent.toInt()
-                    }
-                    activity.control_display_time_tv.text = DateUtil.get().getTime(position)
+                    activity.startPosition = position
+                    activity.updateTime()
                 }
                 MediaService.COMMAND_UPDATE_QUEUE_CODE -> {
-                    if (activity!!.mMediaController?.queue != null &&
+                    if (activity.mMediaController?.queue != null &&
                             activity.mMediaController!!.queue.size > 0) {
-                        if (activity.mBottomQueueAdapter != null) {
-                            activity.mBottomQueueAdapter?.setData(activity.mMediaController?.queue)
-                        }
+                        activity.mBottomQueueAdapter?.setData(activity.mMediaController?.queue)
                         activity.mPlayQueueList = activity.mMediaController?.queue
                     }
                 }
@@ -194,8 +180,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     }
 
     companion object {
-        fun action(context: Context){
-            Intent(context,MediaActivity::class.java).apply {
+        fun action(context: Context) {
+            Intent(context, MediaActivity::class.java).apply {
                 context.startActivity(this)
             }
         }
@@ -229,15 +215,17 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     }
 
     private fun initCenterBackGround() {
-        //专辑图片的圆形背景
         val dp2px = UiUtils.dp2px(this, 110)
         val vpDrawable = RoundDrawable(dp2px, ContextCompat.getColor(this, R.color.colorGray))
         ViewCompat.setBackground(vp_show_media_head, vpDrawable)
     }
 
+    private var mModeIndex = 0
+
     override fun initViews() {
         initTitleBar()
         initEdgeView()
+        //专辑图片的圆形背景
         initCenterBackGround()
 
         control_display_progress.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -262,7 +250,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         })
         //循环模式点击监听
         control_action_loop_model.setOnClickListener {
-            createLoopModePop()
+            mModeIndex++
+            setPlayMode(mModeIndex % 3)
         }
         //播放按钮监听
         control_action_play_pause.setOnClickListener {
@@ -293,26 +282,17 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             }
         }
 
-        override fun onPageScrolled(position: Int, positionOffset: Float,
-                                    positionOffsetPixels: Int) {
+        override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
             if (positionOffset == 0f && positionOffsetPixels == 0) {
                 if (dragBeforeIndex == vp_show_media_head.currentItem) {
                     return
                 }
                 PrintLog.i("-----------ViewPager index 更新 ${vp_show_media_head.currentItem}")
                 val currentMediaId = DataTransform.get().mediaIdList[vp_show_media_head.currentItem]
-                if (StringUtils.ifEquals(currentMediaId, mCurrentMediaIdStr) || mPlayQueueList == null) {
+                if (currentMediaId == mCurrentMediaIdStr || mPlayQueueList == null) {
                     return
                 }
-                vp_show_media_head.postDelayed({
-                    mPresenter?.skipToPosition(vp_show_media_head.currentItem.toLong())
-                    updateQueueSize(mPlayQueueList!!.size, vp_show_media_head.currentItem + 1)
-                    val mediaItem = DataTransform.get().mediaItemList[vp_show_media_head.currentItem]
-                    setMediaInfo(mediaItem.description.title?.toString()
-                            ?: UiUtils.getString(R.string.unknown_author)
-                            , mediaItem.description.subtitle?.toString()
-                            ?: UiUtils.getString(R.string.unknown_author))
-                }, 200)
+                mPresenter?.skipToPosition(vp_show_media_head.currentItem.toLong())
             }
         }
 
@@ -354,7 +334,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 //            }
             R.id.menu_notify_style -> {
                 val dialog = ChooseStyleDialog()
-                dialog.show(fragmentManager, "选择通知栏样式")
+                dialog.show(supportFragmentManager, "选择通知栏样式")
             }
             R.id.menu_count_time -> {
                 createTimeClockDialog()
@@ -369,7 +349,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     @SuppressLint("InflateParams")
     private fun createBottomQueueDialog() {
         mBottomQueueDialog = BottomSheetDialog(this)
-        if (mBottomQueueAdapter == null) {
+        if (mBottomQueueAdapter === null) {
             mBottomQueueAdapter = PlayQueueAdapter()
             mBottomQueueAdapter?.setItemClickListener { v, index ->
                 if (v.id == R.id.queue_item_del) {
@@ -399,11 +379,11 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             parent.removeView(mBottomQueueContentView)
         }
 
-        if (mCurrentMediaIdStr != null && mBottomQueueAdapter != null) {
+        if (mCurrentMediaIdStr != null) {
             mBottomQueueAdapter?.selectIndex = DataTransform.get().getMediaIndex(mCurrentMediaIdStr!!)
         }
         mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
-                (mBottomQueueAdapter!!.selectIndex + 1), if (mPlayQueueList == null) 0 else mPlayQueueList?.size)
+                (mBottomQueueAdapter!!.selectIndex + 1), mPlayQueueList?.size ?: 0)
         mBottomQueueDialog?.setContentView(mBottomQueueContentView)
         mQueueRecycler?.adapter = mBottomQueueAdapter
         mQueueRecycler?.layoutManager = LinearLayoutManager(applicationContext)
@@ -456,8 +436,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                         } else {
                             itemPath?.takeIf { it.isNotEmpty() }?.apply {
                                 doSupportDelAction(this, position)
-                            }
-                                    ?: Toast.makeText(this@MediaActivity, "删除失败", Toast.LENGTH_SHORT).show()
+                            } ?: toast(this@MediaActivity, "删除失败")
                         }
                     } else {
                         notifyDelItem(position)
@@ -481,7 +460,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 //0000-0000
                 val rootId = getRootId(mPresenter!!.getGrantedRootUri())
                 if (itemPath.contains(rootId).not()) {
-                    Toast.makeText(this@MediaActivity, "删除失败", Toast.LENGTH_SHORT).show()
+                    toast(this@MediaActivity, "删除失败")
                     return
                 }
                 val path = itemPath.substringAfter(rootId)
@@ -490,22 +469,22 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 println("删除的uri----$delUri")
                 val result = DocumentsContract.deleteDocument(contentResolver, delUri)
                 if (result) {
-                    Toast.makeText(this@MediaActivity, "删除成功", Toast.LENGTH_SHORT).show()
+                    toast(this@MediaActivity, "删除成功")
                     notifyDelItem(position)
                 } else {
-                    Toast.makeText(this@MediaActivity, "删除失败", Toast.LENGTH_SHORT).show()
+                    toast(this@MediaActivity, "删除失败")
                 }
             } else {
-
+                toast(this@MediaActivity, "删除失败00")
             }
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                Toast.makeText(this@MediaActivity, "需要权限", Toast.LENGTH_SHORT).show()
+                toast(this@MediaActivity, "需要授予权限")
                 Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                     startActivityForResult(this, requestDelPermissionCode)
                 }
             } else {
-                Toast.makeText(this@MediaActivity, "删除失败", Toast.LENGTH_SHORT).show()
+                toast(this@MediaActivity, "删除失败")
             }
         }
     }
@@ -525,43 +504,25 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         return uri.substring(start, end)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
+        super.onActivityResult(requestCode, resultCode, intent)
         //请求删除外置存储权限
         if (requestCode == requestDelPermissionCode && resultCode == Activity.RESULT_OK) {
-            data?.apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    contentResolver.takePersistableUriPermission(this.data,
-                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION and Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(this.data,
-                            DocumentsContract.getTreeDocumentId(this.data))
-                    mPresenter?.setGrantedRootUri(this.data.toString(), childrenUri.toString())
-                }
+            if (intent == null || intent.data == null) {
+                return
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                contentResolver.takePersistableUriPermission(intent.data!!,
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION and Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(intent.data,
+                        DocumentsContract.getTreeDocumentId(intent.data))
+                mPresenter?.setGrantedRootUri(intent.data!!.toString(), childrenUri.toString())
             }
         }
     }
 
-
-    /**
-     * 创建循环模式
-     */
-    private fun createLoopModePop() {
-        if (mBottomLoopModePop == null) {
-            mBottomLoopModePop = ListPopupWindow(this)
-            mBottomLoopModePop?.anchorView = control_action_loop_model
-            mBottomLoopModePop?.setDropDownGravity(Gravity.TOP and Gravity.END)
-            mBottomLoopModePop?.setAdapter(MenuAdapter(this))
-            mBottomLoopModePop?.setContentWidth(UiUtils.dp2px(this, 110))
-            mBottomLoopModePop?.horizontalOffset = control_action_loop_model.measuredWidth
-            mBottomLoopModePop?.setOnItemClickListener { _, _, position, _ ->
-                setPlayMode(position)
-                mBottomLoopModePop?.dismiss()
-            }
-        }
-        mBottomLoopModePop?.show()
-    }
 
     /**
      * 创建倒计时
@@ -579,7 +540,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             if (getCurrentTimeClockLength(position) != 0) {
                 //如果正在倒计时判断是否需要停止倒计时
                 val bundle = Bundle()
-                bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME, (getCurrentTimeClockLength(position) * 1000 * 60).toLong())
+                bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME,
+                        (getCurrentTimeClockLength(position) * 1000 * 60).toLong())
                 mPresenter?.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME, bundle)
                 mTimeClockDialog = null
             }
@@ -606,8 +568,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             override fun onStartTrackingTouch(s: SeekBar?) {
                 val transXRound = (s!!.measuredWidth - s.paddingLeft - s.paddingRight
                         + progressHintTv.measuredWidth / 2).toFloat()
-                val mMaxProgress = s.max.toFloat()
-                percent = transXRound / mMaxProgress
+                percent = transXRound / s.max.toFloat()
                 progressHintTv.visibility = View.VISIBLE
             }
 
@@ -617,8 +578,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 }, 1000)
             }
         })
-        val btnSure = mTimeContentView?.findViewById<Button>(R.id.time_selector_sure_btn)
-        btnSure?.setOnClickListener {
+        mTimeContentView?.findViewById<Button>(R.id.time_selector_sure_btn)?.setOnClickListener {
             val bundle = Bundle()
             bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME,
                     ((lengthSeekBar.progress + 1) * 1000 * 60).toLong())
@@ -626,20 +586,13 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             mTimeClockDialog?.cancel()
             mTimeClockDialog = null
         }
-        mTimeClockDialog?.setContentView(mTimeContentView)
+        mTimeClockDialog?.setContentView(mTimeContentView!!)
         mTimeClockDialog?.show()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        //延迟加载数据
-        vp_show_media_head.postDelayed({
-            mPresenter?.refreshQueue(this, false)
-        }, 100)
     }
 
     override fun onResume() {
         super.onResume()
+        mPresenter?.refreshQueue(this, false)
         volumeControlStream = AudioManager.STREAM_MUSIC
     }
 
@@ -671,20 +624,43 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 刷新列表的回调
      */
     override fun refreshQueue(isRefresh: Boolean) {
-        if (mMediaController == null)
+        if (mMediaController == null) {
+            PrintLog.d("media controller为空---")
+            connectMediaService()
             return
+        }
         if (DataTransform.get().pathList.size > 0) {
             showMsg(String.format(Locale.CHINA, getString(R.string.format_string_search_media_count), DataTransform.get().pathList.size))
-            mPresenter?.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, Bundle(), mResultReceive!!)
+            if (mResultReceive != null) {
+                mPresenter?.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, Bundle(), mResultReceive!!)
+            } else {
+                PrintLog.d("参数ResultReceive为空。")
+            }
         } else {
             showMsg(getString(R.string.no_media_searched))
             mPresenter?.playWithId("-1", Bundle())
         }
     }
 
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return super.onKeyDown(keyCode, event)
+        }
+        when (keyCode) {
+            KeyEvent.KEYCODE_MEDIA_NEXT,
+            KeyEvent.KEYCODE_MEDIA_PAUSE,
+            KeyEvent.KEYCODE_MEDIA_PREVIOUS,
+            KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                mMediaController?.dispatchMediaButtonEvent(event)
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
     private fun updateHead() = if (mHeadAdapter == null) {
         mHeadAdapter = MediaHeadAdapter(supportFragmentManager, DataTransform.get().pathList)
-        vp_show_media_head.offscreenPageLimit = 1
+        vp_show_media_head.offscreenPageLimit = 2
         vp_show_media_head.addOnPageChangeListener(mHeadChangeListener)
         vp_show_media_head.adapter = mHeadAdapter
     } else {
@@ -726,19 +702,12 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 显示加载框
      */
     override fun showLoading() {
-        PrintLog.d("showLoading")
-//        if (mLoadingDialog == null) {
-//            mLoadingDialog = LoadingDialog(this)
-//        }
-//        mLoadingDialog?.setCancelable(false)
-//        mLoadingDialog!!.show()
-
         if (mLoadingDialogFragment == null) {
             mLoadingDialogFragment = LoadingDialogFragment()
         }
         mLoadingDialogFragment?.isCancelable = false
         //判断当前页面的状态是否不可见
-        if (!supportFragmentManager.isStateSaved && !mLoadingDialogFragment!!.isAdded) {
+        if (supportFragmentManager.isStateSaved.not() && mLoadingDialogFragment!!.isAdded.not()) {
             mLoadingDialogFragment?.show(supportFragmentManager, "loading")
         }
     }
@@ -748,11 +717,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      */
     override fun hideLoading() {
         PrintLog.d("hideLoading")
-        if (mLoadingDialogFragment != null && mLoadingDialogFragment!!.isVisible) {
-//            if (!supportFragmentManager.isStateSaved) {
-            mLoadingDialogFragment?.dismiss()
-//            }
-        }
+        mLoadingDialogFragment?.takeIf { it.isVisible }?.dismiss()
     }
 
     /**
@@ -761,6 +726,9 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     private val mConnectionCallBack = object : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
             super.onConnected()
+            if (isFinishing) {
+                return
+            }
             PrintLog.print("已连接服务....")
             //mMediaBrowser!!.root 对应service的BrowserRoot 可以是包名
             mMediaBrowser?.subscribe(mMediaBrowser!!.root, subscriptionCallBack)
@@ -775,12 +743,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         override fun onConnectionSuspended() {
             super.onConnectionSuspended()
             PrintLog.print("服务已断开....")
-//            mMediaBrowser?.unsubscribe(mMediaBrowser!!.root, subscriptionCallBack)
-//            if (mMediaController != null) {
-//                mMediaController?.unregisterCallback(mControllerCallBack)
-//                MediaControllerCompat.setMediaController(this@MediaActivity, null)
-//            }
-            if (!isFinishing) {
+            if (isFinishing.not()) {
                 connectMediaService()
             }
         }
@@ -788,7 +751,16 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         override fun onConnectionFailed() {
             super.onConnectionFailed()
             PrintLog.print("连接服务失败.....")
-            connectMediaService()
+            if (isFinishing.not()) {
+                connectMediaService()
+            }
+        }
+    }
+
+    override fun setRepeatMode(mode: Int) {
+        if (mMediaController != null) {
+            mModeIndex = mode
+            setPlayMode(mModeIndex)
         }
     }
 
@@ -796,9 +768,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 加载本地缓存的播放模式
      */
     private fun loadMode() {
-        if (mPresenter != null && mMediaController != null) {
-            setPlayMode(mPresenter?.getLocalMode(applicationContext)!!)
-        }
+        mPresenter?.getLocalMode(applicationContext)
     }
 
     /**
@@ -807,16 +777,19 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     private fun setPlayMode(mode: Int) {
         when (mode) {
             PlaybackStateCompat.REPEAT_MODE_NONE -> {
-                control_action_loop_model.setImageResource(R.drawable.ic_loop_model_normal)
+                showMsg("顺序播放")
+                control_action_loop_model.setImageResource(R.drawable.ic_loop_mode_normal_svg)
             }
             PlaybackStateCompat.REPEAT_MODE_ONE -> {
-                control_action_loop_model.setImageResource(R.drawable.ic_loop_model_only)
+                showMsg("单曲循环")
+                control_action_loop_model.setImageResource(R.drawable.ic_loop_mode_only_svg)
             }
             PlaybackStateCompat.REPEAT_MODE_ALL -> {
-                control_action_loop_model.setImageResource(R.drawable.ic_loop_mode_list)
+                showMsg("列表循环")
+                control_action_loop_model.setImageResource(R.drawable.ic_loop_mode_list_svg)
             }
         }
-        mPresenter?.setRepeatMode(this, mode)
+        mPresenter?.setRepeatMode(applicationContext, mode)
     }
 
     /**
@@ -832,21 +805,12 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 }
                 //如果当前在播放状态
                 if (mMediaController?.playbackState?.state != PlaybackStateCompat.STATE_NONE) {
-                    val metadata = mMediaController?.metadata
                     //请求获取当前播放位置
-                    if (metadata != null) {
-                        mCurrentMediaIdStr = metadata.description.mediaId
-                        val displayTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE)
-                        val subTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE)
-                        endPosition = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
-                        stepPosition = endPosition / 100L
-                        if (startPosition != 0L) {
-                            val percent = startPosition * 100f / endPosition * 1.0f
-                            control_display_progress.progress = percent.toInt()
-                        }
-                        control_display_duration_tv.text = DateUtil.get().getTime(endPosition)
-                        setMediaInfo(StringUtils.ifEmpty(displayTitle, UiUtils.getString(R.string.unknown_name))
-                                , StringUtils.ifEmpty(subTitle, UiUtils.getString(R.string.unknown_author)))
+                    mMediaController?.metadata?.apply {
+                        endPosition = this.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
+                        updateTime()
+                        mCurrentMediaIdStr = this.description.mediaId
+                        setMediaInfo(this.description.title?.toString(), this.description.subtitle?.toString())
                         val position = mCurrentMediaIdStr?.let {
                             DataTransform.get().getMediaIndex(it)
                         } ?: 0
@@ -855,20 +819,14 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                     }
                     handlePlayState(mMediaController!!.playbackState!!.state)
                 } else {
-                    val subTitle = StringUtils.ifEmpty("${children[0].description.subtitle}",
-                            UiUtils.getString(R.string.unknown_author))
-                    val title = StringUtils.ifEmpty("${children[0].description.title}",
-                            UiUtils.getString(R.string.unknown_name))
-                    setMediaInfo(title, subTitle)
+                    setMediaInfo(children[0].description.title?.toString(), children[0].description.subtitle?.toString())
                     mCurrentMediaIdStr = children[0].description.mediaId
-                    val position = mCurrentMediaIdStr?.let {
-                        DataTransform.get().getMediaIndex(it)
-                    } ?: 0
-                    updateQueueSize(DataTransform.get().mediaIdList.size, position + 1)
-                    val extra = Bundle()
-                    extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_INIT)
-                    mCurrentMediaIdStr?.let {
-                        mPresenter?.playWithId(it, extra)
+                    mCurrentMediaIdStr?.apply {
+                        val position = DataTransform.get().getMediaIndex(this)
+                        updateQueueSize(DataTransform.get().mediaIdList.size, position + 1)
+                        val extra = Bundle()
+                        extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_INIT)
+                        mPresenter?.playWithId(this, extra)
                     }
                 }
             } else {
@@ -884,6 +842,20 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 PrintLog.print("SubscriptionCallback onError called.....")
     }
 
+    private fun updateTime() {
+        //正在拖动不更新
+        if (mIsTrackingBar) {
+            return
+        }
+        stepPosition = endPosition / 100L
+        if (endPosition != 0L) {
+            val percent = ((startPosition * 1.0f) / endPosition * 1.0f)
+            control_display_progress.progress = (percent * 100f).toInt()
+            control_display_duration_tv.text = DateUtil.get().getTime(endPosition)
+        }
+        control_display_time_tv.text = DateUtil.get().getTime(startPosition)
+    }
+
     /**
      * 媒体控制
      */
@@ -896,35 +868,27 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
 
         fun updateMetadata(metadata: MediaMetadataCompat?) {
-            if (metadata != null) {
-                mCurrentMediaIdStr = metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID)
-                val displayTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE)
-                val subTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE)
-                endPosition = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
-                stepPosition = endPosition / 100L
-                if (startPosition != 0L) {
-                    val percent = ((startPosition * 1.0f) / endPosition * 1.0f)
-                    control_display_progress.progress = (percent * 100f).toInt()
+            if (metadata == null) return
+            mCurrentMediaIdStr = metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID)
+            endPosition = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
+            updateTime()
+            val position = mCurrentMediaIdStr?.let {
+                DataTransform.get().getMediaIndex(it)
+            } ?: 0
+            //只在dialog显示时刷新
+            mBottomQueueDialog?.apply {
+                if (this.isShowing) {
+                    mBottomQueueAdapter?.selectIndex = position
+                    mBottomQueueAdapter?.notifyDataSetChanged()
                 }
-                control_display_duration_tv.text = DateUtil.get().getTime(endPosition)
-                PrintLog.print("endPosition=$endPosition,step=$stepPosition")
-                val position = mCurrentMediaIdStr?.let {
-                    DataTransform.get().getMediaIndex(it)
-                } ?: 0
-                //只在dialog显示时刷新
-                if (mCurrentMediaIdStr != null && mBottomQueueDialog != null) {
-                    if (mBottomQueueDialog!!.isShowing) {
-                        mBottomQueueAdapter?.selectIndex = position
-                        mBottomQueueAdapter?.notifyDataSetChanged()
-                    }
-                }
-                setMediaInfo(StringUtils.ifEmpty(displayTitle, getString(R.string.unknown_name)),
-                        StringUtils.ifEmpty(subTitle, getString(R.string.unknown_author)))
-                if (mHeadAdapter != null && mHeadAdapter!!.count > position) {
-                    vp_show_media_head.setCurrentItem(position, false)
-                }
-                updateQueueSize(DataTransform.get().pathList.size, position + 1)
             }
+
+            setMediaInfo(metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE),
+                    metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE))
+            if (vp_show_media_head.currentItem != position) {
+                vp_show_media_head.setCurrentItem(position, false)
+            }
+            updateQueueSize(DataTransform.get().pathList.size, position + 1)
         }
 
         //播放列表变化回调
@@ -934,17 +898,10 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 setMediaInfo(getString(R.string.app_name), getString(R.string.app_name))
                 return
             }
-            if (mBottomQueueAdapter != null) {
-                mBottomQueueAdapter?.setData(queue)
-                showMsg("更新播放列表")
-            }
+            mBottomQueueAdapter?.setData(queue)
+            showMsg("更新播放列表")
             mPlayQueueList = queue
             updateHead()
-        }
-
-        override fun onRepeatModeChanged(repeatMode: Int) {
-            super.onRepeatModeChanged(repeatMode)
-            PrintLog.print("onRepeatModeChanged.....")
         }
 
         //播放器状态改变回调
@@ -953,23 +910,16 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             PrintLog.print("position=" + state?.position + ",buffer=" + state?.bufferedPosition)
             PrintLog.print("endPosition=$endPosition")
             startPosition = state?.position ?: 0
-            if (endPosition != 0L) {
-                val percent = ((startPosition * 1.0f) / endPosition * 1.0f)
-                control_display_progress.progress = (percent * 100f).toInt()
-            }
-            control_display_time_tv.text = DateUtil.get().getTime(startPosition)
-            handlePlayState(state!!.state)
+            updateTime()
+            handlePlayState(state?.state ?: PlaybackStateCompat.STATE_NONE)
         }
 
         override fun onSessionEvent(event: String?, extras: Bundle?) {
             super.onSessionEvent(event, extras)
             when (event) {
                 MediaService.LOCAL_CACHE_POSITION_EVENT -> {
-                    val lastPosition = extras?.getInt(MediaService.LOCAL_CACHE_POSITION_EVENT) as Int
-                    if (endPosition != 0L) {
-                        control_display_progress.progress = (lastPosition * 100 / endPosition).toInt()
-                        PrintLog.d("得到的缓存position=" + (lastPosition * 100 / endPosition).toInt())
-                    }
+                    startPosition = extras?.getLong(MediaService.LOCAL_CACHE_POSITION_EVENT) ?: 0L
+                    updateTime()
                 }
                 MediaService.ERROR_PLAY_QUEUE_EVENT -> {
                     showMsg(getString(R.string.empty_play_queue))
@@ -989,25 +939,19 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                     }
                     mBorderTextView?.show(vp_show_media_head, DateUtil.get().getTime(mis))
                 }
+
                 MediaService.ACTION_COUNT_DOWN_END -> {
-                    if (mBorderTextView != null) {
-                        mBorderTextView?.hide()
-                        disConnectService()
-                        finish()
-                    }
+                    mBorderTextView?.hide()
+                    disConnectService()
+                    finish()
                 }
                 MediaService.RESET_SESSION_EVENT -> {
-                    println("重新连接服务")
+                    PrintLog.d("重新连接服务")
                     connectMediaService()
                 }
                 MediaService.UPDATE_POSITION_EVENT -> {
-                    val position = extras?.getInt(MediaService.UPDATE_POSITION_EVENT, 0)
-                    startPosition = position?.toLong() ?: 0
-                    if (endPosition != 0L) {
-                        val percent = ((startPosition * 1.0f) / endPosition * 1.0f)
-                        control_display_progress.progress = (percent * 100f).toInt()
-                    }
-                    control_display_time_tv.text = DateUtil.get().getTime(startPosition)
+                    startPosition = extras?.getInt(MediaService.UPDATE_POSITION_EVENT, 0)?.toLong() ?: 0
+                    updateTime()
                 }
                 else -> {
                     PrintLog.print("onSessionEvent....." + event + "," + extras.toString())
@@ -1034,7 +978,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             stopLoop()
             control_action_play_pause.setImageResource(R.drawable.ic_black_play)
             if (state == PlaybackStateCompat.STATE_STOPPED) {
-                control_display_progress.progress = 0
+                startPosition = 0
+                updateTime()
             }
         } else {
             startLoop()
@@ -1064,8 +1009,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 更新媒体信息
      */
     private fun setMediaInfo(displayTitle: String?, subTitle: String?) {
-        supportActionBar?.title = displayTitle
-        supportActionBar?.subtitle = subTitle
+        supportActionBar?.title = displayTitle ?: UiUtils.getString(R.string.unknown_name)
+        supportActionBar?.subtitle = subTitle ?: UiUtils.getString(R.string.unknown_author)
     }
 
     /**
@@ -1123,13 +1068,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             mBottomQueueContentView = null
             mBottomQueueDialog = null
             mBottomQueueAdapter = null
-        }
-        //释放循环模式弹窗
-        if (mBottomLoopModePop != null) {
-            if (mBottomLoopModePop!!.isShowing) {
-                mBottomLoopModePop?.dismiss()
-            }
-            mBottomLoopModePop = null
         }
         //释放时间计时弹窗
         if (mTimeClockDialog != null) {

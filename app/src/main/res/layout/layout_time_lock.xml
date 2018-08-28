@@ -14,7 +14,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
+    <android.support.v7.widget.AppCompatTextView
         android:id="@+id/time_selector_desc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -35,7 +35,7 @@
         app:layout_constraintStart_toEndOf="@+id/time_selector_desc"
         app:layout_constraintTop_toTopOf="@+id/time_selector_sure_btn" />
 
-    <Button
+    <android.support.v7.widget.AppCompatButton
         android:id="@+id/time_selector_sure_btn"
         android:layout_width="@dimen/dp45"
         android:layout_height="@dimen/dp25"
@@ -49,7 +49,7 @@
         app:layout_constraintStart_toEndOf="@+id/time_selector_seek_bar"
         app:layout_constraintTop_toBottomOf="@+id/time_selector_progress_hint_tv" />
 
-    <TextView
+    <android.support.v7.widget.AppCompatTextView
         android:id="@+id/time_selector_progress_hint_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

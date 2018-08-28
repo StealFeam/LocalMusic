@@ -82,9 +82,9 @@ public class ViewPagerBorderWrapper extends ViewGroup {
         mLeftView.setTextColor(UiUtils.INSTANCE.getColor(R.color.colorBlack));
         mRightView.setTextColor(UiUtils.INSTANCE.getColor(R.color.colorBlack));
         removeAllViews();
-        addView(mLeftView, 0,new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT));
+        addView(mLeftView, 0, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
         addView(mViewPager, 1);
-        addView(mRightView, 2,new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT));
+        addView(mRightView, 2, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
     }
 
 
@@ -212,13 +212,13 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                     mRightView.setLayoutParams(layoutParams);
                     //限制先左滑之后一直右滑导致ContentView的位移
                     int scrollX = getScrollX() - deltaX;
-                    if(scrollX < 0){
-                        scrollTo(0,0);
+                    if (scrollX < 0) {
+                        scrollTo(0, 0);
                         return false;
                     }
                     scrollBy(-deltaX, 0);
                     invalidate();
-                    System.out.println("scrollX==="+getScrollX());
+                    System.out.println("scrollX===" + getScrollX());
                 }
                 mLastTouchX = (int) ev.getRawX();
                 break;
@@ -249,8 +249,8 @@ public class ViewPagerBorderWrapper extends ViewGroup {
             public void onAnimationUpdate(ValueAnimator animation) {
                 params.width = (int) animation.getAnimatedValue();
                 //当前仅有右侧滑动会改动scrollX
-                if(getScrollX() != 0){
-                    scrollTo(params.width,0);
+                if (getScrollX() != 0) {
+                    scrollTo(params.width, 0);
                     invalidate();
                 }
                 view.setLayoutParams(params);

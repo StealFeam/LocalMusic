@@ -54,7 +54,7 @@ public class TimBackGroundDrawable extends Drawable {
         invalidateSelf();
     }
 
-    public void setCorner(int corner){
+    public void setCorner(int corner) {
         this.mCorner = corner;
         invalidateSelf();
     }
@@ -62,10 +62,10 @@ public class TimBackGroundDrawable extends Drawable {
     @Override
     public void draw(@NonNull Canvas canvas) {
         Rect bounds = getBounds();
-        if(mCorner == RIGHT){
+        if (mCorner == RIGHT) {
             clipRightPath(canvas, bounds);
-        }else{
-            clipLeftPath(canvas,bounds);
+        } else {
+            clipLeftPath(canvas, bounds);
         }
         canvas.drawPath(mPath, mPaint);
     }
@@ -98,19 +98,19 @@ public class TimBackGroundDrawable extends Drawable {
         mPath.rewind();
         switch (mLinePercent) {
             case TOP:
-                mPath.moveTo(area.left, area.height()*3/5);
+                mPath.moveTo(area.left, area.height() * 3 / 5);
                 break;
             case MIDDLE:
-                mPath.moveTo(area.left,area.height()/2);
+                mPath.moveTo(area.left, area.height() / 2);
                 break;
             case BOTTOM:
-                mPath.moveTo(area.left,area.height());
+                mPath.moveTo(area.left, area.height());
                 break;
             default:
                 break;
         }
-        mPath.lineTo(area.width(),0);
-        mPath.lineTo(area.width(),area.height());
+        mPath.lineTo(area.width(), 0);
+        mPath.lineTo(area.width(), area.height());
         mPath.lineTo(0, area.height());
         mPath.close();
         canvas.clipPath(mPath);

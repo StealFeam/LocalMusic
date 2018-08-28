@@ -1,5 +1,6 @@
 package com.zy.ppmusic.mvp.presenter;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -18,6 +19,7 @@ import java.util.Set;
 /**
  * @author ZY
  */
+@SuppressLint("MissingPermission")
 public class BlActivityPresenter extends IBLActivityContract.AbstractBLActivityPresenter {
     private final BluetoothAdapter mBlueAdapter;
     private final Context context;

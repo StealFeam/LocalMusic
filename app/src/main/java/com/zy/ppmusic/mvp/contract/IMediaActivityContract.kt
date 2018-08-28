@@ -27,6 +27,8 @@ interface IMediaActivityContract {
          */
         fun refreshQueue(isRefresh: Boolean)
 
+        fun setRepeatMode(mode:Int)
+
         /**
          * 检查服务连接
          */
@@ -63,20 +65,12 @@ interface IMediaActivityContract {
         abstract fun refreshQueue(context: Context, isRefresh: Boolean)
 
         /**
-         * 修改本地播放模式
-         *
-         * @param c    环境
-         * @param mode 模式对应码
-         */
-        abstract fun changeMode(c: Context, mode: Int)
-
-        /**
          * 获取本地模式数据
          *
          * @param c 环境
          * @return 本地数据
          */
-        abstract fun getLocalMode(c: Context): Int
+        abstract fun getLocalMode(c: Context)
 
         /**
          * 删除文件
@@ -125,7 +119,7 @@ interface IMediaActivityContract {
          * 播放指定位置的媒体
          * @param id 媒体在列表中的位置
          */
-        abstract fun skipToPosition(id: Long?)
+        abstract fun skipToPosition(id: Long)
 
         /**
          * 上一首
@@ -137,6 +131,9 @@ interface IMediaActivityContract {
     interface IMediaActivityModel : IBaseModel {
 
         fun attachController(controller: MediaControllerCompat?)
+
+        fun getLocalMode(c:Context,e:(Int) -> Unit)
+
         /**
          * 刷新列表
          *
@@ -170,7 +167,6 @@ interface IMediaActivityContract {
 
         /**
          * 发送自定义消息
-         * @param controller 服务连接
          * @param action 自定义消息标志
          * @param extra 自定义消息的参数
          */
@@ -178,10 +174,10 @@ interface IMediaActivityContract {
 
         /**
          * 设置列表播放模式
-         * @param controller 服务连接
+         * @param c 上下文
          * @param mode 播放模式
          */
-        fun postSetRepeatMode(mode: Int)
+        fun postSetRepeatMode(c:Context,mode: Int)
 
         /**
          * 下一首
@@ -197,7 +193,7 @@ interface IMediaActivityContract {
          * 播放指定位置的媒体
          * @param id 媒体在列表中的位置
          */
-        fun postSkipToPosition(id: Long?)
+        fun postSkipToPosition(id: Long)
 
         /**
          * 关闭线程池

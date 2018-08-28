@@ -18,7 +18,7 @@ class LoopReceiver(service: MediaService) : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        serviceWeakReference!!.get()?.updatePositionToSession()
+        serviceWeakReference?.get()?.updatePositionToSession()
     }
 
 }

@@ -1,9 +1,9 @@
 package com.zy.ppmusic.widget
 
 import android.app.Dialog
-import android.app.DialogFragment
 import android.content.DialogInterface
 import android.os.Bundle
+import android.support.v4.app.DialogFragment
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v7.app.AppCompatDialog
 import android.view.LayoutInflater
@@ -27,34 +27,34 @@ class ChooseStyleDialog : DialogFragment(), IChooseNotifyStyleContract.IChooseNo
 
     private lateinit var mRadioGroup: RadioGroup
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        val rootView = inflater?.inflate(R.layout.dialog_choose_notify_style_layout, container)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val rootView = inflater.inflate(R.layout.dialog_choose_notify_style_layout, container)
         rootView ?: let {
-            return super.onCreateView(inflater, container, savedInstanceState)
+            return super.onCreateView(inflater, container, savedInstanceState)!!
         }
         mRadioGroup = rootView.findViewById(R.id.rb_choose_parent)
         val localCheckId = mPresenter.getLocalStyle()
         val checkId = if (localCheckId >= 0)
             localCheckId else
             R.id.rb_choose_custom
-        try {
-            mRadioGroup.check(checkId)
-            mRadioGroup.setOnCheckedChangeListener { _, checkedId ->
-                val mediaController = MediaControllerCompat.getMediaController(activity)
-                val extra = Bundle()
-                extra.putInt(Constant.CHOOSE_STYLE_EXTRA,checkedId)
-                mediaController.sendCommand(MediaService.COMMAND_CHANGE_NOTIFY_STYLE,
-                        extra,null)
+        mRadioGroup.check(checkId)
+        mRadioGroup.setOnCheckedChangeListener { _, checkedId ->
+            activity?.apply {
+                val mediaController = MediaControllerCompat.getMediaController(requireActivity())
+                mediaController?.let {
+                    val extra = Bundle()
+                    extra.putInt(Constant.CHOOSE_STYLE_EXTRA, checkedId)
+                    mediaController.sendCommand(MediaService.COMMAND_CHANGE_NOTIFY_STYLE,
+                            extra, null)
+                }
             }
-        } catch (e: Exception) {
-            EasyTintView.makeText(rootView, "出现了错误，尴尬", EasyTintView.TINT_SHORT).show()
         }
 
         return rootView
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return AppCompatDialog(activity,R.style.NotifyDialogStyle)
+        return AppCompatDialog(activity, R.style.NotifyDialogStyle)
     }
 
     override fun onDismiss(dialog: DialogInterface?) {

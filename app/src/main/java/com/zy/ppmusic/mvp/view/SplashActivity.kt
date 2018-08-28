@@ -22,7 +22,6 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
         App.setCustomDensity(this)
-        App.getInstance().createActivity(this)
     }
 
     override fun onResume() {
@@ -124,7 +123,6 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
 
     override fun onDestroy() {
         super.onDestroy()
-        App.getInstance().destroyActivity(this)
         if (tv_splash_open.animation != null) {
             tv_splash_open.animation.cancel()
             tv_splash_open.animation = null

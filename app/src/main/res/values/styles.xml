@@ -31,11 +31,6 @@
         <item name="android:windowIsTranslucent">true</item>
     </style>
 
-    <style name="BLTheme" parent="ThemeOverlay.AppCompat.Dialog">
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowNoTitle">true</item>
-    </style>
-
     <style name="NotifyDialogStyle" parent="Theme.AppCompat.Light.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
@@ -43,10 +38,6 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
-
-    <style name="NotificationContent" parent="@android:style/TextAppearance.Small">
-        <item name="android:textColor">?android:attr/textColorPrimaryInverse</item>
-    </style>
 
     <style name="SelfSeekBarStyle">
         <item name="android:paddingLeft">@dimen/dp10</item>
@@ -72,7 +63,7 @@
 
     <style name="TransDialog" parent="Base.Theme.AppCompat.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowActionBar">false</item>
+        <item name="windowActionBar">false</item>
     </style>
     
     <style name="ToolBarPopTheme" parent="Widget.AppCompat.Light.PopupMenu.Overflow">

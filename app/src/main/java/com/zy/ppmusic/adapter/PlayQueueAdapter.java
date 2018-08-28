@@ -20,6 +20,7 @@ import java.util.Locale;
 
 /**
  * 播放列表
+ *
  * @author ZY
  */
 public class PlayQueueAdapter extends AbstractSingleTypeAdapter {
@@ -68,13 +69,26 @@ public class PlayQueueAdapter extends AbstractSingleTypeAdapter {
                 , UiUtils.INSTANCE.getString(R.string.unknown_name)));
         TextView tvPosition = holder.getView(R.id.queue_item_position);
         if (selectIndex == position) {
+//            tvSubTitle.setTextColor(Color.WHITE);
+//            tvTitle.setTextColor(Color.WHITE);
+//            tvPosition.setTextColor(Color.WHITE);
+//            holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(),R.color.colorTheme));
             holder.getView(R.id.queue_item_selected_line).setVisibility(View.VISIBLE);
-            tvPosition.setText(String.format(Locale.CHINA, "%2d", (position + 1)));
         } else {
+//            tvSubTitle.setTextColor(ContextCompat.getColor(holder.itemView.getContext(),R.color.colorDarkGray));
+//            tvTitle.setTextColor(ContextCompat.getColor(holder.itemView.getContext(),R.color.colorBlack));
+//            tvPosition.setTextColor(ContextCompat.getColor(holder.itemView.getContext(),R.color.colorDarkGray));
+//            ViewCompat.setBackgroundTintList(holder.itemView,null);
             holder.getView(R.id.queue_item_selected_line).setVisibility(View.GONE);
-            tvPosition.setText(String.format(Locale.CHINA, "%2d", (position + 1)));
         }
+        tvPosition.setText(String.format(Locale.CHINA, "%2d", (position + 1)));
         tvSubTitle.setTag(mData.get(position));
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        this.mData = null;
     }
 
     @Override
@@ -88,8 +102,8 @@ public class PlayQueueAdapter extends AbstractSingleTypeAdapter {
     @Override
     public void bindHolderData(ExpandableViewHolder holder, int viewType) {
         super.bindHolderData(holder, viewType);
-        holder.attachOnLongClickListener(mItemLongClickListener,holder.itemView);
-        holder.attachOnClickListener(mItemClickListener,holder.itemView,holder.getView(R.id.queue_item_del));
+        holder.attachOnLongClickListener(mItemLongClickListener, holder.itemView);
+        holder.attachOnClickListener(mItemClickListener, holder.itemView, holder.getView(R.id.queue_item_del));
     }
 
 }

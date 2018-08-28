@@ -26,6 +26,7 @@
 -keepclassmembers class * extends org.greenrobot.greendao.AbstractDao {
 public static java.lang.String TABLENAME;
 }
+
 -keep class **$Properties
 
 # If you do not use SQLCipher:
@@ -38,4 +39,8 @@ public static java.lang.String TABLENAME;
 -keep public enum com.bumptech.glide.load.resource.bitmap.ImageHeaderParser$** {
   **[] $VALUES;
   public *;
+}
+
+-keepclassmembernames class com.zy.ppmusic.mvp.view.MediaActivity{
+    public Boolean onCreateOptionsMenu;
 }

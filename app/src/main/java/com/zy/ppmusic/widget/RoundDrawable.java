@@ -14,17 +14,17 @@ import android.support.annotation.Nullable;
  * @date 2018/1/15
  */
 
-public class RoundDrawable extends Drawable{
+public class RoundDrawable extends Drawable {
     private Paint mPaint;
     private int mRadius;
 
-    public RoundDrawable(int mRadius,int color) {
+    public RoundDrawable(int mRadius, int color) {
         this.mRadius = mRadius;
         initPaint();
         this.mPaint.setColor(color);
     }
 
-    private void initPaint(){
+    private void initPaint() {
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setAntiAlias(true);
     }
@@ -44,7 +44,7 @@ public class RoundDrawable extends Drawable{
         Rect bounds = getBounds();
         int height = bounds.bottom - bounds.top;
         int width = bounds.right - bounds.left;
-        canvas.drawCircle(width/2,height/2,mRadius,mPaint);
+        canvas.drawCircle(width / 2, height / 2, mRadius, mPaint);
     }
 
     @Override

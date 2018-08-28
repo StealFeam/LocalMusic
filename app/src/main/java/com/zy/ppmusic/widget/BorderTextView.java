@@ -30,7 +30,7 @@ public class BorderTextView extends AppCompatTextView implements ViewGroup.OnHie
             findSuitParent(v);
             mRootView.setOnHierarchyChangeListener(this);
         }
-        if(this.getVisibility() != VISIBLE){
+        if (this.getVisibility() != VISIBLE) {
             setVisibility(VISIBLE);
         }
         if (mRootView != null && !isAdded) {
@@ -41,14 +41,14 @@ public class BorderTextView extends AppCompatTextView implements ViewGroup.OnHie
 
             this.setBackgroundResource(R.drawable.layout_shape_round);
             this.getBackground().setAlpha(80);
-            getBackground().setBounds(0,0,getBackground().getIntrinsicWidth() - 10,getBackground().getIntrinsicHeight());
+            getBackground().setBounds(0, 0, getBackground().getIntrinsicWidth() - 10, getBackground().getIntrinsicHeight());
             this.setTextColor(Color.WHITE);
             this.setPadding(10, 10, 0, 10);
         }
         setText(text);
     }
 
-    public void hide(){
+    public void hide() {
         this.setVisibility(GONE);
     }
 
@@ -65,7 +65,7 @@ public class BorderTextView extends AppCompatTextView implements ViewGroup.OnHie
 
     @Override
     public void onChildViewAdded(View parent, View child) {
-        if(child instanceof BorderTextView){
+        if (child instanceof BorderTextView) {
             invalidate();
             isAdded = true;
         }
@@ -73,7 +73,7 @@ public class BorderTextView extends AppCompatTextView implements ViewGroup.OnHie
 
     @Override
     public void onChildViewRemoved(View parent, View child) {
-        if(child instanceof BorderTextView){
+        if (child instanceof BorderTextView) {
             isAdded = false;
         }
     }
