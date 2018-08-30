@@ -41,6 +41,6 @@ public static java.lang.String TABLENAME;
   public *;
 }
 
--keepclassmembernames class com.zy.ppmusic.mvp.view.MediaActivity{
-    public Boolean onCreateOptionsMenu;
+-keep public class com.zy.ppmusic.mvp.view.MediaActivity{
+    public Boolean onCreateOptionsMenu(android.view.Menu);
 }

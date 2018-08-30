@@ -22,7 +22,7 @@ public class Test01 {
     public ActivityTestRule<MediaActivity> mRule = new ActivityTestRule<>(MediaActivity.class);
 
     @Test
-    public void justTest(){
+    public void justTest() {
         Espresso.onView(ViewMatchers.withId(R.id.control_action_loop_model)).perform(ViewActions.click());
     }
 }

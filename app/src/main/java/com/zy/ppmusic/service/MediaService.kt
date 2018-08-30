@@ -246,9 +246,6 @@ class MediaService : MediaBrowserServiceCompat() {
                 handlePlayOrPauseRequest()
             }
             savePlayingRecord()
-            if (mUpdateQueueRunnable != null) {
-                TaskPool.executeSyc(mUpdateQueueRunnable!!)
-            }
             NotificationUtils.cancelAllNotify(applicationContext)
             mMediaSessionCompat?.isActive = false
             mMediaSessionCompat?.release()
@@ -310,35 +307,37 @@ class MediaService : MediaBrowserServiceCompat() {
 
     /**
      * 保存播放记录到本地
+     * 1、在关闭时调用需要在主线程上及时保存，不然很可能会被杀死导致保存失败
+     * 2、扫描完成后的更新列表时需要保存当前的播放进度，这时需要在子线程中更新
      */
-    fun savePlayingRecord() {
-        //当前没有播放曲目
-        mCurrentMedia ?: return
-        TaskPool.executeSyc(Runnable {
-            val cacheEntity = MusicDbEntity()
-            cacheEntity.lastMediaId = mPlayBack!!.currentMediaId
-            if (mCurrentMedia!!.description != null) {
-                if (mCurrentMedia!!.description.mediaUri != null) {
-                    cacheEntity.lastMediaPath = mCurrentMedia!!.description.mediaUri!!.path
-                }
-                cacheEntity.lastPlayAuthor = mCurrentMedia!!.description.subtitle.toString()
-                cacheEntity.lastPlayName = mCurrentMedia!!.description.title.toString()
-            }
-            cacheEntity.lastPlayedPosition = mPlayBack?.currentStreamPosition?.toLong() ?: 0
-            cacheEntity.lastPlayIndex = DataTransform.get().mediaIdList.indexOf(mPlayBack!!.currentMediaId)
-            //删除已有的记录
-            DataBaseManager.getInstance().initDb(applicationContext).deleteAll()
-            DataBaseManager.getInstance().insetEntity(cacheEntity)
-        })
+    private fun savePlayingRecord() {
+        PrintLog.d("开始保存记录-----")
+
+        DataBaseManager.getInstance().let {
+            it.initDb(this@MediaService).deleteAll()
+            it.insetEntity(buildCacheEntity())
+        }
+
     }
 
+    private fun buildCacheEntity(): MusicDbEntity {
+        return MusicDbEntity().apply {
+            if (mCurrentMedia!!.description != null) {
+                this.lastMediaId = mCurrentMedia!!.description.mediaId
+                this.lastMediaPath = mCurrentMedia!!.description.mediaUri?.path
+                this.lastPlayAuthor = mCurrentMedia!!.description.subtitle.toString()
+                this.lastPlayName = mCurrentMedia!!.description.title.toString()
+            }
+            this.lastPlayedPosition = mPlayBack?.currentStreamPosition?.toLong() ?: 0
+            this.lastPlayIndex = DataTransform.get().mediaIdList.indexOf(this.lastMediaId)
+        }
+    }
 
     /**
      * 当播放状态发生改变时
      */
     private fun onPlayStateChange(state: Int) {
         initPlayBack()
-        PrintLog.d("修改状态的线程：：：：${Looper.myLooper() == Looper.getMainLooper()}")
         PrintLog.d("onPlayStateChange() called with: " + mPlayBack!!.state)
         val position = mPlayBack?.currentStreamPosition?.toLong()
                 ?: PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN
@@ -350,6 +349,7 @@ class MediaService : MediaBrowserServiceCompat() {
         } else {
             mAudioReceiver?.unregister()
         }
+
         val stateBuilder = PlaybackStateCompat.Builder()
                 .setActions(playbackActions)
 
@@ -372,8 +372,7 @@ class MediaService : MediaBrowserServiceCompat() {
         for (i in DataTransform.get().getQueueItemList().indices) {
             val queueItem = DataTransform.get().getQueueItemList()[i]
             if (des != null) {
-                if (StringUtils.ifEquals(queueItem.description.mediaId,
-                                des.mediaId)) {
+                if (StringUtils.ifEquals(queueItem.description.mediaId, des.mediaId)) {
                     return i
                 }
             }
@@ -763,11 +762,13 @@ class MediaService : MediaBrowserServiceCompat() {
             when (command) {
                 COMMAND_POSITION -> {
                     val resultExtra = Bundle()
-                    resultExtra.putInt("position", mPlayBack?.currentStreamPosition?:0)
+                    resultExtra.putInt("position", mPlayBack?.currentStreamPosition ?: 0)
                     cb?.send(COMMAND_POSITION_CODE, resultExtra)
                 }
                 COMMAND_UPDATE_QUEUE -> {
-                    savePlayingRecord()
+                    TaskPool.executeSyc(Runnable {
+                        savePlayingRecord()
+                    })
                     TaskPool.executeSyc(mUpdateQueueRunnable!!)
                     TaskPool.executeSyc(Runnable {
                         val entity = DataBaseManager.getInstance()

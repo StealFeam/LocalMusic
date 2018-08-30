@@ -5,32 +5,38 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
+import android.support.v4.content.ContextCompat
 import android.util.Log
 
 import com.zy.ppmusic.callback.AudioNoisyCallBack
+import com.zy.ppmusic.utils.PrintLog
 
 /**
  * @author ZhiTouPC
  * 当手机来电话或者播放其他的媒体时
  */
-class AudioBecomingNoisyReceiver(context: Context) : BroadcastReceiver() {
-    private val mContext: Context = context.applicationContext
+class AudioBecomingNoisyReceiver(private val context: Context) : BroadcastReceiver() {
+    @Volatile
     private var mIsRegistered = false
     private val mAudioNoisyIntentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
     private var mCallBack: AudioNoisyCallBack? = null
 
+    @Synchronized
     fun register(callBack: AudioNoisyCallBack) {
         if (!mIsRegistered) {
             this.mCallBack = callBack
-            mContext.registerReceiver(this, mAudioNoisyIntentFilter)
+            PrintLog.e("注册时的上下文：：：$context")
+            context.registerReceiver(this, mAudioNoisyIntentFilter)
             mIsRegistered = true
         }
     }
 
+    @Synchronized
     fun unregister() {
         if (mIsRegistered) {
             this.mCallBack = null
-            mContext.unregisterReceiver(this)
+            PrintLog.e("街注册的上下文：：：：：$context")
+            context.unregisterReceiver(this)
             mIsRegistered = false
         }
     }

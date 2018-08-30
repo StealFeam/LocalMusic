@@ -7,7 +7,6 @@ import android.support.test.rule.ActivityTestRule
 import android.support.test.runner.AndroidJUnit4
 import com.zy.ppmusic.mvp.view.MediaActivity
 import org.junit.Rule
-
 import org.junit.Test
 import org.junit.runner.RunWith
 

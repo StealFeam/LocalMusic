@@ -50,7 +50,6 @@ object NotificationUtils {
 
     fun createSystemNotify(c: Context, mediaSession: MediaSessionCompat?, isPlaying: Boolean): Notification? {
         val context = c.applicationContext
-        println("这里的状态是：：：：：$isPlaying")
         if (mediaSession == null)
             return null
         if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
@@ -59,7 +58,7 @@ object NotificationUtils {
         val mNotificationManager = context.getSystemService(
                 Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val descriptionCompat = mediaSession.controller.metadata.description
+        val descriptionCompat = mediaSession.controller?.metadata?.description
 
         val builder = initBuilder(context, mNotificationManager)
         builder.setVisibility(android.support.v4.app.NotificationCompat.VISIBILITY_PUBLIC)
@@ -131,14 +130,13 @@ object NotificationUtils {
 
     fun createCustomNotify(c: Context, sessionCompat: MediaSessionCompat?, isPlaying: Boolean): Notification? {
         val context = c.applicationContext
-        println("这里的状态是：：：：$isPlaying")
         if (sessionCompat == null)
             return null
         if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
             return null
         }
         val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val descriptionCompat = sessionCompat.controller.metadata.description
+        val descriptionCompat = sessionCompat.controller?.metadata?.description
         val iconBitmap: Bitmap? = descriptionCompat?.iconBitmap
         //添加内容布局
         val contentView = RemoteViews(context.packageName, R.layout.notify_copy_layout)
