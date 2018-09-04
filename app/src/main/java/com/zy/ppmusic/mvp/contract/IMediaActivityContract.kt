@@ -29,6 +29,8 @@ interface IMediaActivityContract {
 
         fun setRepeatMode(mode:Int)
 
+        fun setDeleteResult(isSuccess:Boolean,path:String?)
+
         /**
          * 检查服务连接
          */
@@ -56,6 +58,8 @@ interface IMediaActivityContract {
 
         abstract fun setGrantedRootUri(uri:String,child:String)
 
+        abstract fun removeQueueItem(position:Int)
+
         /**
          * 刷新列表
          *
@@ -78,7 +82,7 @@ interface IMediaActivityContract {
          * @param path 本地文件路径
          * @return 删除结果
          */
-        abstract fun deleteFile(path: String?): Boolean
+        abstract fun deleteFile(path: String?)
 
         /**
          * 向服务发送命令
@@ -130,9 +134,17 @@ interface IMediaActivityContract {
 
     interface IMediaActivityModel : IBaseModel {
 
+        fun getGrantedRootUri():String
+
+        fun getGrantedChildrenUri():String
+
+        fun saveGrantedUri(root:String,child:String)
+
         fun attachController(controller: MediaControllerCompat?)
 
         fun getLocalMode(c:Context,e:(Int) -> Unit)
+
+        fun removeQueueItem(position:Int)
 
         /**
          * 刷新列表

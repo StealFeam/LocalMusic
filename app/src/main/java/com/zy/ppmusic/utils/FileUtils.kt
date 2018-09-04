@@ -247,14 +247,14 @@ object FileUtils {
     fun deleteFile(path: String?): Boolean {
         if (TextUtils.isEmpty(path)) {
             System.err.println("删除文件失败，路径为空")
+            return false
         }
-        val file = File(path)
-        file.setWritable(true)
-        if (file.exists()) {
-            return file.delete()
+        File(path).apply {
+            if(this.exists()){
+                return this.delete()
+            }
         }
         return false
     }
-
 
 }

@@ -20,16 +20,59 @@ import java.lang.ref.WeakReference
  * @author ZhiTouPC
  */
 class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
-    override fun getLocalMode(c: Context,e:(Int) -> Unit){
+
+    private val CACHE_MODE_NAME = "cache_mode"
+    private val CACHE_MODE_KEY = "mode_key"
+    private val CACHE_ROOT_URI = "root_uri"
+    private val CACHE_CHILD_URI = "child_uri"
+
+    @Volatile
+    private var mCachePreference: SharedPreferences? = null
+    private var mControllerWeak: WeakReference<MediaControllerCompat>? = null
+    private val mMainHandler = Handler(Looper.getMainLooper())
+
+    private fun initCachePreference(context: Context) {
+        if (mCachePreference == null) {
+            mCachePreference = context.getSharedPreferences(CACHE_MODE_NAME, Context.MODE_PRIVATE)
+        }
+    }
+
+    private fun changeLocalMode(c: Context, mode: Int) {
+        initCachePreference(c)
+        if (mCachePreference!!.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE) == mode) {
+            return
+        }
+        val edit = mCachePreference!!.edit()
+        edit.putInt(CACHE_MODE_KEY, mode)
+        edit.apply()
+    }
+
+    override fun getGrantedRootUri(): String {
+        return mCachePreference?.getString(CACHE_ROOT_URI, "") ?: ""
+    }
+
+    override fun getGrantedChildrenUri(): String {
+        return mCachePreference?.getString(CACHE_CHILD_URI, "") ?: ""
+    }
+
+    override fun saveGrantedUri(root: String, child: String) {
+        mCachePreference?.edit()?.putString(CACHE_ROOT_URI, root)?.putString(CACHE_CHILD_URI, child)?.apply()
+    }
+
+    override fun getLocalMode(c: Context, e: (Int) -> Unit) {
         TaskPool.execute(Runnable {
             initCachePreference(c)
-            val mode = mCachePreference?.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE)?:0
+            val mode = mCachePreference?.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE)
+                    ?: 0
             mMainHandler.post { e.invoke(mode) }
         })
     }
 
-    private var mControllerWeak: WeakReference<MediaControllerCompat>? = null
-    private val mMainHandler = Handler(Looper.getMainLooper())
+    override fun removeQueueItem(position: Int) {
+        TaskPool.execute(Runnable {
+            mControllerWeak?.get()?.removeQueueItem(DataTransform.get().queueItemList[position].description)
+        })
+    }
 
     override fun attachController(controller: MediaControllerCompat?) {
         controller?.apply {
@@ -38,6 +81,7 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
     }
 
     override fun refreshQueue(context: Context, l: ScanMusicFile.AbstractOnScanComplete) {
+        initCachePreference(context)
         ScanMusicFile.get().setOnScanComplete(l).scanMusicFile(context)
     }
 
@@ -70,26 +114,6 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
         mControllerWeak?.get()?.transportControls?.sendCustomAction(action, extra)
     }
 
-    @Volatile
-    private var mCachePreference: SharedPreferences? = null
-    private val CACHE_MODE_NAME = "cache_mode"
-    private val CACHE_MODE_KEY = "mode_key"
-
-    private fun initCachePreference(context: Context) {
-        if (mCachePreference == null) {
-            mCachePreference = context.getSharedPreferences(CACHE_MODE_NAME, Context.MODE_PRIVATE)
-        }
-    }
-
-    private fun changeLocalMode(c: Context, mode: Int) {
-        initCachePreference(c)
-        if (mCachePreference!!.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE) == mode) {
-            return
-        }
-        val edit = mCachePreference!!.edit()
-        edit.putInt(CACHE_MODE_KEY, mode)
-        edit.apply()
-    }
 
     override fun postSetRepeatMode(c: Context, mode: Int) {
         TaskPool.execute(Runnable {

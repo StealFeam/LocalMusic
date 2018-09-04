@@ -26,7 +26,8 @@ class DataTransform private constructor() {
      */
     @Volatile
     var musicInfoEntities: ArrayList<MusicInfoEntity>? = null
-    val queueItemList: ArrayList<MediaSessionCompat.QueueItem>
+    @Volatile
+    var queueItemList: ArrayList<MediaSessionCompat.QueueItem>
     val mediaItemList: ArrayList<MediaBrowserCompat.MediaItem>
     private val mapMetadataArray: ArrayMap<String, MediaMetadataCompat>
     /**
@@ -242,7 +243,7 @@ class DataTransform private constructor() {
     }
 
     fun removeItem(index: Int) {
-        this.pathList.removeAt(index)
+        pathList.removeAt(index)
         musicInfoEntities?.removeAt(index)
         mapMetadataArray.remove(this.mediaIdList[index])
         queueItemList.removeAt(index)
@@ -279,7 +280,7 @@ class DataTransform private constructor() {
         }
     }
 
-    fun getMediaIndex(mediaId: String): Int {
+    fun getMediaIndex(mediaId: String?): Int {
         return if (mediaIdList.contains(mediaId)) {
             mediaIdList.indexOf(mediaId)
         } else 0

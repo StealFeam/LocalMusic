@@ -25,6 +25,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
     /**
      * 当前播放队列
      */
+    @Volatile
     private var mPlayQueue: List<String>? = null
     @Volatile
     private var mCurrentPosition: Int = 0
@@ -55,9 +56,6 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
     @Volatile
     var currentStreamPosition: Int  = 0
             get() = mMediaPlayer?.currentPosition ?: mCurrentPosition
-
-    val currentIndex: Int
-        get() = mPlayQueue?.indexOf(currentMediaId) ?: 0
 
     init {
         val context = mMediaService.applicationContext

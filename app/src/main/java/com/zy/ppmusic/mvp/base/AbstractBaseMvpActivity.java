@@ -24,7 +24,6 @@ public abstract class AbstractBaseMvpActivity<P extends AbstractBasePresenter> e
                     .detectAll()
                     .detectCustomSlowCalls()
                     .permitAll()
-                    .detectDiskWrites()
                     .penaltyDeath()
                     .penaltyDialog()
                     .penaltyLog()

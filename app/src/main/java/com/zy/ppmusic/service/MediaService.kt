@@ -391,12 +391,14 @@ class MediaService : MediaBrowserServiceCompat() {
             return
         }
         Log.e(TAG, "removeQueueItemAt: $removeIndex")
-        val state = mPlayBack?.state
-        if (state == PlaybackStateCompat.STATE_PLAYING) {
-            mPlayBack?.pause()
-        }
+
         //如果删除的是当前播放的歌曲，则播放新的曲目
-        if (mPlayBack?.currentIndex == removeIndex) {
+        if (DataTransform.get().getMediaIndex(mPlayBack?.currentMediaId) == removeIndex) {
+            PrintLog.d("是当前的媒体逻辑")
+            val state = mPlayBack?.state
+            if (state == PlaybackStateCompat.STATE_PLAYING) {
+                mPlayBack?.pause()
+            }
             DataTransform.get().removeItem(removeIndex)
             TaskPool.executeSyc(mUpdateQueueRunnable!!)
             if (DataTransform.get().mediaIdList.isNotEmpty()) {
@@ -410,17 +412,12 @@ class MediaService : MediaBrowserServiceCompat() {
                 mPlayBack?.stopPlayer()
             }
         } else {//如果不是当前曲目，不能影响当前播放,记录下播放进度，更新列表后继续播放
-            val currentIndex = mPlayBack?.currentIndex ?: 0
-            val position = mPlayBack?.currentStreamPosition?.toLong() ?: 0
+//            val currentMediaId = mPlayBack?.currentMediaId ?: ""
+//            val position = mPlayBack?.currentStreamPosition?.toLong() ?: 0
             DataTransform.get().removeItem(removeIndex)
             TaskPool.executeSyc(mUpdateQueueRunnable!!)
-            if (currentIndex < removeIndex) {
-                onMediaChange(DataTransform.get().mediaIdList[currentIndex],
-                        state == PlaybackStateCompat.STATE_PLAYING, position)
-            } else {
-                onMediaChange(DataTransform.get().mediaIdList[currentIndex - 1],
-                        state == PlaybackStateCompat.STATE_PLAYING, position)
-            }
+            PrintLog.d("不是当前媒体逻辑")
+//            onMediaChange(currentMediaId,state == PlaybackStateCompat.STATE_PLAYING,position)
         }
     }
 
@@ -601,7 +598,7 @@ class MediaService : MediaBrowserServiceCompat() {
             Log.e(TAG, "updateQueue: size ... ${DataTransform.get().mediaIdList.size}")
 
             mWeakService.get()?.mPlayBack?.setPlayQueue(DataTransform.get().mediaIdList)
-            mWeakService.get()?.mMediaSessionCompat!!.setQueue(DataTransform.get().queueItemList)
+            mWeakService.get()?.mMediaSessionCompat?.setQueue(DataTransform.get().queueItemList)
 
             //覆盖本地缓存
             FileUtils.saveObject(DataTransform.get().musicInfoEntities!!,

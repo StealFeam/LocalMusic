@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.ResultReceiver
 import android.provider.DocumentsContract
+import android.support.annotation.RequiresApi
 import android.support.design.widget.BottomSheetDialog
 import android.support.v4.content.ContextCompat
 import android.support.v4.media.MediaBrowserCompat
@@ -58,21 +59,17 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
      */
     private var mMediaController: MediaControllerCompat? = null
     /**
-     * 播放列表与service同步
-     */
-    private var mPlayQueueList: MutableList<MediaSessionCompat.QueueItem>? = null
-    /**
      * 播放列表的recycler
      */
-    private var mQueueRecycler: RecyclerView? = null
+    private var mMediaQueueRecycler: RecyclerView? = null
     /**
      * 展示播放列表的dialog
      */
-    private var mBottomQueueDialog: BottomSheetDialog? = null
+    private var mMediaQueueDialog: BottomSheetDialog? = null
     /**
      * 播放列表的适配器
      */
-    private var mBottomQueueAdapter: PlayQueueAdapter? = null
+    private var mMediaQueueAdapter: PlayQueueAdapter? = null
     /**
      * 当前播放的媒体id
      */
@@ -124,7 +121,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
     /**
      * 播放列表弹窗的contentView
      */
-    private var mBottomQueueContentView: View? = null
+    private var mPlayQueueContentView: View? = null
     /**
      * 显示播放列表数量
      */
@@ -133,14 +130,13 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
      * 歌曲图片适配器
      */
     private var mHeadAdapter: MediaHeadAdapter? = null
-    /**
-     * 加载框
-     */
-    private var mLoadingDialog: LoadingDialog? = null
+
     /**
      * 记录循环是否已经开始
      */
     private var isStarted = false
+
+    private var mLoadingDialogFragment: LoadingDialogFragment? = null
 
     /**
      * 接收媒体服务回传的信息，这里处理的是当前播放的位置和进度
@@ -168,8 +164,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                 MediaService.COMMAND_UPDATE_QUEUE_CODE -> {
                     if (activity.mMediaController?.queue != null &&
                             activity.mMediaController!!.queue.size > 0) {
-                        activity.mBottomQueueAdapter?.setData(activity.mMediaController?.queue)
-                        activity.mPlayQueueList = activity.mMediaController?.queue
+                        activity.mMediaQueueAdapter?.setData(activity.mMediaController?.queue)
                     }
                 }
                 else -> {
@@ -289,7 +284,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                 }
                 PrintLog.i("-----------ViewPager index 更新 ${vp_show_media_head.currentItem}")
                 val currentMediaId = DataTransform.get().mediaIdList[vp_show_media_head.currentItem]
-                if (currentMediaId == mCurrentMediaIdStr || mPlayQueueList == null) {
+                if (currentMediaId == mCurrentMediaIdStr) {
                     return
                 }
                 mPresenter?.skipToPosition(vp_show_media_head.currentItem.toLong())
@@ -348,64 +343,60 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
      */
     @SuppressLint("InflateParams")
     private fun createBottomQueueDialog() {
-        mBottomQueueDialog = BottomSheetDialog(this)
-        if (mBottomQueueAdapter === null) {
-            mBottomQueueAdapter = PlayQueueAdapter()
-            mBottomQueueAdapter?.setItemClickListener { v, index ->
+        mMediaQueueDialog = BottomSheetDialog(this)
+        if (mMediaQueueAdapter === null) {
+            mMediaQueueAdapter = PlayQueueAdapter()
+            mMediaQueueAdapter?.setItemClickListener { v, index ->
                 if (v.id == R.id.queue_item_del) {
                     createDelQueueItemDialog(index)
                     return@setItemClickListener
                 }
                 //点击播放列表直接播放选中的media
                 mPresenter?.skipToPosition(index.toLong())
-                if (mBottomQueueDialog!!.isShowing) {
-                    mBottomQueueDialog?.cancel()
-                    mBottomQueueDialog?.dismiss()
-                    mBottomQueueDialog = null
-                    mBottomQueueAdapter = null
+                if (mMediaQueueDialog!!.isShowing) {
+                    mMediaQueueDialog?.cancel()
+                    mMediaQueueDialog?.dismiss()
+                    mMediaQueueDialog = null
+                    mMediaQueueAdapter = null
                 }
             }
 
-            mBottomQueueAdapter?.setItemLongClickListener { _, position ->
+            mMediaQueueAdapter?.setItemLongClickListener { _, position ->
                 createQueueItemDetailDialog(position)
             }
         }
-        if (mBottomQueueContentView == null) {
-            mBottomQueueContentView = LayoutInflater.from(this).inflate(R.layout.play_queue_layout, null)
-            mQueueRecycler = mBottomQueueContentView?.findViewById(R.id.control_queue_recycle) as RecyclerView?
-            mQueueCountTv = mBottomQueueContentView?.findViewById(R.id.control_queue_count) as TextView?
+        if (mPlayQueueContentView == null) {
+            mPlayQueueContentView = LayoutInflater.from(this).inflate(R.layout.play_queue_layout, null)
+            mMediaQueueRecycler = mPlayQueueContentView?.findViewById(R.id.control_queue_recycle)
+            mQueueCountTv = mPlayQueueContentView?.findViewById(R.id.control_queue_count)
         } else {
-            val parent = mBottomQueueContentView?.parent as ViewGroup
-            parent.removeView(mBottomQueueContentView)
+            val parent = mPlayQueueContentView?.parent as ViewGroup
+            parent.removeView(mPlayQueueContentView)
         }
 
         if (mCurrentMediaIdStr != null) {
-            mBottomQueueAdapter?.selectIndex = DataTransform.get().getMediaIndex(mCurrentMediaIdStr!!)
+            mMediaQueueAdapter?.selectIndex = DataTransform.get().getMediaIndex(mCurrentMediaIdStr!!)
         }
         mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
-                (mBottomQueueAdapter!!.selectIndex + 1), mPlayQueueList?.size ?: 0)
-        mBottomQueueDialog?.setContentView(mBottomQueueContentView)
-        mQueueRecycler?.adapter = mBottomQueueAdapter
-        mQueueRecycler?.layoutManager = LinearLayoutManager(applicationContext)
-        mQueueRecycler?.addItemDecoration(RecycleViewDecoration(this, LinearLayoutManager.VERTICAL,
+                (mMediaQueueAdapter!!.selectIndex + 1), DataTransform.get().pathList.size)
+        mMediaQueueDialog?.setContentView(mPlayQueueContentView)
+        mMediaQueueRecycler?.adapter = mMediaQueueAdapter
+        mMediaQueueRecycler?.layoutManager = LinearLayoutManager(this)
+        mMediaQueueRecycler?.addItemDecoration(RecycleViewDecoration(this, LinearLayoutManager.VERTICAL,
                 R.drawable.recyclerview_vertical_line, UiUtils.dp2px(this, 25)))
-        mBottomQueueAdapter?.setData(mPlayQueueList)
-        mBottomQueueDialog?.show()
+        mMediaQueueAdapter?.setData(DataTransform.get().queueItemList)
+        mMediaQueueDialog?.show()
     }
 
     /**
      * 显示列表item的详细信息
      */
     private fun createQueueItemDetailDialog(position: Int): Boolean {
-        if (mPlayQueueList == null) {
+        if ((position in 0..DataTransform.get().queueItemList.size).not()) {
             return false
         }
 
-        if ((position in 0..mPlayQueueList!!.size).not()) {
-            return false
-        }
-
-        val item = mPlayQueueList!![position].description ?: return false
+        val item = DataTransform.get().queueItemList[position].description ?: return false
         AlertDialog.Builder(this)
                 .setTitle(String.format(Locale.CHINA, getString(R.string.show_name_and_author), item.title, item.subtitle))
                 .setMessage(item.mediaUri.toString())
@@ -428,15 +419,12 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                 .setPositiveButton(getString(R.string.string_del)) { _, _ ->
                     if (delContentView.checkbox_dl_content_message.isChecked) {
                         val itemPath = DataTransform.get().getPath(position)
-                        if (mPresenter!!.deleteFile(itemPath)) {
-                            Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(DataTransform.get().getPath(position))).apply {
-                                sendBroadcast(this)
-                            }
-                            notifyDelItem(position)
-                        } else {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             itemPath?.takeIf { it.isNotEmpty() }?.apply {
                                 doSupportDelAction(this, position)
                             } ?: toast(this@MediaActivity, "删除失败")
+                        } else {
+                            mPresenter?.deleteFile(itemPath)
                         }
                     } else {
                         notifyDelItem(position)
@@ -450,52 +438,47 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                 .show()
     }
 
-    /**
-     * 修复5.0后无法删除外部存储文件
-     */
-    private fun doSupportDelAction(itemPath: String, position: Int) {
-        if (mPresenter!!.getGrantedRootUri().isNotEmpty()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                println("删除的childrenUri---${mPresenter.getChildrenUri()}")
-                //0000-0000
-                val rootId = getRootId(mPresenter!!.getGrantedRootUri())
-                if (itemPath.contains(rootId).not()) {
-                    toast(this@MediaActivity, "删除失败")
-                    return
-                }
-                val path = itemPath.substringAfter(rootId)
-                val delUri = DocumentsContract.buildDocumentUriUsingTree(Uri.parse(mPresenter.getChildrenUri()),
-                        "$rootId:$path")
-                println("删除的uri----$delUri")
-                val result = DocumentsContract.deleteDocument(contentResolver, delUri)
-                if (result) {
-                    toast(this@MediaActivity, "删除成功")
-                    notifyDelItem(position)
-                } else {
-                    toast(this@MediaActivity, "删除失败")
-                }
-            } else {
-                toast(this@MediaActivity, "删除失败00")
+    override fun setDeleteResult(isSuccess: Boolean, path: String?) {
+        takeIf { isSuccess }?.apply {
+            if (path.isNullOrEmpty()) {
+                return
             }
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                toast(this@MediaActivity, "需要授予权限")
-                Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
-                    startActivityForResult(this, requestDelPermissionCode)
-                }
-            } else {
-                toast(this@MediaActivity, "删除失败")
+            Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(path)).apply {
+                sendBroadcast(this)
             }
+            notifyDelItem(DataTransform.get().getMediaIndex(path?.hashCode().toString()))
         }
     }
 
-    private fun notifyDelItem(position: Int) {
-        mMediaController?.removeQueueItem(mPlayQueueList!![position].description)
-        mPlayQueueList?.removeAt(position)
-        mBottomQueueAdapter?.setData(mPlayQueueList)
-        mBottomQueueAdapter?.notifyItemRemoved(position)
-        mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
-                DataTransform.get().getMediaIndex(mCurrentMediaIdStr!!) + 1, mPlayQueueList?.size)
+    /**
+     * 修复5.0后无法删除外部存储文件
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    private fun doSupportDelAction(itemPath: String, position: Int) {
+        if (mPresenter!!.getGrantedRootUri().isNotEmpty()) {
+            //0000-0000
+            val rootId = getRootId(mPresenter!!.getGrantedRootUri())
+            if (itemPath.contains(rootId).not()) {
+                toast(this@MediaActivity, "删除失败")
+                return
+            }
+            val path = itemPath.substringAfter(rootId)
+            val delUri = DocumentsContract.buildDocumentUriUsingTree(Uri.parse(mPresenter.getChildrenUri()),
+                    "$rootId:$path")
+            println("删除的uri----$delUri")
+            val result = DocumentsContract.deleteDocument(contentResolver, delUri)
+            if (result) {
+                toast(this@MediaActivity, "删除成功")
+                notifyDelItem(position)
+            } else {
+                toast(this@MediaActivity, "删除失败")
+            }
+        } else {
+            toast(this@MediaActivity, "需要授予权限")
+            Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                startActivityForResult(this, requestDelPermissionCode)
+            }
+        }
     }
 
     private fun getRootId(uri: String): String {
@@ -696,8 +679,6 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         mMediaBrowser?.connect()
     }
 
-    private var mLoadingDialogFragment: LoadingDialogFragment? = null
-
     /**
      * 显示加载框
      */
@@ -815,7 +796,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                             DataTransform.get().getMediaIndex(it)
                         } ?: 0
                         vp_show_media_head.setCurrentItem(position, false)
-                        updateQueueSize(mHeadAdapter!!.count, position + 1)
+                        updateQueueSize(position + 1, mHeadAdapter!!.count)
                     }
                     handlePlayState(mMediaController!!.playbackState!!.state)
                 } else {
@@ -823,7 +804,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                     mCurrentMediaIdStr = children[0].description.mediaId
                     mCurrentMediaIdStr?.apply {
                         val position = DataTransform.get().getMediaIndex(this)
-                        updateQueueSize(DataTransform.get().mediaIdList.size, position + 1)
+                        updateQueueSize(position + 1, DataTransform.get().mediaIdList.size)
                         val extra = Bundle()
                         extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_INIT)
                         mPresenter?.playWithId(this, extra)
@@ -876,10 +857,12 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                 DataTransform.get().getMediaIndex(it)
             } ?: 0
             //只在dialog显示时刷新
-            mBottomQueueDialog?.apply {
+            mMediaQueueDialog?.apply {
                 if (this.isShowing) {
-                    mBottomQueueAdapter?.selectIndex = position
-                    mBottomQueueAdapter?.notifyDataSetChanged()
+                    mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
+                            position + 1, mMediaQueueAdapter?.itemCount)
+                    mMediaQueueAdapter?.selectIndex = position
+                    mMediaQueueAdapter?.notifyDataSetChanged()
                 }
             }
 
@@ -888,20 +871,32 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             if (vp_show_media_head.currentItem != position) {
                 vp_show_media_head.setCurrentItem(position, false)
             }
-            updateQueueSize(DataTransform.get().pathList.size, position + 1)
+            updateQueueSize(position + 1, DataTransform.get().pathList.size)
         }
 
         //播放列表变化回调
         override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
             super.onQueueChanged(queue)
-            if (queue?.size == 0) {
+            PrintLog.print("onQueueChanged called size=${queue?.size}")
+            if (queue == null || queue.isEmpty()) {
                 setMediaInfo(getString(R.string.app_name), getString(R.string.app_name))
                 return
             }
-            mBottomQueueAdapter?.setData(queue)
-            showMsg("更新播放列表")
-            mPlayQueueList = queue
+            vp_show_media_head.clearOnPageChangeListeners()
             updateHead()
+            mMediaQueueDialog?.let {
+                if (it.isShowing) {
+                    val currentIndex = DataTransform.get().getMediaIndex(mCurrentMediaIdStr!!)
+                    vp_show_media_head.setCurrentItem(currentIndex, false)
+                    updateQueueSize(currentIndex + 1, DataTransform.get().pathList.size)
+                    mMediaQueueAdapter?.selectIndex = currentIndex
+                    mMediaQueueAdapter?.setData(queue)
+                    mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
+                            currentIndex + 1, queue.size)
+                }
+            }
+            showMsg("更新播放列表")
+            vp_show_media_head.addOnPageChangeListener(mHeadChangeListener)
         }
 
         //播放器状态改变回调
@@ -916,6 +911,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
 
         override fun onSessionEvent(event: String?, extras: Bundle?) {
             super.onSessionEvent(event, extras)
+            PrintLog.print("onSessionEvent....." + event + "," + extras.toString())
             when (event) {
                 MediaService.LOCAL_CACHE_POSITION_EVENT -> {
                     startPosition = extras?.getLong(MediaService.LOCAL_CACHE_POSITION_EVENT) ?: 0L
@@ -954,13 +950,17 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                     updateTime()
                 }
                 else -> {
-                    PrintLog.print("onSessionEvent....." + event + "," + extras.toString())
+                    PrintLog.e("this event was not intercepted")
                 }
             }
         }
     }
 
-    private fun updateQueueSize(total: Int, current: Int) {
+    private fun notifyDelItem(position: Int) {
+        mPresenter?.removeQueueItem(position)
+    }
+
+    private fun updateQueueSize(current: Int, total: Int) {
         if (total == 0) {
             tv_show_position.visibility = View.GONE
             return
@@ -1055,19 +1055,15 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         ViewCompat.setBackground(media_title_tint, null)
         ViewCompat.setBackground(vp_show_media_head, null)
         ViewCompat.setBackground(tv_show_position, null)
-        if (mLoadingDialog != null) {
-            mLoadingDialog?.cancel()
-            mLoadingDialog = null
-        }
         //释放播放列表弹窗
-        if (mBottomQueueDialog != null) {
-            if (mBottomQueueDialog!!.isShowing) {
-                mBottomQueueDialog?.dismiss()
+        if (mMediaQueueDialog != null) {
+            if (mMediaQueueDialog!!.isShowing) {
+                mMediaQueueDialog?.dismiss()
             }
             mQueueCountTv = null
-            mBottomQueueContentView = null
-            mBottomQueueDialog = null
-            mBottomQueueAdapter = null
+            mPlayQueueContentView = null
+            mMediaQueueDialog = null
+            mMediaQueueAdapter = null
         }
         //释放时间计时弹窗
         if (mTimeClockDialog != null) {

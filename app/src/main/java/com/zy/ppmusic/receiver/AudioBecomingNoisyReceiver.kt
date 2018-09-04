@@ -25,7 +25,6 @@ class AudioBecomingNoisyReceiver(private val context: Context) : BroadcastReceiv
     fun register(callBack: AudioNoisyCallBack) {
         if (!mIsRegistered) {
             this.mCallBack = callBack
-            PrintLog.e("注册时的上下文：：：$context")
             context.registerReceiver(this, mAudioNoisyIntentFilter)
             mIsRegistered = true
         }
@@ -35,7 +34,6 @@ class AudioBecomingNoisyReceiver(private val context: Context) : BroadcastReceiv
     fun unregister() {
         if (mIsRegistered) {
             this.mCallBack = null
-            PrintLog.e("街注册的上下文：：：：：$context")
             context.unregisterReceiver(this)
             mIsRegistered = false
         }

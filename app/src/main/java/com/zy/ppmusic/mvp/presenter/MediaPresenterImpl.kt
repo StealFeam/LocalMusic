@@ -1,7 +1,6 @@
 package com.zy.ppmusic.mvp.presenter
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.ResultReceiver
 import android.support.v4.media.session.MediaControllerCompat
@@ -15,19 +14,39 @@ import com.zy.ppmusic.utils.*
  */
 class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         IMediaActivityContract.AbstractMediaActivityPresenter(view) {
-    private var mCachePreference: SharedPreferences? = null
+
     private var isScanning = false
 
+    private fun refresh(context: Context) {
+        if (isScanning) {
+            return
+        }
+        PrintLog.i("开始扫描本地媒体。。。。。。")
+        isScanning = true
+        mModel.refreshQueue(context, object : ScanMusicFile.AbstractOnScanComplete() {
+            override fun onComplete(paths: ArrayList<String>) {
+                isScanning = false
+                Log.e(TAG, "onComplete: 扫描出来的" + paths.toString())
+                mView?.get()?.refreshQueue(true)
+                mView?.get()?.hideLoading()
+            }
+        })
+    }
+
     override fun getChildrenUri(): String {
-        return mCachePreference?.getString(CACHE_CHILD_URI, "") ?: ""
+        return mModel.getGrantedChildrenUri()
+    }
+
+    override fun removeQueueItem(position: Int) {
+        mModel?.removeQueueItem(position)
     }
 
     override fun getGrantedRootUri(): String {
-        return mCachePreference?.getString(CACHE_ROOT_URI, "") ?: ""
+        return mModel.getGrantedRootUri()
     }
 
     override fun setGrantedRootUri(uri: String, child: String) {
-        mCachePreference?.edit()?.putString(CACHE_ROOT_URI, uri)?.putString(CACHE_CHILD_URI, child)?.apply()
+        mModel.saveGrantedUri(uri, child)
     }
 
     override fun createModel(): IMediaActivityContract.IMediaActivityModel {
@@ -78,8 +97,8 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         })
     }
 
-    override fun deleteFile(path: String?): Boolean {
-        return FileUtils.deleteFile(path)
+    override fun deleteFile(path: String?) {
+        mView?.get()?.setDeleteResult(FileUtils.deleteFile(path), path)
     }
 
     override fun sendCommand(method: String, params: Bundle, resultReceiver: ResultReceiver) {
@@ -87,6 +106,7 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
     }
 
     override fun playWithId(mediaId: String, extra: Bundle) {
+        println("presenter .... playWithId")
         mModel.postPlayWithId(mediaId, extra)
     }
 
@@ -95,10 +115,11 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
     }
 
     override fun setRepeatMode(context: Context, mode: Int) {
-        mModel.postSetRepeatMode(context,mode)
+        mModel.postSetRepeatMode(context, mode)
     }
 
     override fun skipNext() {
+        println("presenter .... skipNext")
         mModel.postSkipNext()
     }
 
@@ -107,23 +128,8 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
     }
 
     override fun skipPrevious() {
+        println("presenter .... postSkipPrevious")
         mModel.postSkipPrevious()
-    }
-
-    private fun refresh(context: Context) {
-        if (isScanning) {
-            return
-        }
-        PrintLog.i("开始扫描本地媒体。。。。。。")
-        isScanning = true
-        mModel.refreshQueue(context, object : ScanMusicFile.AbstractOnScanComplete() {
-            override fun onComplete(paths: ArrayList<String>) {
-                isScanning = false
-                Log.e(TAG, "onComplete: 扫描出来的" + paths.toString())
-                mView?.get()?.refreshQueue(true)
-                mView?.get()?.hideLoading()
-            }
-        })
     }
 
     override fun detachViewAndModel() {
@@ -133,9 +139,6 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
 
     companion object {
         private const val TAG = "MediaPresenterImpl"
-
-        private const val CACHE_ROOT_URI = "root_uri"
-        private const val CACHE_CHILD_URI = "child_uri"
     }
 
 }
