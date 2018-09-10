@@ -3,11 +3,20 @@ package com.zy.ppmusic;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Debug;
 import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
 
 import com.squareup.leakcanary.LeakCanary;
+import com.zy.ppmusic.utils.Constant;
 import com.zy.ppmusic.utils.CrashHandler;
+import com.zy.ppmusic.utils.SpUtils;
+
+import java.lang.ref.WeakReference;
+
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 
 /**
  * @author ZhiTouPC
@@ -41,6 +50,24 @@ public class App extends Application {
         activityDisplayMetrics.densityDpi = targetDensityDpi;
     }
 
+    private static WeakReference<Context> baseContext;
+
+    public static Context getAppBaseContext(){
+        return baseContext.get();
+    }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        baseContext = new WeakReference<>(base);
+        SpUtils.get().putOperator(new Function1<SharedPreferences.Editor, Unit>() {
+            @Override
+            public Unit invoke(SharedPreferences.Editor editor) {
+                editor.putLong(Constant.SP_APP_ATTACH_TIME,System.currentTimeMillis());
+                return null;
+            }
+        });
+    }
 
     @Override
     public void onCreate() {
@@ -49,6 +76,7 @@ public class App extends Application {
         if (!BuildConfig.IS_DEBUG) {
             CrashHandler handler = new CrashHandler(this);
             handler.attach();
+            Debug.stopMethodTracing();
         } else {
             LeakCanary.install(this);
         }

@@ -391,10 +391,8 @@ class MediaService : MediaBrowserServiceCompat() {
             return
         }
         Log.e(TAG, "removeQueueItemAt: $removeIndex")
-
         //如果删除的是当前播放的歌曲，则播放新的曲目
         if (DataTransform.get().getMediaIndex(mPlayBack?.currentMediaId) == removeIndex) {
-            PrintLog.d("是当前的媒体逻辑")
             val state = mPlayBack?.state
             if (state == PlaybackStateCompat.STATE_PLAYING) {
                 mPlayBack?.pause()
@@ -412,12 +410,8 @@ class MediaService : MediaBrowserServiceCompat() {
                 mPlayBack?.stopPlayer()
             }
         } else {//如果不是当前曲目，不能影响当前播放,记录下播放进度，更新列表后继续播放
-//            val currentMediaId = mPlayBack?.currentMediaId ?: ""
-//            val position = mPlayBack?.currentStreamPosition?.toLong() ?: 0
             DataTransform.get().removeItem(removeIndex)
             TaskPool.executeSyc(mUpdateQueueRunnable!!)
-            PrintLog.d("不是当前媒体逻辑")
-//            onMediaChange(currentMediaId,state == PlaybackStateCompat.STATE_PLAYING,position)
         }
     }
 
@@ -557,9 +551,9 @@ class MediaService : MediaBrowserServiceCompat() {
                 PrintLog.e("mediaId is $mediaId,player is ${mediaService?.mPlayBack}")
                 return
             }
-            //TODO 设置媒体信息
+            //设置媒体信息
             val track = DataTransform.get().metadataCompatList[mediaId]
-            //TODO 触发MediaControllerCompat.Callback->onMetadataChanged方法
+            //触发MediaControllerCompat.Callback->onMetadataChanged方法
             if (track != null) {
                 mediaService.mMediaSessionCompat?.setMetadata(track)
             } else {
@@ -620,7 +614,7 @@ class MediaService : MediaBrowserServiceCompat() {
             if (extras != null) {
                 val action = extras.getString(ACTION_PARAM)
                 Log.d(TAG, "onPlayFromMediaId: extra=$action")
-                //TODO 缓冲请求
+                // 缓冲请求
                 if (ACTION_PREPARED_WITH_ID == action) {
                     val noneMediaId = "-1"
                     if (noneMediaId == mediaId) {
@@ -632,16 +626,16 @@ class MediaService : MediaBrowserServiceCompat() {
                     } else {
                         onMediaChange(mediaId, false)
                     }
-                    //TODO 播放指定id请求
+                    // 播放指定id请求
                 } else if (ACTION_PLAY_WITH_ID == action) {
-                    //TODO 如果和当前的mediaId相同则视为暂停或播放操作，不同则替换曲目
+                    // 如果和当前的mediaId相同则视为暂停或播放操作，不同则替换曲目
                     if (mCurrentMedia != null && mediaId != mCurrentMedia!!.description.mediaId) {
                         onMediaChange(mediaId, true)
                         PrintLog.d("播放指定曲目")
                         return
                     }
                     handlePlayOrPauseRequest()
-                    //TODO 初始化播放器，如果本地有播放记录，取播放记录，没有就初始化穿过来的media
+                    //初始化播放器，如果本地有播放记录，取播放记录，没有就初始化穿过来的media
                 } else if (ACTION_PLAY_INIT == action) {
                     TaskPool.executeSyc(Runnable {
                         val entityRecordList = DataBaseManager.getInstance()
@@ -727,7 +721,7 @@ class MediaService : MediaBrowserServiceCompat() {
                     }
                 }
                 keyEvent.action == KeyEvent.ACTION_UP -> {
-                    //TODO 如果有线耳机上的播放键快速点击两次且时间在300毫秒以内，则视为下一首
+                    //如果有线耳机上的播放键快速点击两次且时间在300毫秒以内，则视为下一首
                     if (keyEvent.keyCode == KeyEvent.KEYCODE_HEADSETHOOK) {
                         PrintLog.d("按钮抬起走了这里")
                         loge(keyEvent.toString())
@@ -787,9 +781,9 @@ class MediaService : MediaBrowserServiceCompat() {
                         cb?.send(COMMAND_UPDATE_QUEUE_CODE, Bundle())
                     })
                 }
-                //TODO 开始循环获取当前播放位置
+                //开始循环获取当前播放位置
                 COMMAND_START_LOOP -> startLoop()
-                //TODO 结束获取当前播放位置
+                //结束获取当前播放位置
                 COMMAND_STOP_LOOP -> stopLoop()
                 COMMAND_CHANGE_NOTIFY_STYLE -> {
                     val style = reqExtra!!.getInt(Constant.CHOOSE_STYLE_EXTRA, 0)
@@ -816,7 +810,7 @@ class MediaService : MediaBrowserServiceCompat() {
         override fun onCustomAction(action: String?, extras: Bundle?) {
             super.onCustomAction(action, extras)
             when (action) {
-                //TODO 开始倒计时
+                //开始倒计时
                 ACTION_COUNT_DOWN_TIME -> {
                     if (mCountDownTimer != null) {
                         mCountDownTimer?.stopTik()
@@ -825,12 +819,11 @@ class MediaService : MediaBrowserServiceCompat() {
                     mCountDownTimer = TimerUtils(extras!!.getLong(ACTION_COUNT_DOWN_TIME), 1000)
                     mCountDownTimer?.startTik(timeTikCallBack)
                 }
-                //TODO 结束倒计时
+                //结束倒计时
                 ACTION_STOP_COUNT_DOWN -> if (mCountDownTimer != null) {
                     mCountDownTimer?.stopTik()
                     mCountDownTimer = null
                 }
-
             }
         }
     }

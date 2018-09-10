@@ -698,7 +698,13 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
      */
     override fun hideLoading() {
         PrintLog.d("hideLoading")
-        mLoadingDialogFragment?.takeIf { it.isVisible }?.dismiss()
+        mLoadingDialogFragment?.takeIf { it.isVisible }?.apply {
+            if(supportFragmentManager.isStateSaved){
+                dismissAllowingStateLoss()
+            }else{
+                dismiss()
+            }
+        }
     }
 
     /**

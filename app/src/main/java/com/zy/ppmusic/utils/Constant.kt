@@ -13,4 +13,5 @@ object Constant {
     const val CHOOSE_STYLE_EXTRA = "CHOOSE_STYLE_EXTRA"
     const val LOCAL_STYLE_NAME = "LOCAL_STYLE_ID"
     val CACHE_FILE_PATH = "${App.getInstance().cacheDir.absolutePath}/pathlist.obj"
+    const val SP_APP_ATTACH_TIME = "app_attach_time"
 }

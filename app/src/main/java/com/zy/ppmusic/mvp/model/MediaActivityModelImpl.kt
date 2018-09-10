@@ -42,9 +42,10 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
         if (mCachePreference!!.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE) == mode) {
             return
         }
-        val edit = mCachePreference!!.edit()
-        edit.putInt(CACHE_MODE_KEY, mode)
-        edit.apply()
+
+        mCachePreference?.edit()?.apply {
+            putInt(CACHE_MODE_KEY, mode)
+        }?.apply()
     }
 
     override fun getGrantedRootUri(): String {
@@ -56,7 +57,10 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
     }
 
     override fun saveGrantedUri(root: String, child: String) {
-        mCachePreference?.edit()?.putString(CACHE_ROOT_URI, root)?.putString(CACHE_CHILD_URI, child)?.apply()
+        mCachePreference?.edit()?.apply {
+            putString(CACHE_MODE_KEY, root)
+            putString(CACHE_CHILD_URI, child)
+        }?.apply()
     }
 
     override fun getLocalMode(c: Context, e: (Int) -> Unit) {

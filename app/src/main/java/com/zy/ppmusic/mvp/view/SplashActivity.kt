@@ -9,7 +9,9 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import com.zy.ppmusic.App
 import com.zy.ppmusic.R
+import com.zy.ppmusic.utils.Constant
 import com.zy.ppmusic.utils.PrintLog
+import com.zy.ppmusic.utils.SpUtils
 import kotlinx.android.synthetic.main.activity_splash.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
@@ -17,6 +19,18 @@ import pub.devrel.easypermissions.EasyPermissions
 class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     private val requestCode = 0x010
     private val mPreferenceName = "SPLASH"
+    private var animDuration:Long = 2000
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        val attachTime = SpUtils.get().getOperator {
+            it.getLong(Constant.SP_APP_ATTACH_TIME,System.currentTimeMillis())
+        } as Long
+        val diffTime = System.currentTimeMillis() - attachTime
+        if(diffTime in 0..animDuration){
+            animDuration = diffTime
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,10 +44,11 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
     }
 
     private fun createLoadingAnim(): Animation {
+        println("动画时长：：：$animDuration")
         return AlphaAnimation(0.4f, 1f).apply {
-            this.fillAfter = true
-            this.duration = 1500
-            this.setAnimationListener(object : Animation.AnimationListener {
+            fillAfter = true
+            duration = animDuration
+            setAnimationListener(object : Animation.AnimationListener {
                 override fun onAnimationRepeat(a: Animation?) = PrintLog.e("onAnimationRepeat....")
 
                 override fun onAnimationStart(a: Animation?) = PrintLog.e("onAnimationStart....")

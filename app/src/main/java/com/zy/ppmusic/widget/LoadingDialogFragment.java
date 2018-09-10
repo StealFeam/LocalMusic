@@ -15,7 +15,8 @@ import com.zy.ppmusic.R;
 
 /**
  * @author y-slience
- * @date 2018/3/7
+ * @Date 2018/3/7
+ *
  */
 
 public class LoadingDialogFragment extends DialogFragment {
@@ -36,7 +37,8 @@ public class LoadingDialogFragment extends DialogFragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.layout_wave_loading, container);
     }
 
