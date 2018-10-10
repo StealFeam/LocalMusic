@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Path;
 import android.os.Debug;
 import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
@@ -67,6 +68,7 @@ public class App extends Application {
                 return null;
             }
         });
+        Path path = new Path();
     }
 
     @Override

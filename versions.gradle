@@ -2,9 +2,9 @@
 //权限库的配置
 def build_versions = [:]
 build_versions.minSdkVersion = 14
-build_versions.targetSdkVersion = 27
-build_versions.compileSdkVersion = 27
-build_versions.compileToolsVersion = "27.1.1"
+build_versions.targetSdkVersion = 28
+build_versions.compileSdkVersion = 28
+build_versions.compileToolsVersion = "28.0.0"
 build_versions.versionCode = 1
 build_versions.versionName="0.4.2"
 ext.build_versions = build_versions

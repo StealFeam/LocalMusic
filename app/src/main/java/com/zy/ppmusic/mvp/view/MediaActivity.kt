@@ -12,7 +12,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.ResultReceiver
 import android.provider.DocumentsContract
-import android.support.annotation.RequiresApi
 import android.support.design.widget.BottomSheetDialog
 import android.support.v4.content.ContextCompat
 import android.support.v4.media.MediaBrowserCompat
@@ -379,7 +378,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         }
         mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
                 (mMediaQueueAdapter!!.selectIndex + 1), DataTransform.get().pathList.size)
-        mMediaQueueDialog?.setContentView(mPlayQueueContentView)
+        mMediaQueueDialog?.setContentView(mPlayQueueContentView!!)
         mMediaQueueRecycler?.adapter = mMediaQueueAdapter
         mMediaQueueRecycler?.layoutManager = LinearLayoutManager(this)
         mMediaQueueRecycler?.addItemDecoration(RecycleViewDecoration(this, LinearLayoutManager.VERTICAL,
@@ -418,13 +417,10 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                 .setView(delContentView)
                 .setPositiveButton(getString(R.string.string_del)) { _, _ ->
                     if (delContentView.checkbox_dl_content_message.isChecked) {
-                        val itemPath = DataTransform.get().getPath(position)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            itemPath?.takeIf { it.isNotEmpty() }?.apply {
-                                doSupportDelAction(this, position)
-                            } ?: toast(this@MediaActivity, "删除失败")
+                            doSupportDelAction(position)
                         } else {
-                            mPresenter?.deleteFile(itemPath)
+                            mPresenter?.deleteFile(DataTransform.get().getPath(position))
                         }
                     } else {
                         notifyDelItem(position)
@@ -453,33 +449,42 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
     /**
      * 修复5.0后无法删除外部存储文件
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    private fun doSupportDelAction(itemPath: String, position: Int) {
+    @SuppressLint("NewApi")
+    private fun doSupportDelAction(position: Int) {
         if (mPresenter!!.getGrantedRootUri().isNotEmpty()) {
-            //0000-0000
-            val rootId = getRootId(mPresenter!!.getGrantedRootUri())
-            if (itemPath.contains(rootId).not()) {
-                toast(this@MediaActivity, "删除失败")
-                return
+            DataTransform.get().getPath(position)?.apply {
+                //0000-0000
+                val rootId = getRootId(mPresenter!!.getGrantedRootUri())
+                if (contains(rootId).not()) {
+                    toast(this@MediaActivity, "删除失败")
+                    return
+                }
+                try {
+                    val delUri = DocumentsContract.buildDocumentUriUsingTree(Uri.parse(mPresenter.getChildrenUri()),
+                            "$rootId:${substringAfter(rootId)}")
+                    println("删除的uri----$delUri")
+                    if (DocumentsContract.deleteDocument(contentResolver, delUri)) {
+                        toast(this@MediaActivity, "删除成功")
+                        notifyDelItem(position)
+                    } else {
+                        toast(this@MediaActivity, "删除失败")
+                    }
+                } catch (e: SecurityException) {
+                    mPresenter?.setGrantedRootUri("", "")
+                    doSupportDelAction(position)
+                }
             }
-            val path = itemPath.substringAfter(rootId)
-            val delUri = DocumentsContract.buildDocumentUriUsingTree(Uri.parse(mPresenter.getChildrenUri()),
-                    "$rootId:$path")
-            println("删除的uri----$delUri")
-            val result = DocumentsContract.deleteDocument(contentResolver, delUri)
-            if (result) {
-                toast(this@MediaActivity, "删除成功")
-                notifyDelItem(position)
-            } else {
-                toast(this@MediaActivity, "删除失败")
-            }
+
         } else {
             toast(this@MediaActivity, "需要授予权限")
+            doDelActionPosition = position
             Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                 startActivityForResult(this, requestDelPermissionCode)
             }
         }
     }
+
+    private var doDelActionPosition = -1
 
     private fun getRootId(uri: String): String {
         val start = uri.lastIndexOf("/") + 1
@@ -502,6 +507,10 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                 val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(intent.data,
                         DocumentsContract.getTreeDocumentId(intent.data))
                 mPresenter?.setGrantedRootUri(intent.data!!.toString(), childrenUri.toString())
+                if (doDelActionPosition != -1) {
+                    doSupportDelAction(doDelActionPosition)
+                    doDelActionPosition = -1
+                }
             }
         }
     }
@@ -520,11 +529,10 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         //无用的参数直接下划线表示
         mTimeClockAdapter?.setOnItemClickListener(OnItemViewClickListener { _, position ->
             mTimeClockDialog?.cancel()
-            if (getCurrentTimeClockLength(position) != 0) {
+            if (getCurrentTimeClockLength(position) != 0L) {
                 //如果正在倒计时判断是否需要停止倒计时
                 val bundle = Bundle()
-                bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME,
-                        (getCurrentTimeClockLength(position) * 1000 * 60).toLong())
+                bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME, getCurrentTimeClockLength(position))
                 mPresenter?.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME, bundle)
                 mTimeClockDialog = null
             }
@@ -581,19 +589,20 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
 
     /**
      * 获取当前倒计时长度
+     * 如果处于倒计时状态，第一条为取消倒计时
      */
-    private fun getCurrentTimeClockLength(position: Int): Int =//如果处于倒计时状态，第一条为取消倒计时
+    private fun getCurrentTimeClockLength(position: Int): Long =
             if (mTimeClockAdapter!!.isTick) {
                 //发送停止倒计时，隐藏倒计时文本
                 if (position == 0) {
                     mPresenter?.sendCustomAction(MediaService.ACTION_STOP_COUNT_DOWN, Bundle())
                     mBorderTextView?.hide()
-                    0
+                    0L
                 } else {
-                    mTimeClockAdapter!!.getItem(position - 1)
+                    mTimeClockAdapter!!.getItem(position - 1) * 1000L * 60L
                 }
             } else {
-                mTimeClockAdapter!!.getItem(position)
+                mTimeClockAdapter!!.getItem(position) * 1000L * 60L
             }
 
     override fun checkConnection() {
@@ -699,9 +708,9 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
     override fun hideLoading() {
         PrintLog.d("hideLoading")
         mLoadingDialogFragment?.takeIf { it.isVisible }?.apply {
-            if(supportFragmentManager.isStateSaved){
+            if (supportFragmentManager.isStateSaved) {
                 dismissAllowingStateLoss()
-            }else{
+            } else {
                 dismiss()
             }
         }

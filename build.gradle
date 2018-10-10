@@ -2,18 +2,17 @@
 
 
 buildscript {
-    ext.kotlin_version = '1.2.61'
+    ext.kotlin_version = '1.2.71'
     apply from: 'versions.gradle'
 
     repositories {
         jcenter()
         mavenCentral()
-        mavenLocal()
         maven { url 'https://maven.google.com' }
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.3.0-alpha07'
+        classpath 'com.android.tools.build:gradle:3.2.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'org.greenrobot:greendao-gradle-plugin:3.2.2' // add plugin
         // NOTE: Do not place your application dependencies here; they belong
@@ -25,7 +24,6 @@ allprojects {
     repositories {
         jcenter()
         mavenCentral()
-        mavenLocal()
         maven {
             url 'https://maven.google.com/'
         }

@@ -5,6 +5,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.ResultReceiver
 import android.support.v4.media.session.MediaControllerCompat
+import android.support.v4.util.SimpleArrayMap
+import android.util.ArrayMap
 import com.zy.ppmusic.mvp.base.AbstractBasePresenter
 import com.zy.ppmusic.mvp.base.IBaseModel
 import com.zy.ppmusic.mvp.base.IBaseView
@@ -49,7 +51,6 @@ interface IMediaActivityContract {
 
     abstract class AbstractMediaActivityPresenter(iMediaActivityView: IMediaActivityView) :
             AbstractBasePresenter<IMediaActivityView, IMediaActivityModel>(iMediaActivityView) {
-
         abstract fun attachModelController(controller: MediaControllerCompat?)
 
         abstract fun getGrantedRootUri():String

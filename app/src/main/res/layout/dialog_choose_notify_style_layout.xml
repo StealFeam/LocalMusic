@@ -6,7 +6,7 @@
 
     <RadioGroup
         android:id="@+id/rb_choose_parent"
-        android:layout_width="wrap_content"
+        android:layout_width="@dimen/dp200"
         android:layout_height="wrap_content"
         android:padding="@dimen/dp10"
         android:background="@drawable/layout_shape_round_white"
@@ -18,16 +18,19 @@
 
         <android.support.v7.widget.AppCompatRadioButton
             android:id="@+id/rb_choose_custom"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp30"
+            android:textSize="14sp"
             android:text="@string/choose_custom_style" />
 
         <android.support.v7.widget.AppCompatRadioButton
             android:id="@+id/rb_choose_system"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp30"
+            android:layout_marginTop="@dimen/dp5"
+            android:textSize="14sp"
             android:text="@string/choose_system_style" />
-    </RadioGroup>
 
+    </RadioGroup>
 
 </android.support.constraint.ConstraintLayout>

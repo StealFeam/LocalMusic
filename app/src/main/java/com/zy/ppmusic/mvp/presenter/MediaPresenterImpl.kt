@@ -4,6 +4,8 @@ import android.content.Context
 import android.os.Bundle
 import android.os.ResultReceiver
 import android.support.v4.media.session.MediaControllerCompat
+import android.support.v4.util.SimpleArrayMap
+import android.util.ArrayMap
 import android.util.Log
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract
 import com.zy.ppmusic.mvp.model.MediaActivityModelImpl
@@ -14,7 +16,6 @@ import com.zy.ppmusic.utils.*
  */
 class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         IMediaActivityContract.AbstractMediaActivityPresenter(view) {
-
     private var isScanning = false
 
     private fun refresh(context: Context) {

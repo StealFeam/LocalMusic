@@ -42,9 +42,8 @@ class DataTransform private constructor() {
     val metadataCompatList: Map<String, MediaMetadataCompat>
         get() = mapMetadataArray
 
-    private val loadPicOption = BitmapFactory.Options().let {
-        it.inSampleSize = 2
-        it
+    private val loadPicOption = BitmapFactory.Options().apply {
+        inSampleSize = 2
     }
 
     private object Inner {

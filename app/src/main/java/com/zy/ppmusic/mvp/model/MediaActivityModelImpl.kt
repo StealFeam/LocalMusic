@@ -35,6 +35,7 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
         if (mCachePreference == null) {
             mCachePreference = context.getSharedPreferences(CACHE_MODE_NAME, Context.MODE_PRIVATE)
         }
+
     }
 
     private fun changeLocalMode(c: Context, mode: Int) {
@@ -43,9 +44,7 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
             return
         }
 
-        mCachePreference?.edit()?.apply {
-            putInt(CACHE_MODE_KEY, mode)
-        }?.apply()
+        mCachePreference?.edit()?.putInt(CACHE_MODE_KEY, mode)?.apply()
     }
 
     override fun getGrantedRootUri(): String {
@@ -58,7 +57,7 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
 
     override fun saveGrantedUri(root: String, child: String) {
         mCachePreference?.edit()?.apply {
-            putString(CACHE_MODE_KEY, root)
+            putString(CACHE_ROOT_URI, root)
             putString(CACHE_CHILD_URI, child)
         }?.apply()
     }

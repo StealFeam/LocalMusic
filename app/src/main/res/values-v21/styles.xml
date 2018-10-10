@@ -18,6 +18,12 @@
         <item name="android:statusBarColor">@color/colorTheme</item>
     </style>
 
-    <style name="AppTheme.NoActionBar" parent="AppBaseNoBarV21Theme">
+
+    <style name="AppTheme.SplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:statusBarColor">@color/colorTheme</item>
+        <item name="android:navigationBarColor">@color/colorTheme</item>
+        <item name="android:windowBackground">@color/colorTheme</item>
     </style>
 </resources>
