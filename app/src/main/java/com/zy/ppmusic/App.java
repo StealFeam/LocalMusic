@@ -10,6 +10,7 @@ import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
 
 import com.squareup.leakcanary.LeakCanary;
+import com.zy.ppmusic.data.db.DataBaseManager;
 import com.zy.ppmusic.utils.Constant;
 import com.zy.ppmusic.utils.CrashHandler;
 import com.zy.ppmusic.utils.SpUtils;
@@ -68,8 +69,9 @@ public class App extends Application {
                 return null;
             }
         });
-        Path path = new Path();
     }
+
+    private DataBaseManager mDbCacheManager;
 
     @Override
     public void onCreate() {
@@ -82,6 +84,15 @@ public class App extends Application {
         } else {
             LeakCanary.install(this);
         }
+        mDbCacheManager = DataBaseManager.getInstance()
+                .initDb(this);
+
+    }
+
+
+
+    public DataBaseManager getDatabaseManager(){
+        return mDbCacheManager;
     }
 
     public Context getContext() {

@@ -16,10 +16,10 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.KeyEvent
+import com.zy.ppmusic.App
 import com.zy.ppmusic.R
 import com.zy.ppmusic.callback.AudioNoisyCallBack
 import com.zy.ppmusic.callback.TimeTikCallBack
-import com.zy.ppmusic.data.db.DataBaseManager
 import com.zy.ppmusic.entity.MusicDbEntity
 import com.zy.ppmusic.mvp.view.MediaActivity
 import com.zy.ppmusic.receiver.AudioBecomingNoisyReceiver
@@ -172,7 +172,7 @@ class MediaService : MediaBrowserServiceCompat() {
                 if (mErrorTimes < DataTransform.get().mediaIdList.size) {
                     onMediaChange(mPlayBack!!.onSkipToNext(), true)
                 } else {
-                    toast(applicationContext, "无可播放媒体，请重新扫描")
+                    toast("无可播放媒体，请重新扫描")
                 }
             }
         })
@@ -200,16 +200,14 @@ class MediaService : MediaBrowserServiceCompat() {
     override fun onLoadChildren(s: String, result: MediaBrowserServiceCompat.Result<List<MediaBrowserCompat.MediaItem>>) {
         Log.d(TAG, "service onLoadChildren() called with: s = [$s], result = [$result]")
         if (s == MY_ROOT_ID) {
-            val list = DataTransform.get().mediaItemList
             result.detach()
-            if (list.isNotEmpty()) {
-                result.sendResult(list)
-                PrintLog.print("load list size ... ${list.size}")
+            if (DataTransform.get().mediaItemList.isNotEmpty()) {
+                result.sendResult(DataTransform.get().mediaItemList)
+                PrintLog.print("load list size ... ${DataTransform.get().mediaItemList.size}")
             } else {
                 TaskPool.executeSyc(Runnable {
                     val localCacheMediaLoader = LocalCacheMediaLoader()
-                    val mediaPaths = localCacheMediaLoader.mediaPaths
-                    if (mediaPaths.isNotEmpty()) {
+                    if (localCacheMediaLoader.mediaPaths.isNotEmpty()) {
                         PrintLog.e("加载本地数据了")
                         result.sendResult(DataTransform.get().mediaItemList)
                     } else {
@@ -312,24 +310,22 @@ class MediaService : MediaBrowserServiceCompat() {
      */
     private fun savePlayingRecord() {
         PrintLog.d("开始保存记录-----")
-
-        DataBaseManager.getInstance().let {
-            it.initDb(this@MediaService).deleteAll()
-            it.insetEntity(buildCacheEntity())
+        App.getInstance().databaseManager.apply {
+            deleteAll()
+            insetEntity(buildCacheEntity())
         }
-
     }
 
     private fun buildCacheEntity(): MusicDbEntity {
         return MusicDbEntity().apply {
-            if (mCurrentMedia!!.description != null) {
-                this.lastMediaId = mCurrentMedia!!.description.mediaId
-                this.lastMediaPath = mCurrentMedia!!.description.mediaUri?.path
-                this.lastPlayAuthor = mCurrentMedia!!.description.subtitle.toString()
-                this.lastPlayName = mCurrentMedia!!.description.title.toString()
+            mCurrentMedia?.description?.also {
+                lastMediaId = it.mediaId
+                lastMediaPath = it.mediaUri?.path
+                lastPlayAuthor = it.subtitle.toString()
+                lastPlayName = it.title.toString()
             }
-            this.lastPlayedPosition = mPlayBack?.currentStreamPosition?.toLong() ?: 0
-            this.lastPlayIndex = DataTransform.get().mediaIdList.indexOf(this.lastMediaId)
+            lastPlayedPosition = mPlayBack?.currentStreamPosition?.toLong() ?: 0
+            lastPlayIndex = DataTransform.get().mediaIdList.indexOf(this.lastMediaId)
         }
     }
 
@@ -444,7 +440,7 @@ class MediaService : MediaBrowserServiceCompat() {
         super.onDestroy()
         Log.d(TAG, "onDestroy() called")
         NotificationUtils.cancelAllNotify(this)
-        DataBaseManager.getInstance().closeConn()
+        App.getInstance().databaseManager.closeConn()
         mAudioReceiver?.unregister()
         mMediaSessionCompat?.release()
         if (mCountDownTimer != null) {
@@ -547,10 +543,12 @@ class MediaService : MediaBrowserServiceCompat() {
 
         override fun run() {
             val mediaService = mWeakService.get()
-            if (mediaId.isNullOrEmpty() || mediaService?.mPlayBack == null) {
-                PrintLog.e("mediaId is $mediaId,player is ${mediaService?.mPlayBack}")
+            if (mediaId.isNullOrEmpty()) {
+                PrintLog.e("mediaId is $mediaId,service weak $mediaService")
                 return
             }
+            mediaService ?: return
+            mediaService.mPlayBack?:mediaService.initPlayBack()
             //设置媒体信息
             val track = DataTransform.get().metadataCompatList[mediaId]
             //触发MediaControllerCompat.Callback->onMetadataChanged方法
@@ -638,8 +636,7 @@ class MediaService : MediaBrowserServiceCompat() {
                     //初始化播放器，如果本地有播放记录，取播放记录，没有就初始化穿过来的media
                 } else if (ACTION_PLAY_INIT == action) {
                     TaskPool.executeSyc(Runnable {
-                        val entityRecordList = DataBaseManager.getInstance()
-                                .initDb(applicationContext).entity
+                        val entityRecordList = App.getInstance().databaseManager.entity
                         if (entityRecordList.size > 0) {
                             val seekPosition = entityRecordList[0].lastPlayedPosition
                             mHandler.post {
@@ -762,8 +759,7 @@ class MediaService : MediaBrowserServiceCompat() {
                     })
                     TaskPool.executeSyc(mUpdateQueueRunnable!!)
                     TaskPool.executeSyc(Runnable {
-                        val entity = DataBaseManager.getInstance()
-                                .initDb(applicationContext).entity
+                        val entity = App.getInstance().databaseManager.entity
                         if (entity.size > 0) {
                             val lastMediaId = entity[0].lastMediaId
                             mHandler.post {

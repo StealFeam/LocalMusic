@@ -98,8 +98,8 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         })
     }
 
-    override fun deleteFile(path: String?) {
-        mView?.get()?.setDeleteResult(FileUtils.deleteFile(path), path)
+    override fun deleteFile(path: String?) : Boolean{
+        return FileUtils.deleteFile(path)
     }
 
     override fun sendCommand(method: String, params: Bundle, resultReceiver: ResultReceiver) {

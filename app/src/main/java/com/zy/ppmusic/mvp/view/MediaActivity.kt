@@ -205,7 +205,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         bottomBackGround.setDrawableColor(UiUtils.getColor(R.color.colorTheme))
         bottomBackGround.setCorner(TimBackGroundDrawable.LEFT)
         bottomBackGround.setPercent(TimBackGroundDrawable.BOTTOM)
-        ViewCompat.setBackground(tv_show_position, bottomBackGround)
+        ViewCompat.setBackground(v_bottom_line, bottomBackGround)
     }
 
     private fun initCenterBackGround() {
@@ -417,10 +417,22 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                 .setView(delContentView)
                 .setPositiveButton(getString(R.string.string_del)) { _, _ ->
                     if (delContentView.checkbox_dl_content_message.isChecked) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            doSupportDelAction(position)
-                        } else {
-                            mPresenter?.deleteFile(DataTransform.get().getPath(position))
+                        val path = DataTransform.get().getPath(position)
+                        val result = mPresenter?.deleteFile(path)
+                        result?.apply {
+                            if(this){
+                                if (path.isNullOrEmpty()) {
+                                    return@apply
+                                }
+                                sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(path)))
+                                notifyDelItem(DataTransform.get().getMediaIndex(path?.hashCode().toString()))
+                            }else{
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                    doSupportDelAction(position)
+                                } else {
+                                    toast("删除失败")
+                                }
+                            }
                         }
                     } else {
                         notifyDelItem(position)
@@ -435,15 +447,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
     }
 
     override fun setDeleteResult(isSuccess: Boolean, path: String?) {
-        takeIf { isSuccess }?.apply {
-            if (path.isNullOrEmpty()) {
-                return
-            }
-            Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(path)).apply {
-                sendBroadcast(this)
-            }
-            notifyDelItem(DataTransform.get().getMediaIndex(path?.hashCode().toString()))
-        }
+
     }
 
     /**
@@ -455,19 +459,22 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             DataTransform.get().getPath(position)?.apply {
                 //0000-0000
                 val rootId = getRootId(mPresenter!!.getGrantedRootUri())
-                if (contains(rootId).not()) {
-                    toast(this@MediaActivity, "删除失败")
-                    return
-                }
+                println("rootId...$rootId,和rootId相比的值--$this")
+//                if (contains(rootId).not()) {
+//                    println("不包含")
+//                    toast(this@MediaActivity, "删除失败")
+//                    return
+//                }
                 try {
                     val delUri = DocumentsContract.buildDocumentUriUsingTree(Uri.parse(mPresenter.getChildrenUri()),
                             "$rootId:${substringAfter(rootId)}")
                     println("删除的uri----$delUri")
                     if (DocumentsContract.deleteDocument(contentResolver, delUri)) {
-                        toast(this@MediaActivity, "删除成功")
+                        toast( "删除成功")
                         notifyDelItem(position)
                     } else {
-                        toast(this@MediaActivity, "删除失败")
+                        println("执行删除错误")
+                        toast( "删除失败")
                     }
                 } catch (e: SecurityException) {
                     mPresenter?.setGrantedRootUri("", "")
@@ -476,7 +483,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             }
 
         } else {
-            toast(this@MediaActivity, "需要授予权限")
+            toast( "需要授予权限")
             doDelActionPosition = position
             Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                 startActivityForResult(this, requestDelPermissionCode)
@@ -684,6 +691,8 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             val serviceComponentName = ComponentName(this, MediaService::class.java)
             mMediaBrowser = MediaBrowserCompat(this, serviceComponentName, mConnectionCallBack, null)
         }
+
+
 
         mMediaBrowser?.connect()
     }
@@ -977,11 +986,11 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
 
     private fun updateQueueSize(current: Int, total: Int) {
         if (total == 0) {
-            tv_show_position.visibility = View.GONE
+            v_bottom_line.visibility = View.GONE
             return
         }
-        tv_show_position.visibility = View.VISIBLE
-        tv_show_position.text = String.format(Locale.CHINA, "%2d/%2d", current, total)
+        v_bottom_line.visibility = View.VISIBLE
+        (v_bottom_line.background as? TimBackGroundDrawable)?.setTintText(String.format(Locale.CHINA, "%2d / %2d", current, total))
     }
 
     /**
@@ -1059,44 +1068,43 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         if (isFinishing) {
             //正常按键返回退出调用
             disConnectService()
+
+            //去除ViewPager的监听
+            vp_show_media_head.clearOnPageChangeListeners()
+            ViewCompat.setBackground(media_title_tint, null)
+            ViewCompat.setBackground(vp_show_media_head, null)
+            ViewCompat.setBackground(v_bottom_line, null)
+            //释放播放列表弹窗
+            if (mMediaQueueDialog != null) {
+                if (mMediaQueueDialog!!.isShowing) {
+                    mMediaQueueDialog?.dismiss()
+                }
+                mQueueCountTv = null
+                mPlayQueueContentView = null
+                mMediaQueueDialog = null
+                mMediaQueueAdapter = null
+            }
+            //释放时间计时弹窗
+            if (mTimeClockDialog != null) {
+                if (mTimeClockDialog!!.isShowing) {
+                    mTimeClockDialog?.dismiss()
+                }
+                mTimeContentView = null
+                mTimeClockDialog = null
+                mTimeClockAdapter = null
+            }
+            mResultReceive = null
+            //去除SeekBar的监听
+            control_display_progress.setOnSeekBarChangeListener(null)
+
+            control_action_show_queue.setOnClickListener(null)
+            control_action_loop_model.setOnClickListener(null)
+            control_action_play_pause.setOnClickListener(null)
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        //配置发生变化获取其他意外终止
-        disConnectService()
         PrintLog.print("MediaActivity is destroy")
-        ViewCompat.setBackground(media_title_tint, null)
-        ViewCompat.setBackground(vp_show_media_head, null)
-        ViewCompat.setBackground(tv_show_position, null)
-        //释放播放列表弹窗
-        if (mMediaQueueDialog != null) {
-            if (mMediaQueueDialog!!.isShowing) {
-                mMediaQueueDialog?.dismiss()
-            }
-            mQueueCountTv = null
-            mPlayQueueContentView = null
-            mMediaQueueDialog = null
-            mMediaQueueAdapter = null
-        }
-        //释放时间计时弹窗
-        if (mTimeClockDialog != null) {
-            if (mTimeClockDialog!!.isShowing) {
-                mTimeClockDialog?.dismiss()
-            }
-            mTimeContentView = null
-            mTimeClockDialog = null
-            mTimeClockAdapter = null
-        }
-        mResultReceive = null
-        //去除ViewPager的监听
-        vp_show_media_head.removeOnPageChangeListener(mHeadChangeListener)
-        //去除SeekBar的监听
-        control_display_progress.setOnSeekBarChangeListener(null)
-
-        control_action_show_queue.setOnClickListener(null)
-        control_action_loop_model.setOnClickListener(null)
-        control_action_play_pause.setOnClickListener(null)
     }
 }

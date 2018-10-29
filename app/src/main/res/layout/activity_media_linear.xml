@@ -122,15 +122,10 @@
 
     </android.support.v7.widget.LinearLayoutCompat>
 
-    <android.support.v7.widget.AppCompatTextView
-        android:id="@+id/tv_show_position"
+    <View
+        android:id="@+id/v_bottom_line"
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp15"
         android:gravity="bottom|end"
-        android:textSize="@dimen/sp12"
-        android:textColor="@color/colorWhite"
-        tools:background="@color/colorTheme"
-        android:textStyle="bold"
-        android:visibility="visible"
-        tools:text="1000/100000" />
+        android:visibility="visible" />
 </android.support.v7.widget.LinearLayoutCompat>

@@ -1,17 +1,13 @@
 package com.zy.ppmusic.mvp.contract
 
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.os.ResultReceiver
 import android.support.v4.media.session.MediaControllerCompat
-import android.support.v4.util.SimpleArrayMap
-import android.util.ArrayMap
 import com.zy.ppmusic.mvp.base.AbstractBasePresenter
 import com.zy.ppmusic.mvp.base.IBaseModel
 import com.zy.ppmusic.mvp.base.IBaseView
 import com.zy.ppmusic.utils.ScanMusicFile
-import java.util.*
 
 /**
  * @author ZhiTouPC
@@ -83,7 +79,7 @@ interface IMediaActivityContract {
          * @param path 本地文件路径
          * @return 删除结果
          */
-        abstract fun deleteFile(path: String?)
+        abstract fun deleteFile(path: String?):Boolean
 
         /**
          * 向服务发送命令

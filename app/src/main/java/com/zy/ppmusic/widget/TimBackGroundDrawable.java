@@ -4,6 +4,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
+import android.graphics.PaintFlagsDrawFilter;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
@@ -11,6 +12,10 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import com.zy.ppmusic.App;
+import com.zy.ppmusic.utils.StringUtils;
+import com.zy.ppmusic.utils.UiUtils;
 
 /**
  * @author ZhiTouPC
@@ -34,13 +39,19 @@ public class TimBackGroundDrawable extends Drawable {
     private int mPaintColor = Color.BLUE;
     private int mLinePercent = MIDDLE;
     private int mCorner = RIGHT;
+    private PaintFlagsDrawFilter filter = new PaintFlagsDrawFilter(0,Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+    private Path textPath;
+    private String text;
 
     public TimBackGroundDrawable() {
-        mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaint = new Paint();
+        mPaint.setTextAlign(Paint.Align.CENTER);
+        mPaint.setTextSize(48);
         mPaint.setAntiAlias(true);
         mPaint.setColor(mPaintColor);
         mPaint.setStrokeWidth(1);
         mPath = new Path();
+        textPath = new Path();
     }
 
     public void setDrawableColor(int color) {
@@ -59,15 +70,32 @@ public class TimBackGroundDrawable extends Drawable {
         invalidateSelf();
     }
 
+    public void setTintText(String msg){
+        this.text = msg;
+        invalidateSelf();
+    }
+
     @Override
     public void draw(@NonNull Canvas canvas) {
         Rect bounds = getBounds();
+        canvas.setDrawFilter(filter);
+        canvas.save();
         if (mCorner == RIGHT) {
             clipRightPath(canvas, bounds);
         } else {
             clipLeftPath(canvas, bounds);
         }
+        mPaint.setColor(mPaintColor);
         canvas.drawPath(mPath, mPaint);
+        canvas.restore();
+
+        if(!StringUtils.ifEmpty(text)){
+            mPaint.setColor(Color.BLACK);
+            mPaint.setStrokeWidth(10);
+            textPath.moveTo(0,bounds.height());
+            textPath.lineTo(bounds.width(),0);
+            canvas.drawTextOnPath(text,textPath,0,0,mPaint);
+        }
     }
 
     private void clipRightPath(Canvas canvas, Rect area) {

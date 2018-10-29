@@ -34,6 +34,7 @@ public class DataBaseManager {
         }
         if (mSession != null) {
             mSession.clear();
+            mSession = null;
         }
         mSession = mMaster.newSession();
         return this;
@@ -58,8 +59,11 @@ public class DataBaseManager {
 
     private void checkSession() {
         if (mSession == null) {
-            System.err.println("please call initDb first...");
-            throw new NullPointerException("please call initDb first...");
+            if(mOpenHelper == null){
+                System.err.println("please call initDb first...");
+                throw new NullPointerException("please call initDb first...");
+            }
+            mSession = mMaster.newSession();
         }
     }
 
@@ -67,7 +71,7 @@ public class DataBaseManager {
         if (mOpenHelper == null) {
             return;
         }
-        mOpenHelper.close();
-        mOpenHelper = null;
+        mSession.clear();
+        mSession = null;
     }
 }

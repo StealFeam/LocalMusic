@@ -1,5 +1,7 @@
 package com.zy.ppmusic.utils
 
+import org.jetbrains.annotations.Nullable
+
 /**
  * @author y-slience
  * @date 2018/5/8

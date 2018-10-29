@@ -35,7 +35,6 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
         if (mCachePreference == null) {
             mCachePreference = context.getSharedPreferences(CACHE_MODE_NAME, Context.MODE_PRIVATE)
         }
-
     }
 
     private fun changeLocalMode(c: Context, mode: Int) {
@@ -43,7 +42,6 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
         if (mCachePreference!!.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE) == mode) {
             return
         }
-
         mCachePreference?.edit()?.putInt(CACHE_MODE_KEY, mode)?.apply()
     }
 
