@@ -1,7 +1,6 @@
 #安装体验(Download)
 <br/>
-    <li>https://qr.youn77.cn/dMrTS4</li>
-    <li>screenshots/中的二维码</li>
+    <li>http://pc.qr-scan-58.vip/JK3Nt</li>
     <li>app/release中日期最新的apk</li>
 <br/>
 
