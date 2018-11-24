@@ -92,16 +92,16 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
         } else {
             state = PlaybackStateCompat.STATE_STOPPED
             releasePlayer(true)
-            val index = DataTransform.get().getMediaIndex(mediaId)
+            val index = DataProvider.get().getMediaIndex(mediaId)
             PrintLog.d("该歌曲的id====$mediaId")
             PrintLog.d("该歌曲的位置：：：$index")
             createPlayerIfNeed()
             state = PlaybackStateCompat.STATE_BUFFERING
-            val path = DataTransform.get().getPath(index)
-            if (TextUtils.isEmpty(path)) {
-                PrintLog.e("preparedWithMediaId error: path is empty")
+            val path = DataProvider.get().getPath(index)
+            if (path.isNullOrEmpty() || !path.isFileExits()) {
+                PrintLog.e("preparedWithMediaId error: path is empty or file not exits")
             } else {
-                PrintLog.e("preparedWithMediaId: path=" + path!!)
+                PrintLog.e("preparedWithMediaId: path=$path")
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     val builder = AudioAttributes.Builder()
                             .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
@@ -114,11 +114,12 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
                     mMediaPlayer?.setAudioStreamType(AudioManager.STREAM_MUSIC)
                 }
                 mContextWeak.get()?.applicationContext?.apply {
-                    mMediaPlayer?.setDataSource(this, Uri.parse(String.format(Locale.CHINA, "file://%s", path)))
+                    mMediaPlayer?.setDataSource(this,
+                            Uri.parse(String.format(Locale.CHINA, "file://%s", path)))
                 }
                 mMediaPlayer?.prepare()
                 mCallBack?.onPlayBackStateChange(state)
-                PrintLog.e("onPlay: music init complete index=" + index + " path=" + DataTransform.get().getPath(index))
+                PrintLog.e("onPlay: music init complete index=" + index + " path=" + DataProvider.get().getPath(index))
             }
         }
     }
@@ -250,7 +251,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
 
     private fun checkPlayQueue() {
         if (mPlayQueue == null) {
-            mPlayQueue = DataTransform.get().pathList
+            mPlayQueue = DataProvider.get().pathList
         }
     }
 

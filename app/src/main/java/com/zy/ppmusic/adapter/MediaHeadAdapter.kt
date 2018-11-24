@@ -3,9 +3,8 @@ package com.zy.ppmusic.adapter
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentStatePagerAdapter
-import android.view.ViewGroup
 import com.zy.ppmusic.mvp.view.frag.MediaHeadFragment
-import com.zy.ppmusic.utils.DataTransform
+import com.zy.ppmusic.utils.DataProvider
 
 import java.util.ArrayList
 
@@ -47,8 +46,8 @@ class MediaHeadAdapter(fm: FragmentManager, pathList: List<String>) : FragmentSt
         if (this.mPathList.isEmpty()) {
             return MediaHeadFragment.createInstance(null)
         }
-        val mediaId = DataTransform.get().mediaIdList[position]
-        val metadataCompat = DataTransform.get().getMetadataItem(mediaId)
+        val mediaId = DataProvider.get().mediaIdList[position]
+        val metadataCompat = DataProvider.get().getMetadataItem(mediaId)
         return MediaHeadFragment.createInstance(metadataCompat)
     }
 

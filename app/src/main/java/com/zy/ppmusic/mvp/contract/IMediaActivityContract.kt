@@ -23,7 +23,7 @@ interface IMediaActivityContract {
          * 刷新列表
          * @param isRefresh 是否是刷新
          */
-        fun refreshQueue(isRefresh: Boolean)
+        fun refreshQueueResult(isRefresh: Boolean)
 
         fun setRepeatMode(mode:Int)
 
@@ -43,6 +43,7 @@ interface IMediaActivityContract {
          * 隐藏LoadingDialog
          */
         fun hideLoading()
+
     }
 
     abstract class AbstractMediaActivityPresenter(iMediaActivityView: IMediaActivityView) :
@@ -59,11 +60,8 @@ interface IMediaActivityContract {
 
         /**
          * 刷新列表
-         *
-         * @param context   环境
-         * @param isRefresh 是否是刷新
          */
-        abstract fun refreshQueue(context: Context, isRefresh: Boolean)
+        abstract fun refreshQueue(isRefresh: Boolean)
 
         /**
          * 获取本地模式数据
@@ -142,22 +140,6 @@ interface IMediaActivityContract {
         fun getLocalMode(c:Context,e:(Int) -> Unit)
 
         fun removeQueueItem(position:Int)
-
-        /**
-         * 刷新列表
-         *
-         * @param context 环境
-         * @param l       监听回调
-         */
-        fun refreshQueue(context: Context, l: ScanMusicFile.AbstractOnScanComplete)
-
-        /**
-         * 加载本地数据
-         *
-         * @param path     本地数据路径
-         * @param callback 加载完成回调
-         */
-        fun loadLocalData(path: String, callback: IOnLocalDataLoadFinished)
 
         /**
          * 向服务发送命令

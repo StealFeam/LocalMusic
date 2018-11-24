@@ -1,9 +1,8 @@
 package com.zy.ppmusic.utils
 
 import android.os.AsyncTask
-import kotlinx.coroutines.experimental.CoroutineDispatcher
-import kotlinx.coroutines.experimental.Runnable
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlin.coroutines.CoroutineContext
 
 /**
  * @author y-slience

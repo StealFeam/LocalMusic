@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -42,7 +43,7 @@ public class RecycleViewDecoration extends RecyclerView.ItemDecoration {
     }
 
     @Override
-    public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
+    public void onDraw(@NonNull Canvas c, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
         if (mOrientation == LinearLayoutManager.HORIZONTAL) {
             drawHorizontalLine(c, parent, state);
         } else {
@@ -62,8 +63,8 @@ public class RecycleViewDecoration extends RecyclerView.ItemDecoration {
 
             final int left = child.getRight();
             final int right = left + mDivider.getIntrinsicWidth();
-            mDivider.setBounds(left + getPaddingSafe(0), top + getPaddingSafe(1), right + getPaddingSafe(2),
-                    bottom + getPaddingSafe(3));
+            mDivider.setBounds(left + getPaddingSafe(0), top + getPaddingSafe(1),
+                    right + getPaddingSafe(2), bottom + getPaddingSafe(3));
             mDivider.draw(c);
         }
     }
@@ -88,7 +89,7 @@ public class RecycleViewDecoration extends RecyclerView.ItemDecoration {
     }
 
     @Override
-    public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+    public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
         if (mOrientation == LinearLayoutManager.HORIZONTAL) {
             outRect.set(mDivider.getIntrinsicWidth(), 0, mDivider.getIntrinsicWidth(), 0);
         } else {

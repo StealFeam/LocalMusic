@@ -9,7 +9,6 @@ import com.zy.ppmusic.utils.PrintLog
  * @author ZhiTouPC
  * @date 2017/12/28
  */
-
 class LoopService : IntentService(TAG) {
     private var loopStart = true
 

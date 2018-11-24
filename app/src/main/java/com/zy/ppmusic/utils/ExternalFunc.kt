@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import com.zy.ppmusic.App
+import java.io.File
 
 /**
  * @author y-slience
@@ -15,4 +16,11 @@ fun loge(tag: String, str: String) {
 
 fun toast(msg: String) {
     Toast.makeText(App.getAppBaseContext(), msg, Toast.LENGTH_SHORT).show()
+}
+
+fun String.isFileExits():Boolean{
+    if(this.isNotEmpty()){
+        return File(this).exists()
+    }
+    return false
 }

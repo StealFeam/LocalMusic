@@ -10,7 +10,7 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import com.zy.ppmusic.entity.MusicInfoEntity
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract
-import com.zy.ppmusic.utils.DataTransform
+import com.zy.ppmusic.utils.DataProvider
 import com.zy.ppmusic.utils.FileUtils
 import com.zy.ppmusic.utils.ScanMusicFile
 import com.zy.ppmusic.utils.TaskPool
@@ -71,7 +71,7 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
 
     override fun removeQueueItem(position: Int) {
         TaskPool.execute(Runnable {
-            mControllerWeak?.get()?.removeQueueItem(DataTransform.get().queueItemList[position].description)
+            mControllerWeak?.get()?.removeQueueItem(DataProvider.get().queueItemList[position].description)
         })
     }
 
@@ -79,23 +79,6 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
         controller?.apply {
             mControllerWeak = WeakReference(controller)
         }
-    }
-
-    override fun refreshQueue(context: Context, l: ScanMusicFile.AbstractOnScanComplete) {
-        initCachePreference(context)
-        ScanMusicFile.get().setOnScanComplete(l).scanMusicFile(context)
-    }
-
-    override fun loadLocalData(path: String, callback: IMediaActivityContract.IMediaActivityModel.IOnLocalDataLoadFinished) {
-        TaskPool.execute(Runnable {
-            val data = FileUtils.readObject(path)
-            data?.apply {
-                DataTransform.get().transFormData(data as ArrayList<MusicInfoEntity>)
-            }
-            mMainHandler.post {
-                callback.callBack(data)
-            }
-        })
     }
 
     override fun postSendCommand(method: String, params: Bundle,

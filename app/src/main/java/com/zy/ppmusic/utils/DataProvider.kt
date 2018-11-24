@@ -5,6 +5,8 @@ import android.database.Cursor
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
@@ -13,6 +15,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.util.ArrayMap
 import android.text.TextUtils
 import android.util.Log
+import com.zy.ppmusic.App
 import com.zy.ppmusic.entity.MusicInfoEntity
 import java.util.*
 
@@ -20,7 +23,7 @@ import java.util.*
  * 数据转换
  * @author ZhiTouPC
  */
-class DataTransform private constructor() {
+class DataProvider private constructor() {
     /**
      * 可存放本地的数据
      */
@@ -38,6 +41,9 @@ class DataTransform private constructor() {
      * 用于获取mediaId的位置
      */
     val mediaIdList: ArrayList<String>
+    private val handler by lazy {
+        Handler(Looper.getMainLooper())
+    }
 
     val metadataCompatList: Map<String, MediaMetadataCompat>
         get() = mapMetadataArray
@@ -47,7 +53,7 @@ class DataTransform private constructor() {
     }
 
     private object Inner {
-        val INSTANCE = DataTransform()
+        val INSTANCE = DataProvider()
     }
 
     init {
@@ -58,9 +64,40 @@ class DataTransform private constructor() {
         mediaIdList = ArrayList()
     }
 
-    fun transFormData(context: Context, pathList: ArrayList<String>) {
+    fun transFormStringData(pathList: ArrayList<String>) {
         clearData()
-        queryMedia(context, pathList)
+        queryMedia(App.getInstance(), pathList)
+    }
+
+    fun loadData(forceCache:Boolean,callback:OnLoadCompleteListener){
+        if(!forceCache){
+            //返回内存中数据
+            if(mediaItemList.size > 0 && pathList.size > 0){
+                handler.post {
+                    callback.onLoadComplete()
+                }
+                return
+            }
+            FileUtils.readObject(Constant.CACHE_FILE_PATH)?.apply {
+                transFormData(this as ArrayList<MusicInfoEntity>)
+                handler.post {
+                    callback.onLoadComplete()
+                }
+                return
+            }
+        }
+        ScanMusicFile.get().startScan(App.getInstance(),object:ScanMusicFile.OnScanCompleteListener{
+            override fun onComplete(paths: ArrayList<String>) {
+                transFormStringData(paths)
+                handler.post {
+                    callback.onLoadComplete()
+                }
+            }
+        })
+    }
+
+    interface OnLoadCompleteListener{
+        fun onLoadComplete()
     }
 
     private fun clearData() {
@@ -292,7 +329,7 @@ class DataTransform private constructor() {
     }
 
     override fun toString(): String {
-        return "DataTransform{" +
+        return "DataProvider{" +
                 "musicInfoEntities=" + musicInfoEntities!!.size +
                 ", queueItemList=" + queueItemList.size +
                 ", mediaItemList=" + mediaItemList.size +
@@ -303,10 +340,10 @@ class DataTransform private constructor() {
     }
 
     companion object {
-        private const val TAG = "DataTransform"
+        private const val TAG = "DataProvider"
 
         @JvmStatic
-        fun get(): DataTransform {
+        fun get(): DataProvider {
             return Inner.INSTANCE
         }
     }

@@ -46,7 +46,7 @@ public class TimBackGroundDrawable extends Drawable {
     public TimBackGroundDrawable() {
         mPaint = new Paint();
         mPaint.setTextAlign(Paint.Align.CENTER);
-        mPaint.setTextSize(48);
+        mPaint.setTextSize(UiUtils.dp2px(App.getAppBaseContext(),12));
         mPaint.setAntiAlias(true);
         mPaint.setColor(mPaintColor);
         mPaint.setStrokeWidth(1);
@@ -89,13 +89,13 @@ public class TimBackGroundDrawable extends Drawable {
         canvas.drawPath(mPath, mPaint);
         canvas.restore();
 
-        if(!StringUtils.ifEmpty(text)){
-            mPaint.setColor(Color.BLACK);
-            mPaint.setStrokeWidth(10);
-            textPath.moveTo(0,bounds.height());
-            textPath.lineTo(bounds.width(),0);
-            canvas.drawTextOnPath(text,textPath,0,0,mPaint);
-        }
+//        if(!StringUtils.ifEmpty(text)){
+//            mPaint.setColor(Color.BLACK);
+//            mPaint.setStrokeWidth(10);
+//            textPath.moveTo(0,bounds.height());
+//            textPath.lineTo(bounds.width(),0);
+//            canvas.drawTextOnPath(text,textPath,0,0,mPaint);
+//        }
     }
 
     private void clipRightPath(Canvas canvas, Rect area) {

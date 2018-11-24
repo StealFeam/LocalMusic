@@ -9,5 +9,7 @@ import android.support.annotation.Keep
  */
 object SupportMediaType {
     @Keep
-    val SUPPORT_TYPE = arrayOf(".mp3", ".MP3", ".wav", ".flac")
+    @JvmStatic
+    val SUPPORT_TYPE = listOf(".mp3", ".MP3", ".wav", ".flac")
+
 }

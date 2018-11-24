@@ -26,7 +26,6 @@ import com.zy.ppmusic.receiver.AudioBecomingNoisyReceiver
 import com.zy.ppmusic.receiver.LoopReceiver
 import com.zy.ppmusic.utils.*
 import java.lang.ref.WeakReference
-import java.util.*
 
 /**
  * @author ZhiTouPC
@@ -169,7 +168,7 @@ class MediaService : MediaBrowserServiceCompat() {
 
             override fun onError(errorCode: Int, error: String) {
                 mErrorTimes++
-                if (mErrorTimes < DataTransform.get().mediaIdList.size) {
+                if (mErrorTimes < DataProvider.get().mediaIdList.size) {
                     onMediaChange(mPlayBack!!.onSkipToNext(), true)
                 } else {
                     toast("无可播放媒体，请重新扫描")
@@ -184,7 +183,7 @@ class MediaService : MediaBrowserServiceCompat() {
         initPlayBack()
         //也可以在这接收通知按钮的event事件
         MediaButtonReceiver.handleIntent(mMediaSessionCompat, intent)
-        return Service.START_STICKY
+        return Service.START_NOT_STICKY
     }
 
     override fun onGetRoot(clientPackageName: String, clientUId: Int, bundle: Bundle?): MediaBrowserServiceCompat.BrowserRoot? {
@@ -201,24 +200,16 @@ class MediaService : MediaBrowserServiceCompat() {
         Log.d(TAG, "service onLoadChildren() called with: s = [$s], result = [$result]")
         if (s == MY_ROOT_ID) {
             result.detach()
-            if (DataTransform.get().mediaItemList.isNotEmpty()) {
-                result.sendResult(DataTransform.get().mediaItemList)
-                PrintLog.print("load list size ... ${DataTransform.get().mediaItemList.size}")
+            if (DataProvider.get().mediaItemList.isNotEmpty()) {
+                result.sendResult(DataProvider.get().mediaItemList)
+                PrintLog.print("load list size ... ${DataProvider.get().mediaItemList.size}")
             } else {
                 TaskPool.executeSyc(Runnable {
-                    val localCacheMediaLoader = LocalCacheMediaLoader()
-                    if (localCacheMediaLoader.mediaPaths.isNotEmpty()) {
-                        PrintLog.e("加载本地数据了")
-                        result.sendResult(DataTransform.get().mediaItemList)
-                    } else {
-                        ScanMusicFile.get().setOnScanComplete(object : ScanMusicFile.AbstractOnScanComplete() {
-                            override fun onComplete(paths: ArrayList<String>) {
-                                PrintLog.e("扫描本地数据了")
-                                DataTransform.get().transFormData(applicationContext, paths)
-                                result.sendResult(DataTransform.get().mediaItemList)
-                            }
-                        }).scanMusicFile(applicationContext)
-                    }
+                    DataProvider.get().loadData(false, object : DataProvider.OnLoadCompleteListener {
+                        override fun onLoadComplete() {
+                            result.sendResult(DataProvider.get().mediaItemList)
+                        }
+                    })
                 })
             }
             if (mUpdateQueueRunnable == null) {
@@ -285,12 +276,12 @@ class MediaService : MediaBrowserServiceCompat() {
             }
             //列表播放
             PlaybackStateCompat.REPEAT_MODE_NONE -> if (isNext) {
-                val position = DataTransform.get().getQueueItemList().indexOf(mCurrentMedia)
+                val position = DataProvider.get().getQueueItemList().indexOf(mCurrentMedia)
                 //如果不是当前歌曲播放完成自动调用的话，就直接播放下一首
-                if (!isComplete || position < DataTransform.get().getQueueItemList().size - 1) {
+                if (!isComplete || position < DataProvider.get().getQueueItemList().size - 1) {
                     onMediaChange(mPlayBack!!.onSkipToNext(), true)
                 } else {
-                    onMediaChange(DataTransform.get().mediaIdList[DataTransform.get().mediaIdList.size - 1],
+                    onMediaChange(DataProvider.get().mediaIdList[DataProvider.get().mediaIdList.size - 1],
                             false)
                     Log.e(TAG, "handleStopRequest: 已播放到最后一首曲目")
                 }
@@ -316,17 +307,20 @@ class MediaService : MediaBrowserServiceCompat() {
         }
     }
 
-    private fun buildCacheEntity(): MusicDbEntity {
-        return MusicDbEntity().apply {
-            mCurrentMedia?.description?.also {
-                lastMediaId = it.mediaId
-                lastMediaPath = it.mediaUri?.path
-                lastPlayAuthor = it.subtitle.toString()
-                lastPlayName = it.title.toString()
+    private fun buildCacheEntity(): MusicDbEntity? {
+        mCurrentMedia?.let {
+            return MusicDbEntity().apply {
+                if (it.description != null) {
+                    lastMediaId = it.description.mediaId
+                    lastMediaPath = it.description.mediaUri?.path
+                    lastPlayAuthor = it.description.subtitle.toString()
+                    lastPlayName = it.description.title.toString()
+                }
+                lastPlayedPosition = mPlayBack?.currentStreamPosition?.toLong() ?: 0
+                lastPlayIndex = DataProvider.get().mediaIdList.indexOf(this.lastMediaId)
             }
-            lastPlayedPosition = mPlayBack?.currentStreamPosition?.toLong() ?: 0
-            lastPlayIndex = DataTransform.get().mediaIdList.indexOf(this.lastMediaId)
         }
+        return null
     }
 
     /**
@@ -365,8 +359,8 @@ class MediaService : MediaBrowserServiceCompat() {
     }
 
     private fun getIndexByDes(des: MediaDescriptionCompat?): Int {
-        for (i in DataTransform.get().getQueueItemList().indices) {
-            val queueItem = DataTransform.get().getQueueItemList()[i]
+        for (i in DataProvider.get().getQueueItemList().indices) {
+            val queueItem = DataProvider.get().getQueueItemList()[i]
             if (des != null) {
                 if (StringUtils.ifEquals(queueItem.description.mediaId, des.mediaId)) {
                     return i
@@ -388,25 +382,25 @@ class MediaService : MediaBrowserServiceCompat() {
         }
         Log.e(TAG, "removeQueueItemAt: $removeIndex")
         //如果删除的是当前播放的歌曲，则播放新的曲目
-        if (DataTransform.get().getMediaIndex(mPlayBack?.currentMediaId) == removeIndex) {
+        if (DataProvider.get().getMediaIndex(mPlayBack?.currentMediaId) == removeIndex) {
             val state = mPlayBack?.state
             if (state == PlaybackStateCompat.STATE_PLAYING) {
                 mPlayBack?.pause()
             }
-            DataTransform.get().removeItem(removeIndex)
+            DataProvider.get().removeItem(removeIndex)
             TaskPool.executeSyc(mUpdateQueueRunnable!!)
-            if (DataTransform.get().mediaIdList.isNotEmpty()) {
+            if (DataProvider.get().mediaIdList.isNotEmpty()) {
                 //删除的是前列表倒数第二个曲目的时候直接播放替代的曲目
-                if (removeIndex <= DataTransform.get().mediaIdList.size - 1) {
-                    onMediaChange(DataTransform.get().mediaIdList[removeIndex], state == PlaybackStateCompat.STATE_PLAYING)
+                if (removeIndex <= DataProvider.get().mediaIdList.size - 1) {
+                    onMediaChange(DataProvider.get().mediaIdList[removeIndex], state == PlaybackStateCompat.STATE_PLAYING)
                 } else {//删除的是前列表最后一个曲目播放列表的第一个曲目
-                    onMediaChange(DataTransform.get().mediaIdList[0], state == PlaybackStateCompat.STATE_PLAYING)
+                    onMediaChange(DataProvider.get().mediaIdList[0], state == PlaybackStateCompat.STATE_PLAYING)
                 }
             } else {
                 mPlayBack?.stopPlayer()
             }
         } else {//如果不是当前曲目，不能影响当前播放,记录下播放进度，更新列表后继续播放
-            DataTransform.get().removeItem(removeIndex)
+            DataProvider.get().removeItem(removeIndex)
             TaskPool.executeSyc(mUpdateQueueRunnable!!)
         }
     }
@@ -492,7 +486,7 @@ class MediaService : MediaBrowserServiceCompat() {
      * @param shouldPlayWhenPrepared 是否需要准备完成后播放
      */
     fun onMediaChange(mediaId: String?, shouldPlayWhenPrepared: Boolean, shouldSeekToPosition: Long = 0) {
-        if (DataTransform.get().pathList.isNotEmpty()) {
+        if (DataProvider.get().pathList.isNotEmpty()) {
             PrintLog.d("mediaId-----$mediaId")
             if (mUpdateRunnable == null) {
                 mUpdateRunnable = UpdateRunnable(this)
@@ -548,9 +542,9 @@ class MediaService : MediaBrowserServiceCompat() {
                 return
             }
             mediaService ?: return
-            mediaService.mPlayBack?:mediaService.initPlayBack()
+            mediaService.mPlayBack ?: mediaService.initPlayBack()
             //设置媒体信息
-            val track = DataTransform.get().metadataCompatList[mediaId]
+            val track = DataProvider.get().metadataCompatList[mediaId!!]
             //触发MediaControllerCompat.Callback->onMetadataChanged方法
             if (track != null) {
                 mediaService.mMediaSessionCompat?.setMetadata(track)
@@ -558,8 +552,8 @@ class MediaService : MediaBrowserServiceCompat() {
                 println("----track is null----")
             }
 
-            val index = DataTransform.get().getMediaIndex(mediaId!!)
-            mediaService.mCurrentMedia = DataTransform.get().getQueueItemList()[index]
+            val index = DataProvider.get().getMediaIndex(mediaId!!)
+            mediaService.mCurrentMedia = DataProvider.get().getQueueItemList()[index]
             if (seekToPosition > 0) {
                 val extra = Bundle()
                 extra.putLong(LOCAL_CACHE_POSITION_EVENT, seekToPosition)
@@ -587,14 +581,10 @@ class MediaService : MediaBrowserServiceCompat() {
         }
 
         override fun run() {
-            Log.e(TAG, "updateQueue: size ... ${DataTransform.get().mediaIdList.size}")
+            Log.e(TAG, "updateQueue: size ... ${DataProvider.get().mediaIdList.size}")
 
-            mWeakService.get()?.mPlayBack?.setPlayQueue(DataTransform.get().mediaIdList)
-            mWeakService.get()?.mMediaSessionCompat?.setQueue(DataTransform.get().queueItemList)
-
-            //覆盖本地缓存
-            FileUtils.saveObject(DataTransform.get().musicInfoEntities!!,
-                    Constant.CACHE_FILE_PATH)
+            mWeakService.get()?.mPlayBack?.setPlayQueue(DataProvider.get().mediaIdList)
+            mWeakService.get()?.mMediaSessionCompat?.setQueue(DataProvider.get().queueItemList)
         }
 
     }
@@ -616,8 +606,8 @@ class MediaService : MediaBrowserServiceCompat() {
                 if (ACTION_PREPARED_WITH_ID == action) {
                     val noneMediaId = "-1"
                     if (noneMediaId == mediaId) {
-                        if (DataTransform.get().getMediaIdList().isNotEmpty()) {
-                            onMediaChange(DataTransform.get().getMediaIdList()[0], false)
+                        if (DataProvider.get().getMediaIdList().isNotEmpty()) {
+                            onMediaChange(DataProvider.get().getMediaIdList()[0], false)
                         } else {
                             mMediaSessionCompat?.sendSessionEvent(ERROR_PLAY_QUEUE_EVENT, null)
                         }
@@ -680,8 +670,8 @@ class MediaService : MediaBrowserServiceCompat() {
 
         override fun onSkipToQueueItem(id: Long) {
             super.onSkipToQueueItem(id)
-            val mediaId = DataTransform.get().mediaIdList[id.toInt()]
-            PrintLog.e("准备跳转的id--------${DataTransform.get().getMetadataItem(mediaId)?.description?.title}")
+            val mediaId = DataProvider.get().mediaIdList[id.toInt()]
+            PrintLog.e("准备跳转的id--------${DataProvider.get().getMetadataItem(mediaId)?.description?.title}")
             onMediaChange(mediaId, true)
         }
 
@@ -763,15 +753,15 @@ class MediaService : MediaBrowserServiceCompat() {
                         if (entity.size > 0) {
                             val lastMediaId = entity[0].lastMediaId
                             mHandler.post {
-                                if (!DataTransform.get().mediaIdList.contains(lastMediaId)) {
-                                    onMediaChange(DataTransform.get().getMediaIdList()[0], false)
+                                if (!DataProvider.get().mediaIdList.contains(lastMediaId)) {
+                                    onMediaChange(DataProvider.get().getMediaIdList()[0], false)
                                 } else {
                                     onMediaChange(lastMediaId, false, entity[0].lastPlayedPosition)
                                 }
                             }
                         } else {
                             mHandler.post {
-                                onMediaChange(DataTransform.get().getMediaIdList()[0], false)
+                                onMediaChange(DataProvider.get().getMediaIdList()[0], false)
                             }
                         }
                         cb?.send(COMMAND_UPDATE_QUEUE_CODE, Bundle())

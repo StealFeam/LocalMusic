@@ -4,36 +4,18 @@ import android.content.Context
 import android.os.Bundle
 import android.os.ResultReceiver
 import android.support.v4.media.session.MediaControllerCompat
-import android.support.v4.util.SimpleArrayMap
-import android.util.ArrayMap
-import android.util.Log
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract
 import com.zy.ppmusic.mvp.model.MediaActivityModelImpl
-import com.zy.ppmusic.utils.*
+import com.zy.ppmusic.utils.DataProvider
+import com.zy.ppmusic.utils.FileUtils
+import com.zy.ppmusic.utils.PrintLog
+import com.zy.ppmusic.utils.TaskPool
 
 /**
  * @author ZhiTouPC
  */
 class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         IMediaActivityContract.AbstractMediaActivityPresenter(view) {
-    private var isScanning = false
-
-    private fun refresh(context: Context) {
-        if (isScanning) {
-            return
-        }
-        PrintLog.i("开始扫描本地媒体。。。。。。")
-        isScanning = true
-        mModel.refreshQueue(context, object : ScanMusicFile.AbstractOnScanComplete() {
-            override fun onComplete(paths: ArrayList<String>) {
-                isScanning = false
-                Log.e(TAG, "onComplete: 扫描出来的" + paths.toString())
-                mView?.get()?.refreshQueue(true)
-                mView?.get()?.hideLoading()
-            }
-        })
-    }
-
     override fun getChildrenUri(): String {
         return mModel.getGrantedChildrenUri()
     }
@@ -58,37 +40,20 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         mModel.attachController(controller)
     }
 
-    override fun refreshQueue(context: Context, isRefresh: Boolean) {
+    override fun refreshQueue(isRefresh: Boolean) {
         if (mView.get() == null) {
             PrintLog.i("view is null")
             return
         }
         mView.get()?.showLoading()
-        //重新扫描本地文件或者初次扫描
-        if (isRefresh) {
-            refresh(context)
-        } else {
-            //内存有数据
-            if (DataTransform.get().mediaItemList.size > 0) {
-                mView.get()?.loadFinished()
-                mView.get()?.hideLoading()
-            } else {
-                PrintLog.i("开始读取本地数据")
-                mModel.loadLocalData(Constant.CACHE_FILE_PATH,
-                        object : IMediaActivityContract.IMediaActivityModel.IOnLocalDataLoadFinished {
-                            override fun callBack(data: Any?) {
-                                data?.apply {
-                                    PrintLog.i("读取到本地缓存数据")
-                                    mView?.get()?.loadFinished()
-                                    mView?.get()?.hideLoading()
-                                } ?: let {
-                                    PrintLog.i("未读取到本地数据")
-                                    refresh(context)
-                                }
-                            }
-                        })
-            }
-        }
+        TaskPool.executeSyc(Runnable {
+            DataProvider.get().loadData(isRefresh,object:DataProvider.OnLoadCompleteListener{
+                override fun onLoadComplete() {
+                    mView.get()?.loadFinished()
+                    mView.get()?.hideLoading()
+                }
+            })
+        })
     }
 
 
@@ -98,7 +63,7 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         })
     }
 
-    override fun deleteFile(path: String?) : Boolean{
+    override fun deleteFile(path: String?): Boolean {
         return FileUtils.deleteFile(path)
     }
 

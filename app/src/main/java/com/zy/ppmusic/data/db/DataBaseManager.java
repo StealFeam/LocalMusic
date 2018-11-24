@@ -15,7 +15,6 @@ import java.util.List;
 public class DataBaseManager {
     private static final String TABLE_NAME = "local_db";
     private static volatile DataBaseManager manager = new DataBaseManager();
-    private DaoMaster mMaster;
     private DaoMaster.DevOpenHelper mOpenHelper;
     private DaoSession mSession;
 
@@ -30,18 +29,20 @@ public class DataBaseManager {
     public DataBaseManager initDb(Context context) {
         if (mOpenHelper == null) {
             mOpenHelper = new DaoMaster.DevOpenHelper(context, TABLE_NAME);
-            mMaster = new DaoMaster(mOpenHelper.getWritableDb());
         }
         if (mSession != null) {
             mSession.clear();
             mSession = null;
         }
-        mSession = mMaster.newSession();
+        mSession = new DaoMaster(mOpenHelper.getWritableDb()).newSession();
         return this;
     }
 
     public void insetEntity(MusicDbEntity entity) {
         checkSession();
+        if(entity == null){
+            return;
+        }
         MusicDbEntityDao musicDbEntityDao = mSession.getMusicDbEntityDao();
         musicDbEntityDao.insertOrReplace(entity);
     }
@@ -63,7 +64,7 @@ public class DataBaseManager {
                 System.err.println("please call initDb first...");
                 throw new NullPointerException("please call initDb first...");
             }
-            mSession = mMaster.newSession();
+            mSession = new DaoMaster(mOpenHelper.getWritableDb()).newSession();
         }
     }
 
