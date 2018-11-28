@@ -15,7 +15,7 @@ import java.lang.ref.WeakReference
 import java.util.*
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeListener,
         MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener,
@@ -74,12 +74,12 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
         this.mIsUserPause = flag
     }
 
-    fun playMediaIdAutoStart(mediaId: String) {
+    fun playMediaIdAutoStart(mediaId: String?) {
         this.mIsAutoStart = true
         preparedWithMediaId(mediaId)
     }
 
-    fun preparedWithMediaId(mediaId: String) {
+    fun preparedWithMediaId(mediaId: String?) {
         mPlayOnFocusGain = true
         getAudioFocus()
         val isChanged = !TextUtils.equals(mediaId, currentMediaId)

@@ -19,7 +19,7 @@ import com.zy.ppmusic.utils.PrintLog;
 
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 public class WaveRefreshView extends View {
     private static final String TAG = "WaveRefreshView";

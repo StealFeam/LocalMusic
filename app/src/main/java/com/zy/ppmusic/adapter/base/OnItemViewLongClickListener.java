@@ -3,7 +3,7 @@ package com.zy.ppmusic.adapter.base;
 import android.view.View;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2018/2/11
  */
 

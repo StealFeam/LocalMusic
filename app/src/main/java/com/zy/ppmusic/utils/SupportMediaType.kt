@@ -4,7 +4,7 @@ import android.support.annotation.Keep
 
 
 /**
- * @author y-slience
+ * @author stealfeam
  * @date 2018/4/25
  */
 object SupportMediaType {

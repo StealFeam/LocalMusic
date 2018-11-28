@@ -6,7 +6,7 @@ import android.util.Log;
 import android.view.View;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 public class ExpandableViewHolder extends RecyclerView.ViewHolder
         implements View.OnClickListener, View.OnLongClickListener {

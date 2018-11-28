@@ -17,7 +17,7 @@ import com.zy.ppmusic.utils.TaskPool
 import java.lang.ref.WeakReference
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
 

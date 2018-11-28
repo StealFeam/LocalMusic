@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 public class BorderTextView extends AppCompatTextView implements ViewGroup.OnHierarchyChangeListener {
     private static final String TAG = "BorderTextView";

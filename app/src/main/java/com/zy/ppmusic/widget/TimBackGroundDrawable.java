@@ -18,7 +18,7 @@ import com.zy.ppmusic.utils.StringUtils;
 import com.zy.ppmusic.utils.UiUtils;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 public class TimBackGroundDrawable extends Drawable {
     public static final int TOP = 1;

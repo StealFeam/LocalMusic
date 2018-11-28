@@ -3,7 +3,7 @@ package com.zy.ppmusic.utils
 import java.util.*
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 class DateUtil {
 

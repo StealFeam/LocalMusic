@@ -5,7 +5,7 @@ import android.os.CountDownTimer
 import com.zy.ppmusic.callback.TimeTikCallBack
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2018/1/19
  */
 

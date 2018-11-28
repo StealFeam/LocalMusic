@@ -1,20 +1,22 @@
 *.iml
-*.gradle
+.gradle
 /local.properties
 /.idea
 .DS_Store
+/gradle
+#编译临时文件
+/build
 /captures
 /.externalNativeBuild
 /bugreport.txt
-/.gradle
+
+
 
 #生成的apk
 
 #编译的字节文件
 *.class
 
-#编译临时文件
-/build
 
 #备份文件信息
 /projectFilesBackup

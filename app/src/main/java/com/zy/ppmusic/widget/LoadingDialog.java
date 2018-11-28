@@ -10,7 +10,7 @@ import com.zy.ppmusic.R;
 import java.lang.ref.WeakReference;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2018/1/16
  */
 public class LoadingDialog extends AppCompatDialog {

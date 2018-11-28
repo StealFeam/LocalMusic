@@ -9,7 +9,7 @@ import android.util.AttributeSet;
 import android.widget.TextView;
 
 /**
- * @author y-slience
+ * @author stealfeam
  * @date 2018/3/29
  */
 public class SimpleVerticalTextView extends AppCompatTextView {

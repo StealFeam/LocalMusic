@@ -5,7 +5,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlin.coroutines.CoroutineContext
 
 /**
- * @author y-slience
+ * @author stealfeam
  * @since 2018/6/29
  */
 object TaskPool : CoroutineDispatcher(){

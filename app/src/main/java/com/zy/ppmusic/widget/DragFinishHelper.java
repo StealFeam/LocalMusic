@@ -13,7 +13,7 @@ import android.view.animation.LinearInterpolator;
 import java.lang.ref.WeakReference;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 class DragFinishHelper {
     private static final String TAG = "DragFinishHelper";

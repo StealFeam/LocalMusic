@@ -4,7 +4,7 @@ import android.os.Parcel
 import android.os.Parcelable
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 class MenuEntity : Parcelable {
     var icon: Int = 0

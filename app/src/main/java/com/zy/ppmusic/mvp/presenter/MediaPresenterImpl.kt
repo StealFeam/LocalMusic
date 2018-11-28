@@ -12,7 +12,7 @@ import com.zy.ppmusic.utils.PrintLog
 import com.zy.ppmusic.utils.TaskPool
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         IMediaActivityContract.AbstractMediaActivityPresenter(view) {
@@ -47,13 +47,17 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         }
         mView.get()?.showLoading()
         TaskPool.executeSyc(Runnable {
-            DataProvider.get().loadData(isRefresh,object:DataProvider.OnLoadCompleteListener{
-                override fun onLoadComplete() {
-                    mView.get()?.loadFinished()
-                    mView.get()?.hideLoading()
-                }
-            })
+            mLoadCompleteListener.flag = isRefresh
+            DataProvider.get().loadData(isRefresh,mLoadCompleteListener)
         })
+    }
+
+    private val mLoadCompleteListener = object:DataProvider.OnLoadCompleteListener{
+        var flag = false
+        override fun onLoadComplete() {
+            mView.get()?.loadFinished(flag)
+            mView.get()?.hideLoading()
+        }
     }
 
 
@@ -72,7 +76,6 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
     }
 
     override fun playWithId(mediaId: String, extra: Bundle) {
-        println("presenter .... playWithId")
         mModel.postPlayWithId(mediaId, extra)
     }
 
@@ -85,7 +88,6 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
     }
 
     override fun skipNext() {
-        println("presenter .... skipNext")
         mModel.postSkipNext()
     }
 
@@ -94,7 +96,6 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
     }
 
     override fun skipPrevious() {
-        println("presenter .... postSkipPrevious")
         mModel.postSkipPrevious()
     }
 

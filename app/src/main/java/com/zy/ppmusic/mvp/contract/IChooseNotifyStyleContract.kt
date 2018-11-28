@@ -5,7 +5,7 @@ import com.zy.ppmusic.mvp.base.IBaseModel
 import com.zy.ppmusic.mvp.base.IBaseView
 
 /**
- * @author y-slience
+ * @author stealfeam
  * @date 2018/6/16
  */
 interface IChooseNotifyStyleContract {

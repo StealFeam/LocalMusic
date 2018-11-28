@@ -4,7 +4,7 @@ import android.media.MediaPlayer;
 import android.media.audiofx.Visualizer;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2017/12/25
  */
 

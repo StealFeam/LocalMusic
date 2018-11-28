@@ -9,7 +9,7 @@ import com.zy.ppmusic.utils.DataProvider
 import java.util.ArrayList
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2017/12/26
  */
 

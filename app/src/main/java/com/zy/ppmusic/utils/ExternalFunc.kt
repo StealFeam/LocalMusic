@@ -7,7 +7,7 @@ import com.zy.ppmusic.App
 import java.io.File
 
 /**
- * @author y-slience
+ * @author stealfeam
  * @since 2018/7/11
  */
 fun loge(tag: String, str: String) {

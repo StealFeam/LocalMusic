@@ -4,7 +4,7 @@ package com.zy.ppmusic.entity
 import android.bluetooth.BluetoothDevice
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 class ScanResultEntity {
     /**

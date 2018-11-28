@@ -17,7 +17,7 @@ import com.zy.ppmusic.service.MediaService
 import com.zy.ppmusic.utils.Constant
 
 /**
- * @author y-slience
+ * @author stealfeam
  * @date 2018/6/16
  */
 class ChooseStyleDialog : DialogFragment(), IChooseNotifyStyleContract.IChooseNotifyStyleView {

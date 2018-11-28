@@ -7,7 +7,7 @@ import com.zy.ppmusic.service.MediaService
 import java.lang.ref.WeakReference
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2018/1/11
  * @des 循环接受 LoopService 的广播
  */

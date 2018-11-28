@@ -5,7 +5,7 @@ import java.io.Serializable
 import java.util.Arrays
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 class MusicInfoEntity : Serializable {
     var mediaId: String? = null
@@ -58,6 +58,4 @@ class MusicInfoEntity : Serializable {
     companion object {
         private const val serialVersionUID = -1016970004377532215L
     }
-
-
 }

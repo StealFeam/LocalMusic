@@ -19,7 +19,7 @@ import pub.devrel.easypermissions.EasyPermissions
 class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     private val requestCode = 0x010
     private val mPreferenceName = "SPLASH"
-    private var animDuration:Long = 2000
+    private var animDuration:Long = 1500
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)

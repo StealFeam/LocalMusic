@@ -4,7 +4,7 @@ import com.zy.ppmusic.mvp.contract.IChooseNotifyStyleContract
 import com.zy.ppmusic.mvp.model.ChooseNotifyStyleModel
 
 /**
- * @author y-slience
+ * @author stealfeam
  * @date 2018/6/16
  */
 class ChooseNotifyStylePresenter(view:IChooseNotifyStyleContract.IChooseNotifyStyleView):

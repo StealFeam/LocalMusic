@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  *
  */
 public class BlActivityModelImpl implements IBLActivityContract.IBLActivityModel{

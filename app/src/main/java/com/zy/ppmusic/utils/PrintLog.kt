@@ -7,7 +7,7 @@ import com.zy.ppmusic.BuildConfig
 import java.util.Locale
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2017/12/27
  */
 

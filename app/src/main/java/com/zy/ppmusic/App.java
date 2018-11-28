@@ -21,7 +21,7 @@ import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 public class App extends Application {
 

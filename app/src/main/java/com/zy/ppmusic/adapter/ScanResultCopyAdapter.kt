@@ -13,7 +13,7 @@ import com.zy.ppmusic.adapter.base.OnItemViewClickListener
 import com.zy.ppmusic.entity.ScanResultEntity
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2018/2/9
  */
 class ScanResultCopyAdapter(mData: ArrayList<ScanResultEntity>) : AbstractMultipleTypeAdapter() {

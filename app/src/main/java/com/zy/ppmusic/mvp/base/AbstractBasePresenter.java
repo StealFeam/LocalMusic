@@ -3,7 +3,7 @@ package com.zy.ppmusic.mvp.base;
 import java.lang.ref.WeakReference;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2018/1/12
  */
 

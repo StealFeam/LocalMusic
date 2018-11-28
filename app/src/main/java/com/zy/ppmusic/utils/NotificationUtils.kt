@@ -20,7 +20,7 @@ import android.widget.RemoteViews
 import com.zy.ppmusic.R
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 object NotificationUtils {
     private const val TAG = "NotificationUtils"

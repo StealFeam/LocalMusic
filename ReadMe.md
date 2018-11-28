@@ -1,7 +1,7 @@
 #安装体验(Download)
 <br/>
-    <li>http://pc.qr-scan-58.vip/JK3Nt</li>
-    <li>app/release中日期最新的apk</li>
+    <li>app/release/日期最新的apk</li>
+    <li>http://pc.qr-scan-58.vip/JK3Nt 链接上可能不是最新</li>
 <br/>
 
 #友情提示

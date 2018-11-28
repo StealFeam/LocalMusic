@@ -12,7 +12,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.zy.ppmusic.R
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2017/12/26
  * 显示媒体专辑图片
  */

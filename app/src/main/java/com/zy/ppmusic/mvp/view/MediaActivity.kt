@@ -113,7 +113,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             val activity = mWeakView!!.get() ?: return
             when (resultCode) {
                 MediaService.COMMAND_POSITION_CODE -> {
-                    val position = resultData.getInt("position").toLong()
+                    val position = resultData.getInt(MediaService.EXTRA_POSITION).toLong()
                     activity.startPosition = position
                     activity.updateTime()
                 }
@@ -277,7 +277,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         when (item!!.itemId) {
             R.id.menu_media_scan -> {
                 showMsg(getString(R.string.start_scanning_the_local_file))
-                mPresenter?.refreshQueue( true)
+                mPresenter?.refreshQueue(true)
             }
 //            R.id.menu_blue_connect -> {
 //                val intent = Intent(this, BlScanActivity::class.java)
@@ -546,7 +546,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
 
     override fun onResume() {
         super.onResume()
-        mPresenter?.refreshQueue( false)
+        mPresenter?.refreshQueue(false)
         volumeControlStream = AudioManager.STREAM_MUSIC
     }
 
@@ -567,20 +567,6 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             } else {
                 mTimeClockAdapter!!.getItem(position) * 1000L * 60L
             }
-
-    override fun checkConnection() {
-        if (mMediaBrowser?.isConnected!!.not()) {
-            mMediaBrowser?.connect()
-        }
-    }
-
-    /**
-     * IView
-     * 刷新列表的回调
-     */
-    override fun refreshQueueResult(isRefresh: Boolean) {
-
-    }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -615,19 +601,17 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         println("onSaveInstanceState............................." + outState?.toString())
     }
 
-    /**
-     * 首次加载完成
-     */
-    override fun loadFinished() {
+    override fun loadFinished(isForce:Boolean) {
         if (mMediaController == null) {
             PrintLog.d("media controller为空---")
             connectMediaService()
             return
         }
         if (DataProvider.get().pathList.size > 0) {
-            showMsg(String.format(Locale.CHINA, getString(R.string.format_string_search_media_count), DataProvider.get().pathList.size))
             if (mResultReceive != null) {
-                mPresenter?.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, Bundle(), mResultReceive!!)
+                mPresenter?.sendCommand(MediaService.COMMAND_UPDATE_QUEUE,Bundle().apply {
+                    putBoolean(MediaService.EXTRA_SCAN_COMPLETE,isForce)
+                } , mResultReceive!!)
             } else {
                 PrintLog.d("参数ResultReceive为空。")
             }
@@ -647,8 +631,11 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             val serviceComponentName = ComponentName(this, MediaService::class.java)
             mMediaBrowser = MediaBrowserCompat(this, serviceComponentName, mConnectionCallBack, null)
         }
-
-        mMediaBrowser?.connect()
+        try{
+            mMediaBrowser?.connect()
+        }catch (e:IllegalStateException){
+            PrintLog.e("正在连接服务...")
+        }
     }
 
     /**
@@ -812,9 +799,9 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             control_display_progress.progress = (percent * 100f).toInt()
             control_display_duration_tv.text = DateUtil.get().getTime(endPosition)
         }
-        startPosition = if(startPosition > endPosition){
+        startPosition = if (startPosition > endPosition) {
             endPosition
-        }else{
+        } else {
             startPosition
         }
         control_display_time_tv.text = DateUtil.get().getTime(startPosition)

@@ -11,7 +11,7 @@ import android.view.MotionEvent;
 import android.view.WindowManager;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2018/2/7
  */
 public class LoopViewPager extends ViewPager {

@@ -10,11 +10,11 @@ import com.zy.ppmusic.entity.MusicDbEntity;
 import java.util.List;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 public class DataBaseManager {
     private static final String TABLE_NAME = "local_db";
-    private static volatile DataBaseManager manager = new DataBaseManager();
+    private static final String TABLE_PATH_LIST = "path_list";
     private DaoMaster.DevOpenHelper mOpenHelper;
     private DaoSession mSession;
 
@@ -22,8 +22,12 @@ public class DataBaseManager {
 
     }
 
+    private static class InstanceHolder{
+        private static final DataBaseManager INSTANCE = new DataBaseManager();
+    }
+
     public static DataBaseManager getInstance() {
-        return manager;
+        return InstanceHolder.INSTANCE;
     }
 
     public DataBaseManager initDb(Context context) {

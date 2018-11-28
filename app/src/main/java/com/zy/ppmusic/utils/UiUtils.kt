@@ -5,7 +5,7 @@ import android.support.v4.content.ContextCompat
 import com.zy.ppmusic.App
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2017/10/19
  */
 

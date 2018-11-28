@@ -15,7 +15,7 @@ import java.io.File
 import java.io.PrintWriter
 
 /**
- * @author y-slience
+ * @author stealfeam
  * @date 2018-04-03 15:04:35
  * 错误页面，用来处理应用崩溃显示友好界面
  */

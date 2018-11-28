@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.ref.WeakReference;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2018/1/3
  */
 public abstract class AbstractExpandableAdapter extends RecyclerView.Adapter<ExpandableViewHolder> {

@@ -6,7 +6,7 @@ import android.view.MotionEvent;
 import android.widget.LinearLayout;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 public class DragFinishLayout extends LinearLayout {
     private static final String TAG = "DragFinishLayout";

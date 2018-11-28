@@ -14,7 +14,7 @@ import android.view.ViewGroup;
 import com.zy.ppmusic.R;
 
 /**
- * @author y-slience
+ * @author stealfeam
  * @Date 2018/3/7
  *
  */

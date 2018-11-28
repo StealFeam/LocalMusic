@@ -10,29 +10,18 @@ import com.zy.ppmusic.mvp.base.IBaseView
 import com.zy.ppmusic.utils.ScanMusicFile
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 interface IMediaActivityContract {
     interface IMediaActivityView : IBaseView {
         /**
          * 加载完成
          */
-        fun loadFinished()
-
-        /**
-         * 刷新列表
-         * @param isRefresh 是否是刷新
-         */
-        fun refreshQueueResult(isRefresh: Boolean)
+        fun loadFinished(isForce:Boolean)
 
         fun setRepeatMode(mode:Int)
 
         fun setDeleteResult(isSuccess:Boolean,path:String?)
-
-        /**
-         * 检查服务连接
-         */
-        fun checkConnection()
 
         /**
          * 显示LoadingDialog

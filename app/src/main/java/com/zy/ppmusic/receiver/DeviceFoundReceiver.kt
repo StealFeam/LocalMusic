@@ -10,7 +10,7 @@ import com.zy.ppmusic.mvp.view.BlScanActivity
 import java.lang.ref.WeakReference
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 class DeviceFoundReceiver(weakReference: BlScanActivity) : BroadcastReceiver() {
     private val weakReference: WeakReference<BlScanActivity> = WeakReference(weakReference)

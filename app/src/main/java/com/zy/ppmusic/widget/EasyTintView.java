@@ -26,7 +26,7 @@ import com.zy.ppmusic.utils.PrintLog;
 import java.util.Locale;
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * 问题1:创建多个实例
  * 问题2：每次都要寻找ViewGroup
  */

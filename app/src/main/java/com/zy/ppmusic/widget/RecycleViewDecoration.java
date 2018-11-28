@@ -14,7 +14,7 @@ import android.view.View;
 /**
  * RecyclerView Item分割线，横向和纵向
  *
- * @author ZhiTouPC
+ * @author stealfeam
  */
 public class RecycleViewDecoration extends RecyclerView.ItemDecoration {
     private static final String TAG = "RecycleViewDecoration";

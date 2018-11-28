@@ -18,7 +18,7 @@ import com.zy.ppmusic.R;
 import com.zy.ppmusic.utils.UiUtils;
 
 /**
- * @author y-slience
+ * @author stealfeam
  * @date 2018/3/22
  * 只支持横向，还欠缺的是多指判断，耦合性相对高
  */

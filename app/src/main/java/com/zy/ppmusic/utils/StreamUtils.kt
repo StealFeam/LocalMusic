@@ -4,7 +4,7 @@ import java.io.Closeable
 import java.io.IOException
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 object StreamUtils {
     @JvmStatic

@@ -6,7 +6,7 @@ import org.greenrobot.greendao.annotation.Generated;
 
 /**
  * 记录上次播放媒体信息
- * @author ZhiTouPC
+ * @author stealfeam
  */
 @Entity
 public class MusicDbEntity {

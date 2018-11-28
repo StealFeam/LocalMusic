@@ -21,7 +21,7 @@ import java.util.*
 
 /**
  * 数据转换
- * @author ZhiTouPC
+ * @author stealfeam
  */
 class DataProvider private constructor() {
     /**
@@ -69,16 +69,23 @@ class DataProvider private constructor() {
         queryMedia(App.getInstance(), pathList)
     }
 
+    private fun isMemoryHasData():Boolean{
+        return pathList.size > 0
+    }
+
     fun loadData(forceCache:Boolean,callback:OnLoadCompleteListener){
         if(!forceCache){
             //返回内存中数据
-            if(mediaItemList.size > 0 && pathList.size > 0){
+            PrintLog.e("开始检查内存缓存")
+            if(isMemoryHasData()){
                 handler.post {
                     callback.onLoadComplete()
                 }
                 return
             }
+            PrintLog.e("开始检查文件缓存")
             FileUtils.readObject(Constant.CACHE_FILE_PATH)?.apply {
+                PrintLog.e("读取到本地缓存列表------")
                 transFormData(this as ArrayList<MusicInfoEntity>)
                 handler.post {
                     callback.onLoadComplete()
@@ -86,9 +93,12 @@ class DataProvider private constructor() {
                 return
             }
         }
+        PrintLog.e("未检查到本地缓存-----$forceCache")
         ScanMusicFile.get().startScan(App.getInstance(),object:ScanMusicFile.OnScanCompleteListener{
             override fun onComplete(paths: ArrayList<String>) {
                 transFormStringData(paths)
+                //缓存到本地
+                FileUtils.saveObject(musicInfoEntities,Constant.CACHE_FILE_PATH)
                 handler.post {
                     callback.onLoadComplete()
                 }
@@ -263,7 +273,7 @@ class DataProvider private constructor() {
      *
      * @param localList 本地缓存数据
      */
-    fun transFormData(localList: ArrayList<MusicInfoEntity>) {
+    private fun transFormData(localList: ArrayList<MusicInfoEntity>) {
         clearData()
         this.musicInfoEntities = localList
         for (itemEntity in localList) {

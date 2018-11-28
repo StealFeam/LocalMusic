@@ -170,7 +170,7 @@ object FileUtils {
         return null
     }
 
-    fun saveObject(obj: Any, path: String) {
+    fun saveObject(obj: Any?, path: String) {
         val file = File(path)
         if (!file.exists()) {
             try {
@@ -199,13 +199,15 @@ object FileUtils {
 
     fun readObject(path: String): Any? {
         val file = File(path)
+        PrintLog.e("缓存文件的路径----$path")
         if (!file.exists()) {
+            PrintLog.e("该文件不存在")
             return null
         }
         var inputStream: ObjectInputStream? = null
         return try {
             inputStream = ObjectInputStream(FileInputStream(file))
-            PrintLog.print("read object success")
+            PrintLog.d("read object success")
             inputStream.readObject()
         } catch (e: IOException) {
             PrintLog.e("read cache has a error :" + e.message)

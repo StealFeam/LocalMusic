@@ -40,7 +40,7 @@ public static java.lang.String TABLENAME;
   public *;
 }
 
--keepclassmembers class * extends android.app.Activity { # 保持自定义控件类不被混淆
+-keepclassmembers class * extends android.app.Activity {
    public boolean *(android.view.Menu);
 }
 

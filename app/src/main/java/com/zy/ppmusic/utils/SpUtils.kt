@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import com.zy.ppmusic.App
 
 /**
- * @author y-slience
+ * @author stealfeam
  * @since 2018/9/6
  */
 class SpUtils {

@@ -6,7 +6,7 @@ import android.support.v4.content.LocalBroadcastManager
 import com.zy.ppmusic.utils.PrintLog
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * @date 2017/12/28
  */
 class LoopService : IntentService(TAG) {

@@ -4,7 +4,7 @@ import android.os.Parcel
 import android.os.Parcelable
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 class MainMenuEntity : Parcelable {
     var menuTitle: String? = null

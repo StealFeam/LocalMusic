@@ -12,7 +12,7 @@ import com.zy.ppmusic.callback.AudioNoisyCallBack
 import com.zy.ppmusic.utils.PrintLog
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  * 当手机来电话或者播放其他的媒体时
  */
 class AudioBecomingNoisyReceiver(private val context: Context) : BroadcastReceiver() {

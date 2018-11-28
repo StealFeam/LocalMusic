@@ -7,7 +7,7 @@ import android.os.Process
 import com.zy.ppmusic.mvp.view.ErrorActivity
 
 /**
- * @author ZhiTouPC
+ * @author stealfeam
  */
 class CrashHandler(private val mContext: Context) : Thread.UncaughtExceptionHandler {
 
