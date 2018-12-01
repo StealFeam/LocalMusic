@@ -2,6 +2,7 @@ package com.zy.ppmusic.widget;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.support.annotation.Keep;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
@@ -148,7 +149,7 @@ class DragFinishHelper {
             animator.start();
         }
     }
-
+    @Keep
     public interface DragFinishListener {
         /**
          * 滑动到右边界

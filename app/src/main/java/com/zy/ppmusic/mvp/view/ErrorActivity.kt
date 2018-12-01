@@ -1,15 +1,19 @@
 package com.zy.ppmusic.mvp.view
 
+import android.Manifest
 import android.app.Dialog
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Process
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.AppCompatDialogFragment
 import com.zy.ppmusic.R
 import com.zy.ppmusic.utils.DateUtil
 import com.zy.ppmusic.utils.FileUtils
+import com.zy.ppmusic.utils.PrintLog
 import com.zy.ppmusic.utils.StreamUtils
 import java.io.File
 import java.io.PrintWriter
@@ -37,6 +41,10 @@ class ErrorActivity : AppCompatActivity() {
 
     private fun writeMsgToLocal() {
         val errorInfo = intent.getSerializableExtra(ERROR_INFO) as Throwable
+        if(ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            PrintLog.e(errorInfo.message?:"error msg is null")
+            return
+        }
         val writer = PrintWriter(File(FileUtils.downloadFile + "/music_error_log.txt"))
         writer.println("---- " + DateUtil.get().getTime(System.currentTimeMillis()) + " ----")
         errorInfo.printStackTrace(writer)

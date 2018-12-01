@@ -15,11 +15,14 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
-
+-dontpreverify
+-keepattributes *Annotation*,InnerClasses       #保持注解
+-keepattributes Signature
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
 -keepattributes SourceFile,LineNumberTable
 
+-optimizations !code/simplification/cast,!field/*,!class/merging/*
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 -renamesourcefileattribute SourceFile
@@ -40,7 +43,35 @@ public static java.lang.String TABLENAME;
   public *;
 }
 
--keepclassmembers class * extends android.app.Activity {
+-keepclasseswithmembers public class * implements kotlin.coroutines.CoroutineContext
+
+-keep public interface kotlin.coroutines.CoroutineContext{*;}
+-keep public interface kotlin.coroutines.CoroutineContext$Key{*;}
+-keep public interface kotlin.jvm.functions.**
+-keep public class kotlin.coroutines.**{*;}
+-keep public class kotlinx.coroutines.**{*;}
+-keep public interface kotlinx.coroutines.**{*;}
+
+-keep public class * extends android.app.Activity {
    public boolean *(android.view.Menu);
+   public boolean onCreateOptionsMenu(android.view.Menu);
 }
 
+-keepclasseswithmembernames public class com.zy.ppmusic.mvp.view.MediaActivity{
+    public boolean onCreateOptionsMenu(android.view.Menu);
+}
+
+-keepclassmembernames public class android.support.v7.view.menu.MenuBuilder{*;}
+
+# 保留Serializable序列化的类不被混淆
+-keepclassmembers class * implements java.io.Serializable {
+    static final long serialVersionUID;
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+    !static !transient <fields>;
+    !private <fields>;
+    !private <methods>;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}

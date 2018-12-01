@@ -41,9 +41,6 @@ class DataProvider private constructor() {
      * 用于获取mediaId的位置
      */
     val mediaIdList: ArrayList<String>
-    private val handler by lazy {
-        Handler(Looper.getMainLooper())
-    }
 
     val metadataCompatList: Map<String, MediaMetadataCompat>
         get() = mapMetadataArray
@@ -73,23 +70,17 @@ class DataProvider private constructor() {
         return pathList.size > 0
     }
 
-    fun loadData(forceCache:Boolean,callback:OnLoadCompleteListener){
+    fun loadData(forceCache:Boolean){
         if(!forceCache){
             //返回内存中数据
             PrintLog.e("开始检查内存缓存")
             if(isMemoryHasData()){
-                handler.post {
-                    callback.onLoadComplete()
-                }
                 return
             }
             PrintLog.e("开始检查文件缓存")
             FileUtils.readObject(Constant.CACHE_FILE_PATH)?.apply {
                 PrintLog.e("读取到本地缓存列表------")
                 transFormData(this as ArrayList<MusicInfoEntity>)
-                handler.post {
-                    callback.onLoadComplete()
-                }
                 return
             }
         }
@@ -99,9 +90,6 @@ class DataProvider private constructor() {
                 transFormStringData(paths)
                 //缓存到本地
                 FileUtils.saveObject(musicInfoEntities,Constant.CACHE_FILE_PATH)
-                handler.post {
-                    callback.onLoadComplete()
-                }
             }
         })
     }

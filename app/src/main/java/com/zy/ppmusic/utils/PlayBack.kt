@@ -11,8 +11,11 @@ import android.os.PowerManager
 import android.support.v4.media.session.PlaybackStateCompat
 import android.text.TextUtils
 import com.zy.ppmusic.service.MediaService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
-import java.util.*
 
 /**
  * @author stealfeam
@@ -27,7 +30,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
      */
     @Volatile
     private var mPlayQueue: List<String>? = null
-    @Volatile
+
     private var mCurrentPosition: Int = 0
     var currentMediaId: String? = null
         private set
@@ -53,9 +56,15 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
         private set
     private val mContextWeak: WeakReference<MediaService> = WeakReference(mMediaService)
 
-    @Volatile
-    var currentStreamPosition: Int  = 0
-            get() = mMediaPlayer?.currentPosition ?: mCurrentPosition
+    var currentStreamPosition: Int = 0
+        get() {
+            val isPlaying = mMediaPlayer?.isPlaying ?: false
+            return if (isPlaying) {
+                mMediaPlayer?.currentPosition ?: mCurrentPosition
+            } else {
+                mCurrentPosition
+            }
+        }
 
     init {
         val context = mMediaService.applicationContext
@@ -91,41 +100,31 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
             configMediaPlayerState()
         } else {
             state = PlaybackStateCompat.STATE_STOPPED
-            releasePlayer(true)
             val index = DataProvider.get().getMediaIndex(mediaId)
             PrintLog.d("该歌曲的id====$mediaId")
             PrintLog.d("该歌曲的位置：：：$index")
-            createPlayerIfNeed()
-            state = PlaybackStateCompat.STATE_BUFFERING
             val path = DataProvider.get().getPath(index)
             if (path.isNullOrEmpty() || !path.isFileExits()) {
                 PrintLog.e("preparedWithMediaId error: path is empty or file not exits")
             } else {
                 PrintLog.e("preparedWithMediaId: path=$path")
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    val builder = AudioAttributes.Builder()
-                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                            .setLegacyStreamType(AudioManager.STREAM_MUSIC)
-                            .setFlags(AudioManager.FLAG_ALLOW_RINGER_MODES)
-                            .setUsage(AudioAttributes.USAGE_MEDIA)
-                    mMediaPlayer?.setAudioAttributes(builder.build())
-                } else {
-                    @Suppress("DEPRECATION")
-                    mMediaPlayer?.setAudioStreamType(AudioManager.STREAM_MUSIC)
-                }
-                mContextWeak.get()?.applicationContext?.apply {
-                    mMediaPlayer?.setDataSource(this,
-                            Uri.parse(String.format(Locale.CHINA, "file://%s", path)))
-                }
-                mMediaPlayer?.prepare()
+                state = PlaybackStateCompat.STATE_BUFFERING
                 mCallBack?.onPlayBackStateChange(state)
+
+                GlobalScope.launch(Dispatchers.Default) {
+                    val reset = async(Dispatchers.IO) {
+                        createPlayerIfNeed(path)
+
+                    }
+                    reset.await()
+                }
                 PrintLog.e("onPlay: music init complete index=" + index + " path=" + DataProvider.get().getPath(index))
             }
         }
     }
 
     private fun configMediaPlayerState() {
-        PrintLog.i("configMediaPlayerState: started,$mAudioFocus")
+        PrintLog.e("configMediaPlayerState: started,$mAudioFocus state=$state")
         if (mAudioFocus == AUDIO_NO_FOCUS_NO_DUCK) {
             //如果没有获取到硬件的播放权限则暂停播放
             if (state == PlaybackStateCompat.STATE_PLAYING) {
@@ -140,7 +139,8 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
             }
             //当失去音频的焦点时，如果在播放状态要恢复播放
             if (mPlayOnFocusGain && !mIsUserPause && mIsPauseCauseAudio) {
-                if (mMediaPlayer != null && !mMediaPlayer!!.isPlaying) {
+                val isNotPlaying = mMediaPlayer?.isPlaying?.not() ?: false
+                if (isNotPlaying) {
                     state = if (mCurrentPosition == mMediaPlayer?.currentPosition) {
                         mMediaPlayer?.start()
                         PlaybackStateCompat.STATE_PLAYING
@@ -156,12 +156,15 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
         mCallBack?.onPlayBackStateChange(state)
     }
 
+    private fun isPlaying(): Boolean {
+        return state == PlaybackStateCompat.STATE_PLAYING || mMediaPlayer?.isPlaying ?: false
+    }
+
     fun pause() {
-        if (state == PlaybackStateCompat.STATE_PLAYING) {
-            if (mMediaPlayer != null && mMediaPlayer!!.isPlaying) {
-                mMediaPlayer?.pause()
-                mCurrentPosition = mMediaPlayer!!.currentPosition
-            }
+        PrintLog.e("pause music-------")
+        if (isPlaying()) {
+            mMediaPlayer?.pause()
+            mCurrentPosition = mMediaPlayer!!.currentPosition
             releasePlayer(false)
         }
         state = PlaybackStateCompat.STATE_PAUSED
@@ -228,7 +231,6 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
 
     private fun releasePlayer(releasePlayer: Boolean) {
         if (releasePlayer) {
-            mMediaPlayer?.stop()
             mMediaPlayer?.reset()
             mMediaPlayer?.release()
             mMediaPlayer = null
@@ -259,7 +261,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
         if (mPlayQueue!!.isEmpty()) {
             return null
         }
-        var queueIndex = mPlayQueue?.indexOf(currentMediaId)?:0
+        var queueIndex = mPlayQueue?.indexOf(currentMediaId) ?: 0
         if (queueIndex == 0) {
             queueIndex = mPlayQueue!!.size
         }
@@ -281,14 +283,31 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
     /**
      * 创建播放器或者重置
      */
-    private fun createPlayerIfNeed() {
+    private fun createPlayerIfNeed(url: String) {
         if (mMediaPlayer == null) {
-            mMediaPlayer = MediaPlayer()
+            mMediaPlayer = MediaPlayer.create(mContextWeak.get(), Uri.parse("file://$url"))
             mMediaPlayer?.setWakeMode(mContextWeak.get()?.applicationContext, PowerManager.PARTIAL_WAKE_LOCK)
             mMediaPlayer?.setOnCompletionListener(this)
             mMediaPlayer?.setOnPreparedListener(this)
             mMediaPlayer?.setOnErrorListener(this)
             mMediaPlayer?.setOnSeekCompleteListener(this)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                val builder = AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setLegacyStreamType(AudioManager.STREAM_MUSIC)
+                        .setFlags(AudioManager.FLAG_ALLOW_RINGER_MODES)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                mMediaPlayer?.setAudioAttributes(builder.build())
+            } else {
+                @Suppress("DEPRECATION")
+                mMediaPlayer?.setAudioStreamType(AudioManager.STREAM_MUSIC)
+            }
+        } else {
+            mMediaPlayer?.stop()
+            mMediaPlayer?.reset()
+            mMediaPlayer?.setDataSource(mContextWeak.get(), Uri.parse("file://$url"))
+            mMediaPlayer?.prepareAsync()
         }
     }
 
@@ -346,18 +365,16 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
      */
     override fun onPrepared(mp: MediaPlayer) {
         PrintLog.i("onPrepared: called " + mMediaPlayer!!.currentPosition)
-        //准备完成
         if (state == PlaybackStateCompat.STATE_BUFFERING) {
             state = PlaybackStateCompat.STATE_CONNECTING
         }
 
         if (mIsAutoStart) {
             mIsAutoStart = false
-            mMediaPlayer?.start()
-            state = PlaybackStateCompat.STATE_PLAYING
+            play()
+        } else {
+            mCallBack?.onPlayBackStateChange(state)
         }
-
-        mCallBack?.onPlayBackStateChange(state)
     }
 
     /**
@@ -368,17 +385,16 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
     override fun onSeekComplete(mp: MediaPlayer) {
         mCurrentPosition = mMediaPlayer?.currentPosition ?: 0
         PrintLog.i("onSeekComplete() called=$mCurrentPosition")
-
         if (state == PlaybackStateCompat.STATE_BUFFERING) {
             state = PlaybackStateCompat.STATE_PAUSED
         }
 
         if (mIsAutoStart) {
-            mMediaPlayer?.start()
-            state = PlaybackStateCompat.STATE_PLAYING
+            play()
             mIsAutoStart = false
+        } else {
+            mCallBack?.onPlayBackStateChange(state)
         }
-        mCallBack?.onPlayBackStateChange(state)
     }
 
     interface CallBack {

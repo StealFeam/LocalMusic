@@ -19,8 +19,8 @@ android {
 }
 
 dependencies {
-    api "com.android.support:appcompat-v7:${build_versions.compileToolsVersion}"
-    api "com.android.support:support-v4:${build_versions.compileToolsVersion}"
+    api deps.lib.v7
+    api deps.lib.v4
 }
 
 

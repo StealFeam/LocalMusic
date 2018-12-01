@@ -2,6 +2,7 @@ package com.zy.ppmusic.widget;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewPager;
@@ -122,7 +123,7 @@ public class LoopViewPager extends ViewPager {
         }
         return intercepted || super.onTouchEvent(ev);
     }
-
+    @Keep
     public interface OnDragListener {
         /**
          * x方向移动距离变化时

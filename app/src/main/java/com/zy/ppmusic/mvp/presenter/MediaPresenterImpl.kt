@@ -9,7 +9,7 @@ import com.zy.ppmusic.mvp.model.MediaActivityModelImpl
 import com.zy.ppmusic.utils.DataProvider
 import com.zy.ppmusic.utils.FileUtils
 import com.zy.ppmusic.utils.PrintLog
-import com.zy.ppmusic.utils.TaskPool
+import kotlinx.coroutines.*
 
 /**
  * @author stealfeam
@@ -40,26 +40,36 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         mModel.attachController(controller)
     }
 
+//    override fun refreshQueue(isRefresh: Boolean) {
+//        if (mView.get() == null) {
+//            PrintLog.i("view is null")
+//            return
+//        }
+//        mView.get()?.showLoading()
+//        TaskPool.executeSyc(Runnable {
+//            mLoadCompleteListener.flag = isRefresh
+//            DataProvider.get().loadData(isRefresh,mLoadCompleteListener)
+//        })
+//    }
+
     override fun refreshQueue(isRefresh: Boolean) {
         if (mView.get() == null) {
             PrintLog.i("view is null")
             return
         }
         mView.get()?.showLoading()
-        TaskPool.executeSyc(Runnable {
-            mLoadCompleteListener.flag = isRefresh
-            DataProvider.get().loadData(isRefresh,mLoadCompleteListener)
-        })
-    }
-
-    private val mLoadCompleteListener = object:DataProvider.OnLoadCompleteListener{
-        var flag = false
-        override fun onLoadComplete() {
-            mView.get()?.loadFinished(flag)
+        //创建协程环境
+        //CoroutineScope注释代码
+        GlobalScope.launch(Dispatchers.Main) {
+            val job = async(Dispatchers.IO){
+                DataProvider.get().loadData(isRefresh)
+                return@async
+            }
+            job.await()
             mView.get()?.hideLoading()
+            mView.get()?.loadFinished(isRefresh)
         }
     }
-
 
     override fun getLocalMode(c: Context) {
         mModel.getLocalMode(c, e = {

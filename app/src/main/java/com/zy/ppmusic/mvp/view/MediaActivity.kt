@@ -97,7 +97,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
     private var mLoadingDialogFragment: LoadingDialogFragment? = null
 
     /*** 接收媒体服务回传的信息，这里处理的是当前播放的位置和进度*/
-    class MediaResultReceive(activity: MediaActivity, handler: Handler) : ResultReceiver(handler) {
+    inner class MediaResultReceive(activity: MediaActivity, handler: Handler) : ResultReceiver(handler) {
 
         private var mWeakView: WeakReference<MediaActivity>? = null
 
@@ -118,10 +118,11 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                     activity.updateTime()
                 }
                 MediaService.COMMAND_UPDATE_QUEUE_CODE -> {
-                    if (activity.mMediaController?.queue != null &&
-                            activity.mMediaController!!.queue.size > 0) {
+                    val isNotEmpty = activity.mMediaController?.queue?.isNotEmpty() ?: false
+                    if (isNotEmpty) {
                         activity.mMediaQueueAdapter?.setData(activity.mMediaController?.queue)
                     }
+                    activity.hideLoading()
                 }
                 else -> {
                     PrintLog.print("MediaResultReceive other result....$resultCode," + resultData.toString())
@@ -243,6 +244,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                 if (currentMediaId == mCurrentMediaIdStr) {
                     return
                 }
+                PrintLog.e("准备播放第${vp_show_media_head.currentItem}首")
                 mPresenter?.skipToPosition(vp_show_media_head.currentItem.toLong())
             }
         }
@@ -381,7 +383,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                                     return@apply
                                 }
                                 sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(path)))
-                                notifyDelItem(DataProvider.get().getMediaIndex(path?.hashCode().toString()))
+                                notifyDelItem(DataProvider.get().getMediaIndex(path.hashCode().toString()))
                             } else {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                                     doSupportDelAction(position)
@@ -437,7 +439,6 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                     doSupportDelAction(position)
                 }
             }
-
         } else {
             toast("需要授予权限")
             doDelActionPosition = position
@@ -507,7 +508,6 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             mTimeClockAdapter?.setTicking(false)
         }
         mTimeClockRecycler?.adapter = mTimeClockAdapter
-
         val lengthSeekBar = mTimeContentView?.findViewById(R.id.time_selector_seek_bar) as SeekBar
         val progressHintTv = mTimeContentView?.findViewById(R.id.time_selector_progress_hint_tv) as TextView
         progressHintTv.visibility = View.VISIBLE
@@ -601,7 +601,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         println("onSaveInstanceState............................." + outState?.toString())
     }
 
-    override fun loadFinished(isForce:Boolean) {
+    override fun loadFinished(isForce: Boolean) {
         if (mMediaController == null) {
             PrintLog.d("media controller为空---")
             connectMediaService()
@@ -609,9 +609,9 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         }
         if (DataProvider.get().pathList.size > 0) {
             if (mResultReceive != null) {
-                mPresenter?.sendCommand(MediaService.COMMAND_UPDATE_QUEUE,Bundle().apply {
-                    putBoolean(MediaService.EXTRA_SCAN_COMPLETE,isForce)
-                } , mResultReceive!!)
+                mPresenter?.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, Bundle().apply {
+                    putBoolean(MediaService.EXTRA_SCAN_COMPLETE, isForce)
+                }, mResultReceive!!)
             } else {
                 PrintLog.d("参数ResultReceive为空。")
             }
@@ -631,9 +631,9 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             val serviceComponentName = ComponentName(this, MediaService::class.java)
             mMediaBrowser = MediaBrowserCompat(this, serviceComponentName, mConnectionCallBack, null)
         }
-        try{
+        try {
             mMediaBrowser?.connect()
-        }catch (e:IllegalStateException){
+        } catch (e: IllegalStateException) {
             PrintLog.e("正在连接服务...")
         }
     }
@@ -881,7 +881,6 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
 
         override fun onSessionEvent(event: String?, extras: Bundle?) {
             super.onSessionEvent(event, extras)
-            PrintLog.print("onSessionEvent....." + event + "," + extras.toString())
             when (event) {
                 MediaService.LOCAL_CACHE_POSITION_EVENT -> {
                     startPosition = extras?.getLong(MediaService.LOCAL_CACHE_POSITION_EVENT) ?: 0L
