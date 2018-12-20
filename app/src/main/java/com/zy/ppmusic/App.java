@@ -84,9 +84,7 @@ public class App extends Application {
         } else {
             LeakCanary.install(this);
         }
-        mDbCacheManager = DataBaseManager.getInstance()
-                .initDb(this);
-
+        mDbCacheManager = DataBaseManager.getInstance().initDb(this);
     }
 
 

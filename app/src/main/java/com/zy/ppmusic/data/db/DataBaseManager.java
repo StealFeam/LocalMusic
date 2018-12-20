@@ -48,12 +48,18 @@ public class DataBaseManager {
             return;
         }
         MusicDbEntityDao musicDbEntityDao = mSession.getMusicDbEntityDao();
+        musicDbEntityDao.deleteAll();
         musicDbEntityDao.insertOrReplace(entity);
     }
 
-    public List<MusicDbEntity> getEntity() {
+    public MusicDbEntity getEntity() {
         checkSession();
-        return mSession.loadAll(MusicDbEntity.class);
+        long count = mSession.getDao(MusicDbEntity.class).count();
+        if(count == 0){
+            return null;
+        }else{
+            return mSession.getMusicDbEntityDao().loadAll().get(0);
+        }
     }
 
     public void deleteAll() {

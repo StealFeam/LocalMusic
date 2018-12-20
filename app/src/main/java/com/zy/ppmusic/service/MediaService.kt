@@ -234,11 +234,6 @@ class MediaService : MediaBrowserServiceCompat() {
      * @param isComplete 调用是否来自歌曲播放完成
      */
     private fun changeMediaByMode(isNext: Boolean, isComplete: Boolean) {
-        if(System.currentTimeMillis() - lastChangeMis < 500){
-            return
-        }else{
-            lastChangeMis = System.currentTimeMillis()
-        }
         if (mPlayBack == null) {
             PrintLog.e("changeMediaByMode: playback is null")
             PrintLog.d("尝试启动界面")
@@ -454,7 +449,7 @@ class MediaService : MediaBrowserServiceCompat() {
      * 进度更新到界面
      */
     fun updatePositionToSession() {
-        GlobalScope.launch(Dispatchers.Default) {
+        GlobalScope.launch(Dispatchers.IO) {
             val bundle = Bundle()
             bundle.putInt(MediaService.UPDATE_POSITION_EVENT, mPlayBack!!.currentStreamPosition)
             mMediaSessionCompat?.sendSessionEvent(MediaService.UPDATE_POSITION_EVENT, bundle)
@@ -469,6 +464,11 @@ class MediaService : MediaBrowserServiceCompat() {
      */
     fun onMediaChange(mediaId: String?, shouldPlayWhenPrepared: Boolean, shouldSeekToPosition: Long = 0) {
         if (DataProvider.get().pathList.isNotEmpty()) {
+            if(System.currentTimeMillis() - lastChangeMis < 800){
+                return
+            }else{
+                lastChangeMis = System.currentTimeMillis()
+            }
             PrintLog.d("mediaId-----$mediaId")
 //            if (mUpdateRunnable == null) {
 //                mUpdateRunnable = UpdateRunnable(this)
@@ -522,17 +522,8 @@ class MediaService : MediaBrowserServiceCompat() {
             val extra = Bundle()
             extra.putLong(LOCAL_CACHE_POSITION_EVENT, seekToPosition)
             mMediaSessionCompat?.sendSessionEvent(LOCAL_CACHE_POSITION_EVENT, extra)
-            mPlayBack?.preparedWithMediaId(mediaId)
-            mPlayBack?.seekTo(seekToPosition.toInt(), isShouldPlay)
-        } else {
-            if (isShouldPlay) {
-                PrintLog.e("准备自动播放id-----")
-                mPlayBack?.playMediaIdAutoStart(mediaId)
-            } else {
-                PrintLog.e("准备播放id------")
-                mPlayBack?.preparedWithMediaId(mediaId)
-            }
         }
+        mPlayBack?.preparedWithMediaId(mediaId,seekToPosition.toInt(),isShouldPlay)
     }
 
     private fun updateQueue() {
@@ -580,9 +571,10 @@ class MediaService : MediaBrowserServiceCompat() {
                         val job = async(Dispatchers.IO) {
                             return@async App.getInstance().databaseManager.entity
                         }
-                        val list = job.await()
-                        if (list.size > 0) {
-                            onMediaChange(list[0].lastMediaId, false, list[0].lastPlayedPosition)
+                        val cacheEntity = job.await()
+                        if (cacheEntity != null) {
+                            PrintLog.d("缓存的进度---${cacheEntity.lastPlayedPosition}")
+                            onMediaChange(cacheEntity.lastMediaId, false, cacheEntity.lastPlayedPosition)
                         } else {
                             onMediaChange(mediaId, false)
                         }
@@ -710,16 +702,16 @@ class MediaService : MediaBrowserServiceCompat() {
                                 //读取本地数据库
                                 return@async App.getInstance().databaseManager.entity
                             }
-                            return@async emptyList<MusicDbEntity>()
+                            return@async MusicDbEntity()
                         }
                         if (isForce) {
-                            val entity = job.await()
-                            if (entity.isNotEmpty()) {
-                                val lastMediaId = entity[0].lastMediaId
+                            val cacheEntity = job.await()
+                            if (cacheEntity != null) {
+                                val lastMediaId = cacheEntity.lastMediaId
                                 if (!DataProvider.get().mediaIdList.contains(lastMediaId)) {
                                     onMediaChange(DataProvider.get().getMediaIdList()[0], false)
                                 } else {
-                                    onMediaChange(lastMediaId, false, entity[0].lastPlayedPosition)
+                                    onMediaChange(lastMediaId, false, cacheEntity.lastPlayedPosition)
                                 }
                             } else {
                                 onMediaChange(DataProvider.get().getMediaIdList()[0], false)

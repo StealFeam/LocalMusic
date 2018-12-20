@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.ResultReceiver
 import android.provider.DocumentsContract
+import android.support.annotation.Keep
 import android.support.design.widget.BottomSheetDialog
 import android.support.v4.content.ContextCompat
 import android.support.v4.media.MediaBrowserCompat
@@ -258,6 +259,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         }
     }
 
+    @Keep
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main, menu)
         if (menu != null) {
@@ -678,7 +680,8 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             PrintLog.print("已连接服务....")
             //mMediaBrowser!!.root 对应service的BrowserRoot 可以是包名
             mMediaBrowser?.subscribe(mMediaBrowser!!.root, subscriptionCallBack)
-            mMediaController = MediaControllerCompat(this@MediaActivity, mMediaBrowser!!.sessionToken)
+            mMediaController = MediaControllerCompat(this@MediaActivity,
+                    mMediaBrowser!!.sessionToken)
             mResultReceive = MediaResultReceive(this@MediaActivity, Handler())
             MediaControllerCompat.setMediaController(this@MediaActivity, mMediaController)
             mMediaController?.registerCallback(mControllerCallBack)
@@ -884,6 +887,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             when (event) {
                 MediaService.LOCAL_CACHE_POSITION_EVENT -> {
                     startPosition = extras?.getLong(MediaService.LOCAL_CACHE_POSITION_EVENT) ?: 0L
+                    PrintLog.d("收到穿过来的缓存位置----$startPosition")
                     updateTime()
                 }
                 MediaService.ERROR_PLAY_QUEUE_EVENT -> {
@@ -916,6 +920,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                 }
                 MediaService.UPDATE_POSITION_EVENT -> {
                     startPosition = extras?.getInt(MediaService.UPDATE_POSITION_EVENT, 0)?.toLong() ?: 0
+                    PrintLog.d("更新列表的位置-----$startPosition")
                     updateTime()
                 }
                 else -> {

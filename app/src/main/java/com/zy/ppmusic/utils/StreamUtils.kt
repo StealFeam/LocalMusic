@@ -16,7 +16,6 @@ object StreamUtils {
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }
-
             }
         }
     }

@@ -137,9 +137,10 @@ class DataProvider private constructor() {
                     continue
                 } else {
                     queryContent(query, mediaMetadataRetriever)
+                    StreamUtils.closeIo(query)
                 }
             }
-            StreamUtils.closeIo(query)
+
             oldUri = audioUri
         }
 

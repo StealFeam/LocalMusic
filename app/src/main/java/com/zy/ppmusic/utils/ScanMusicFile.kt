@@ -28,11 +28,6 @@ class ScanMusicFile private constructor() {
      * 外部存储路径
      */
     private var mExternalStoragePath: String? = null
-    /**
-     * 扫描任务
-     */
-    private var mScanTask: Runnable? = null
-
 
     fun startScan(c: Context,l:OnScanCompleteListener) {
         val context = c.applicationContext
@@ -40,7 +35,6 @@ class ScanMusicFile private constructor() {
             mInnerStoragePath = FileUtils.getStoragePath(context, false)
             mExternalStoragePath = FileUtils.getStoragePath(context, true)
         }
-
         if (mPathList.size > 0) {
             mPathList.clear()
         }
