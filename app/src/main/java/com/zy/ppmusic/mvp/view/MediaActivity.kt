@@ -126,7 +126,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                     activity.hideLoading()
                 }
                 else -> {
-                    PrintLog.print("MediaResultReceive other result....$resultCode," + resultData.toString())
+                    PrintLog.print("MediaResultReceive other result....$resultCode,$resultData")
                 }
             }
         }
@@ -630,8 +630,8 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         }
 
         if (mMediaBrowser == null) {
-            val serviceComponentName = ComponentName(this, MediaService::class.java)
-            mMediaBrowser = MediaBrowserCompat(this, serviceComponentName, mConnectionCallBack, null)
+            mMediaBrowser = MediaBrowserCompat(this,
+                    ComponentName(this, MediaService::class.java), mConnectionCallBack, null)
         }
         try {
             mMediaBrowser?.connect()

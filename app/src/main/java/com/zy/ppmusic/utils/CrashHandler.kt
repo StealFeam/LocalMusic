@@ -35,8 +35,4 @@ class CrashHandler(private val mContext: Context) : Thread.UncaughtExceptionHand
         mContext.startActivity(it)
         Process.killProcess(Process.myPid())
     }
-
-    companion object {
-        private val TAG = "CrashHandler"
-    }
 }

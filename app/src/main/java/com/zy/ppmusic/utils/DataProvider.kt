@@ -24,9 +24,6 @@ import java.util.*
  * @author stealfeam
  */
 class DataProvider private constructor() {
-    /**
-     * 可存放本地的数据
-     */
     @Volatile
     var musicInfoEntities: ArrayList<MusicInfoEntity>? = null
     @Volatile

@@ -50,6 +50,7 @@ class ScanMusicFile private constructor() {
         Log.d(TAG, "run: 扫描结束")
         l.onComplete(mPathList)
     }
+    private val dot = "."
 
     /**
      * 遍历文件目录下的所有文件
@@ -68,7 +69,6 @@ class ScanMusicFile private constructor() {
             }
             return
         }
-        val dot = "."
         //过滤没有后缀名的文件
         if (!file.name.contains(dot)) {
             return

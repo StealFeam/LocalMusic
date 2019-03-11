@@ -33,7 +33,7 @@ class LoopService : IntentService(TAG) {
 
     override fun stopService(name: Intent): Boolean {
         loopStart = false
-        PrintLog.e("stopService....." + name.toString())
+        PrintLog.e("stopService.....$name")
         return super.stopService(name)
     }
 
