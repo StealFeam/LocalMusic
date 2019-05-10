@@ -1,6 +1,5 @@
 package com.zy.ppmusic.utils
 
-import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import com.zy.ppmusic.App
@@ -18,9 +17,11 @@ fun toast(msg: String) {
     Toast.makeText(App.getAppBaseContext(), msg, Toast.LENGTH_SHORT).show()
 }
 
-fun String.isFileExits():Boolean{
-    if(this.isNotEmpty()){
+fun String.isFileExits(): Boolean {
+    if (this.isNotEmpty()) {
         return File(this).exists()
     }
     return false
 }
+
+typealias Void = Unit

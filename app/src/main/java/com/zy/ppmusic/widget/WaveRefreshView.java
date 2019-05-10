@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -14,14 +15,16 @@ import android.util.SparseBooleanArray;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 
+import com.zy.ppmusic.R;
 import com.zy.ppmusic.utils.PrintLog;
 
 
 /**
  * @author stealfeam
  */
-public class WaveRefreshView extends View {
+public class WaveRefreshView extends LinearLayout {
     private static final String TAG = "WaveRefreshView";
     /**
      * 最小宽度占屏幕的比例
@@ -44,7 +47,7 @@ public class WaveRefreshView extends View {
     public WaveRefreshView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mCirclePaint = new Paint();
-        mCirclePaint.setColor(Color.WHITE);
+        mCirclePaint.setColor(ContextCompat.getColor(context, R.color.colorTheme));
         mCirclePaint.setAntiAlias(true);
         mCirclePaint.setStyle(Paint.Style.FILL);
         mCirclePaint.setStrokeWidth(5);

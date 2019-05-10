@@ -31,7 +31,7 @@ class MediaHeadFragment : Fragment() {
         info?.description?.iconBitmap?.apply {
             Glide.with(rootView).load(this)
                     .apply(mImageLoadOptions).into(mHeadImageView!!)
-        }?:apply {
+        } ?: apply {
             mHeadImageView?.setImageResource(R.mipmap.ic_music_launcher_round)
         }
         return rootView

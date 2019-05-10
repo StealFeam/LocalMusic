@@ -5,8 +5,6 @@ import android.database.Cursor
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
-import android.os.Handler
-import android.os.Looper
 import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
@@ -164,7 +162,10 @@ class DataProvider private constructor() {
             if (!FileUtils.isExits(queryPath)) {
                 continue
             }
-
+            val format = queryPath.substring(queryPath.lastIndexOf("."), queryPath.length)
+            if (!SupportMediaType.SUPPORT_TYPE.contains(format)) {
+                continue
+            }
             PrintLog.e("扫描到的名称----$title------$artist")
             PrintLog.e("实际地址-------$queryPath")
 

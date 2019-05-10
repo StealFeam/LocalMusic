@@ -19,13 +19,14 @@ class SpUtils {
     }
 
     companion object {
-        @JvmStatic
-        fun get(): SpUtils {
+        @JvmStatic fun get(): SpUtils {
             return Holder.instance
         }
     }
 
-    private val spInstance: SharedPreferences = App.getAppBaseContext().getSharedPreferences(spName, Context.MODE_PRIVATE)
+    private val spInstance: SharedPreferences by lazy(LazyThreadSafetyMode.NONE) {
+        App.getAppBaseContext().getSharedPreferences(spName, Context.MODE_PRIVATE)
+    }
 
     fun putString(key: String, value: String) {
         spInstance.edit().apply {
@@ -47,7 +48,7 @@ class SpUtils {
         return spInstance.getInt(key, DEFAULT_INT_VALUE)
     }
 
-    fun putOperator(operator: (SharedPreferences.Editor) -> Unit) {
+    fun putOperator(operator: (SharedPreferences.Editor) -> Void) {
         spInstance.edit().apply {
             operator.invoke(this)
         }.apply()

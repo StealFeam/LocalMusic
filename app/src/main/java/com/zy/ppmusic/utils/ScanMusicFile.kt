@@ -80,60 +80,20 @@ class ScanMusicFile private constructor() {
             return
         }
         //判断文件的类型是否支持
-        val endIndex = file.name.lastIndexOf(dot)
-        val fileFormat = file.name.substring(endIndex, file.name.length)
-        if (SupportMediaType.SUPPORT_TYPE.contains(fileFormat)) {
-            val size = 1024L * 1024L
-            if (size < file.length()) {
-                Log.w(TAG, file.absolutePath + ",length=" + file.length())
-                mPathList.add(file.absolutePath)
+        SupportMediaType.SUPPORT_TYPE.forEach {
+            if (file.name.endsWith(it)) {
+                val size = 1024L * 1024L
+                if (size < file.length()) {
+                    Log.w(TAG, file.absolutePath + ",length=" + file.length())
+                    mPathList.add(file.absolutePath)
+                }
             }
         }
-
-        //        for (String format : SupportMediaType.getSUPPORT_TYPE()) {
-        //            if (file.getName().endsWith(format)) {
-        //                // * 1L  1M的大小
-        //                long size = 1024L * 1024L;
-        //                if (size < file.length()) {
-        //                    Log.w(TAG, file.getAbsolutePath() + ",length=" + file.length());
-        //                    mPathList.add(file.getAbsolutePath());
-        //                    mHandler.sendEmptyMessage(COUNT_CHANGE);
-        //                }
-        //                return;
-        //            }
-        //        }
     }
 
     private object ScanInstance {
         val instance = ScanMusicFile()
     }
-
-//    private class ScanHandler constructor(scanMusicFile: ScanMusicFile) : Handler(Looper.getMainLooper()) {
-//        private val weak: WeakReference<ScanMusicFile> = WeakReference(scanMusicFile)
-//
-//        override fun handleMessage(msg: Message) {
-//            super.handleMessage(msg)
-//            if (weak.get() != null) {
-//                val scanMusicFile = weak.get()
-//                when (msg.what) {
-//                    SCAN_COMPLETE -> if (scanMusicFile?.callBackList!!.size > 0) {
-//                        for (i in scanMusicFile.callBackList.indices.reversed()) {
-//                            val callback = scanMusicFile.callBackList[i]
-//                            callback.onComplete(scanMusicFile.mPathList)
-//                            scanMusicFile.callBackList.remove(callback)
-//                        }
-//                    }
-//                    COUNT_CHANGE -> if (scanMusicFile?.callBackList!!.size > 0) {
-//                        for (callback in scanMusicFile.callBackList) {
-//                            callback.onCountChange(scanMusicFile.mPathList.size)
-//                        }
-//                    }
-//                    else -> {
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     interface OnScanCompleteListener {
         /**

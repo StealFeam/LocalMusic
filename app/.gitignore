@@ -1,3 +1,5 @@
 /build
 *.iml
 /release/output.json
+/src/test
+/src/androidTest

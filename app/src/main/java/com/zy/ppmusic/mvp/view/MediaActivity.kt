@@ -95,23 +95,16 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
     /*** 记录循环是否已经开始*/
     private var isStarted = false
 
-    private var mLoadingDialogFragment: LoadingDialogFragment? = null
-
     /*** 接收媒体服务回传的信息，这里处理的是当前播放的位置和进度*/
     inner class MediaResultReceive(activity: MediaActivity, handler: Handler) : ResultReceiver(handler) {
-
-        private var mWeakView: WeakReference<MediaActivity>? = null
-
-        init {
-            this.mWeakView = WeakReference(activity)
-        }
+        private var mWeakView: WeakReference<MediaActivity> = WeakReference(activity)
 
         override fun onReceiveResult(resultCode: Int, resultData: Bundle) {
             super.onReceiveResult(resultCode, resultData)
-            if (mWeakView!!.get() == null) {
+            if (mWeakView.get() == null) {
                 return
             }
-            val activity = mWeakView!!.get() ?: return
+            val activity = mWeakView.get() ?: return
             when (resultCode) {
                 MediaService.COMMAND_POSITION_CODE -> {
                     val position = resultData.getInt(MediaService.EXTRA_POSITION).toLong()
@@ -144,7 +137,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
 
     override fun createPresenter(): MediaPresenterImpl = MediaPresenterImpl(this)
 
-    private fun initTitleBar() {
+    private fun setUpTitleBar() {
         tb_media.setBackgroundColor(ContextCompat.getColor(this, R.color.colorTheme))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             tb_media.elevation = 0f
@@ -152,23 +145,25 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         setSupportActionBar(tb_media)
     }
 
-    private fun initEdgeView() {
+    private fun setUpTopEdgeView(){
         //顶部斜边View的背景
         val drawable = TimBackGroundDrawable()
         drawable.setDrawableColor(ContextCompat.getColor(this, R.color.colorTheme))
         drawable.setPercent(TimBackGroundDrawable.TOP)
         ViewCompat.setBackground(media_title_tint, drawable)
+    }
 
+    private fun setUpBottomEdgeView() {
         //设置底部的斜边
         val bottomBackGround = TimBackGroundDrawable()
-        bottomBackGround.setDrawableColor(UiUtils.getColor(R.color.colorTheme))
+        bottomBackGround.setDrawableColor(UIUtils.getColor(R.color.colorTheme))
         bottomBackGround.setCorner(TimBackGroundDrawable.LEFT)
         bottomBackGround.setPercent(TimBackGroundDrawable.BOTTOM)
         ViewCompat.setBackground(v_bottom_line, bottomBackGround)
     }
 
-    private fun initCenterBackGround() {
-        val dp2px = UiUtils.dp2px(this, 110)
+    private fun setUpCenterBackGround() {
+        val dp2px = UIUtils.dp2px(this, 110)
         val vpDrawable = RoundDrawable(dp2px, ContextCompat.getColor(this, R.color.colorGray))
         ViewCompat.setBackground(vp_show_media_head, vpDrawable)
     }
@@ -176,10 +171,11 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
     private var mModeIndex = 0
 
     override fun initViews() {
-        initTitleBar()
-        initEdgeView()
+        setUpTitleBar()
+        setUpTopEdgeView()
+        setUpBottomEdgeView()
         //专辑图片的圆形背景
-        initCenterBackGround()
+        setUpCenterBackGround()
 
         control_display_progress.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -329,20 +325,20 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             mMediaQueueRecycler = mPlayQueueContentView?.findViewById(R.id.control_queue_recycle)
             mQueueCountTv = mPlayQueueContentView?.findViewById(R.id.control_queue_count)
         } else {
-            val parent = mPlayQueueContentView?.parent as ViewGroup
-            parent.removeView(mPlayQueueContentView)
+            val parent = mPlayQueueContentView?.parent as? ViewGroup
+            parent?.removeView(mPlayQueueContentView)
         }
 
         if (mCurrentMediaIdStr != null) {
             mMediaQueueAdapter?.selectIndex = DataProvider.get().getMediaIndex(mCurrentMediaIdStr!!)
         }
         mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
-                (mMediaQueueAdapter!!.selectIndex + 1), DataProvider.get().pathList.size)
+                (mMediaQueueAdapter?.selectIndex?:0 + 1), DataProvider.get().pathList.size)
         mMediaQueueDialog?.setContentView(mPlayQueueContentView!!)
         mMediaQueueRecycler?.adapter = mMediaQueueAdapter
         mMediaQueueRecycler?.layoutManager = LinearLayoutManager(this)
         mMediaQueueRecycler?.addItemDecoration(RecycleViewDecoration(this, LinearLayoutManager.VERTICAL,
-                R.drawable.recyclerview_vertical_line, UiUtils.dp2px(this, 25)))
+                R.drawable.recyclerview_vertical_line, UIUtils.dp2px(this, 25)))
         mMediaQueueAdapter?.setData(DataProvider.get().queueItemList)
         mMediaQueueDialog?.show()
     }
@@ -370,28 +366,26 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
     @SuppressLint("InflateParams")
     private fun createDelQueueItemDialog(position: Int) {
         val delContentView = LayoutInflater.from(this).inflate(R.layout.dl_content_del_item, null)
-        delContentView.setPadding(UiUtils.dp2px(this, 20), UiUtils.dp2px(this, 20),
-                UiUtils.dp2px(this, 10), UiUtils.dp2px(this, 10))
+        delContentView.setPadding(UIUtils.dp2px(this, 20), UIUtils.dp2px(this, 20),
+                UIUtils.dp2px(this, 10), UIUtils.dp2px(this, 10))
         AlertDialog.Builder(this)
                 .setTitle(getString(R.string.string_sure_del))
                 .setView(delContentView)
                 .setPositiveButton(getString(R.string.string_del)) { _, _ ->
                     if (delContentView.checkbox_dl_content_message.isChecked) {
                         val path = DataProvider.get().getPath(position)
-                        val result = mPresenter?.deleteFile(path)
-                        result?.apply {
-                            if (this) {
-                                if (path.isNullOrEmpty()) {
-                                    return@apply
-                                }
-                                sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(path)))
-                                notifyDelItem(DataProvider.get().getMediaIndex(path.hashCode().toString()))
+                        val result = mPresenter?.deleteFile(path) ?: false
+                        if (result) {
+                            if (path.isNullOrEmpty()) {
+                                return@setPositiveButton
+                            }
+                            sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(path)))
+                            notifyDelItem(DataProvider.get().getMediaIndex(path.hashCode().toString()))
+                        } else {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                doSupportDelAction(position)
                             } else {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                    doSupportDelAction(position)
-                                } else {
-                                    toast("删除失败")
-                                }
+                                toast("删除失败")
                             }
                         }
                     } else {
@@ -640,17 +634,15 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         }
     }
 
+
+    var loader: Loader? = null
+
     /**
      * 显示加载框
      */
     override fun showLoading() {
-        if (mLoadingDialogFragment == null) {
-            mLoadingDialogFragment = LoadingDialogFragment()
-        }
-        mLoadingDialogFragment?.isCancelable = false
-        //判断当前页面的状态是否不可见
-        if (supportFragmentManager.isStateSaved.not() && mLoadingDialogFragment!!.isAdded.not()) {
-            mLoadingDialogFragment?.show(supportFragmentManager, "loading")
+        if(loader == null){
+            loader = Loader.show(this)
         }
     }
 
@@ -659,13 +651,8 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
      */
     override fun hideLoading() {
         PrintLog.d("hideLoading")
-        mLoadingDialogFragment?.takeIf { it.isVisible }?.apply {
-            if (supportFragmentManager.isStateSaved) {
-                dismissAllowingStateLoss()
-            } else {
-                dismiss()
-            }
-        }
+        loader?.hide()
+        loader = null
     }
 
     /**
@@ -687,6 +674,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             mMediaController?.registerCallback(mControllerCallBack)
             loadMode()
             mPresenter.attachModelController(mMediaController)
+
         }
 
         override fun onConnectionSuspended() {
@@ -983,8 +971,8 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
      * 更新媒体信息
      */
     private fun setMediaInfo(displayTitle: String?, subTitle: String?) {
-        supportActionBar?.title = displayTitle ?: UiUtils.getString(R.string.unknown_name)
-        supportActionBar?.subtitle = subTitle ?: UiUtils.getString(R.string.unknown_author)
+        supportActionBar?.title = displayTitle ?: UIUtils.getString(R.string.unknown_name)
+        supportActionBar?.subtitle = subTitle ?: UIUtils.getString(R.string.unknown_author)
     }
 
     /**

@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Path;
 import android.os.Debug;
 import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
@@ -65,7 +64,7 @@ public class App extends Application {
         SpUtils.get().putOperator(new Function1<SharedPreferences.Editor, Unit>() {
             @Override
             public Unit invoke(SharedPreferences.Editor editor) {
-                editor.putLong(Constant.SP_APP_ATTACH_TIME,System.currentTimeMillis());
+                editor.putLong(Constant.SP_APP_ATTACH_TIME, System.currentTimeMillis());
                 return null;
             }
         });
@@ -85,6 +84,23 @@ public class App extends Application {
             LeakCanary.install(this);
         }
         mDbCacheManager = DataBaseManager.getInstance().initDb(this);
+
+//        Matrix.Builder builder = new Matrix.Builder(this); // build matrix
+//        builder.patchListener(new TestPluginListener(this)); // add general pluginListener
+//        DynamicConfigImplDemo dynamicConfig = new DynamicConfigImplDemo(); // dynamic config
+//
+//        // init plugin
+//        IOCanaryPlugin ioCanaryPlugin = new IOCanaryPlugin(new IOConfig.Builder()
+//                .dynamicConfig(dynamicConfig)
+//                .build());
+//        //add to matrix
+//        builder.plugin(ioCanaryPlugin);
+//
+//        //init matrix
+//        Matrix.init(builder.build());
+//
+//        // start plugin
+//        ioCanaryPlugin.start();
     }
 
 

@@ -27,7 +27,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
             it.getLong(Constant.SP_APP_ATTACH_TIME,System.currentTimeMillis())
         } as Long
         val diffTime = System.currentTimeMillis() - attachTime
-        if(diffTime in 0..animDuration){
+        if (diffTime in 0 .. animDuration) {
             animDuration = diffTime
         }
     }

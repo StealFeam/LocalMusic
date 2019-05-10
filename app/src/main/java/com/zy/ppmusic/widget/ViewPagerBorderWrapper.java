@@ -15,7 +15,7 @@ import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 
 import com.zy.ppmusic.R;
-import com.zy.ppmusic.utils.UiUtils;
+import com.zy.ppmusic.utils.UIUtils;
 
 /**
  * @author stealfeam
@@ -79,8 +79,8 @@ public class ViewPagerBorderWrapper extends ViewGroup {
             mRightView = new SimpleVerticalTextView(getContext());
             mRightView.setGravity(Gravity.CENTER);
         }
-        mLeftView.setTextColor(UiUtils.getColor(R.color.colorBlack));
-        mRightView.setTextColor(UiUtils.getColor(R.color.colorBlack));
+        mLeftView.setTextColor(UIUtils.getColor(R.color.colorBlack));
+        mRightView.setTextColor(UIUtils.getColor(R.color.colorBlack));
         removeAllViews();
         addView(mLeftView, 0, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
         addView(mViewPager, 1);

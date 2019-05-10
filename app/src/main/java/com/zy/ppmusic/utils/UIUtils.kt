@@ -9,7 +9,7 @@ import com.zy.ppmusic.App
  * @date 2017/10/19
  */
 
-object UiUtils {
+object UIUtils {
     @JvmStatic
     fun dp2px(context: Context, dp: Int): Int {
         val density = context.resources.displayMetrics.density

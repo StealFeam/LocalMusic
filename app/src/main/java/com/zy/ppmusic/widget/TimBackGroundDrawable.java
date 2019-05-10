@@ -14,8 +14,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.zy.ppmusic.App;
-import com.zy.ppmusic.utils.StringUtils;
-import com.zy.ppmusic.utils.UiUtils;
+import com.zy.ppmusic.utils.UIUtils;
 
 /**
  * @author stealfeam
@@ -46,7 +45,7 @@ public class TimBackGroundDrawable extends Drawable {
     public TimBackGroundDrawable() {
         mPaint = new Paint();
         mPaint.setTextAlign(Paint.Align.CENTER);
-        mPaint.setTextSize(UiUtils.dp2px(App.getAppBaseContext(),12));
+        mPaint.setTextSize(UIUtils.dp2px(App.getAppBaseContext(),12));
         mPaint.setAntiAlias(true);
         mPaint.setColor(mPaintColor);
         mPaint.setStrokeWidth(1);

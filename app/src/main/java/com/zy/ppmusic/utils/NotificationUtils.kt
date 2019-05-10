@@ -163,9 +163,9 @@ object NotificationUtils {
             Log.e(TAG, "postNotification: title=" + descriptionCompat.title +
                     ",subTitle=" + descriptionCompat.subtitle)
             contentView.setTextViewText(R.id.notify_display_title, StringUtils
-                    .ifEmpty(descriptionCompat.title.toString(), UiUtils.getString(R.string.unknown_name)))
+                    .ifEmpty(descriptionCompat.title.toString(), UIUtils.getString(R.string.unknown_name)))
             contentView.setTextViewText(R.id.notify_display_sub_title, StringUtils
-                    .ifEmpty(descriptionCompat.subtitle.toString(), UiUtils.getString(R.string.unknown_author)))
+                    .ifEmpty(descriptionCompat.subtitle.toString(), UIUtils.getString(R.string.unknown_author)))
         } else {
             Log.e(TAG, "postNotification: description is null")
         }

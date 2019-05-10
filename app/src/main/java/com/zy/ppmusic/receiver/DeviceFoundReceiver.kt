@@ -31,6 +31,6 @@ class DeviceFoundReceiver(weakReference: BlScanActivity) : BroadcastReceiver() {
     }
 
     companion object {
-        private val TAG = "DeviceFoundReceiver"
+        private const val TAG = "DeviceFoundReceiver"
     }
 }

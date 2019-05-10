@@ -7,15 +7,15 @@ apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 27
-    buildToolsVersion '27.0.3'
     defaultConfig {
         applicationId "com.zy.ppmusic"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 27
         versionCode 12
         versionName "1.1.6"
         resConfigs 'zh'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
     }
     buildTypes {
         debug {
@@ -28,7 +28,7 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        applicationVariants.all { variant ->
+        android.applicationVariants.all { variant ->
             variant.outputs.each { output ->
                 def time = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINA).format(new Date())
                 if (variant.buildType.name == 'release') {
@@ -60,12 +60,21 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
     }
+
 //    kotlin {
 //        experimental {
 //            coroutines "enable"
 //        }
 //    }
 }
+//
+//matrix {
+//    trace {
+//        enable = true	//if you don't want to use trace canary, set false
+//        baseMethodMapFile = "${project.buildDir}/matrix_output/Debug.methodmap"
+//        blackListFile = "${project.projectDir}/matrixTrace/blackMethodList.txt"
+//    }
+//}
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
@@ -90,7 +99,7 @@ dependencies {
     implementation deps.lib.kotlin_jdk
     implementation deps.lib.kotlin_coroutines
     //koin https://github.com/InsertKoinIO/koin
-    implementation deps.lib.koin
+//    implementation deps.lib.koin
     //    constraint库
     implementation deps.lib.constraint
     //    greendao数据库
@@ -102,5 +111,27 @@ dependencies {
     //leak检测
     debugImplementation deps.lib.leakcanary
     releaseImplementation deps.lib.leakcanary_no_op
-
+//    implementation (group: "com.tencent.matrix", name: "matrix-android-lib", version: MATRIX_VERSION, changing: true){
+//        exclude group: 'org.koin.android'
+//        exclude group: 'android.support.coreutils'
+//        exclude group: 'com.android.support'
+//    }
+//    implementation( group: "com.tencent.matrix", name: "matrix-android-commons", version: MATRIX_VERSION, changing: true){
+//        exclude group: 'org.koin',module: 'koin-android'
+//    }
+//    implementation( group: "com.tencent.matrix", name: "matrix-trace-canary", version: MATRIX_VERSION, changing: true){
+//        exclude group: 'org.koin',module: 'koin-android'
+//    }
+//    implementation( group: "com.tencent.matrix", name: "matrix-resource-canary-android", version: MATRIX_VERSION, changing: true){
+//        exclude group: 'org.koin',module: 'koin-android'
+//    }
+//    implementation (group: "com.tencent.matrix", name: "matrix-resource-canary-common", version: MATRIX_VERSION, changing: true){
+//        exclude group: 'org.koin',module: 'koin-android'
+//    }
+//    implementation( group: "com.tencent.matrix", name: "matrix-io-canary", version: MATRIX_VERSION, changing: true){
+//        exclude group: 'org.koin',module: 'koin-android'
+//    }
+//    implementation(group: "com.tencent.matrix", name: "matrix-sqlite-lint-android-sdk", version: MATRIX_VERSION, changing: true) {
+//        exclude group: 'org.koin',module: 'koin-android'
+//    }
 }
