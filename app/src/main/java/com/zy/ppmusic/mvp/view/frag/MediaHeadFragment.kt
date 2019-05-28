@@ -1,7 +1,7 @@
 package com.zy.ppmusic.mvp.view.frag
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.support.v4.media.MediaMetadataCompat
 import android.view.LayoutInflater
 import android.view.View
@@ -16,7 +16,7 @@ import com.zy.ppmusic.R
  * @date 2017/12/26
  * 显示媒体专辑图片
  */
-class MediaHeadFragment : Fragment() {
+class MediaHeadFragment : androidx.fragment.app.Fragment() {
     private val mImageLoadOptions: RequestOptions = RequestOptions()
             //不能指定其他缓存
             //glide加载bitmap无法缓存

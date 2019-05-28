@@ -2,7 +2,7 @@ package com.zy.ppmusic.widget;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.support.v7.widget.AppCompatTextView;
+import androidx.appcompat.widget.AppCompatTextView;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;

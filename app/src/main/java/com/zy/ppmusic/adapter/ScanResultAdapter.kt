@@ -3,7 +3,7 @@ package com.zy.ppmusic.adapter
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.os.Build
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
@@ -19,7 +19,7 @@ import kotlin.collections.ArrayList
  * @author ZY
  */
 class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
-        RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
     private var mBondDevices: ArrayList<ScanResultEntity> = ArrayList()
     private val mScanDevices: ArrayList<ScanResultEntity> = ArrayList()
     private var listener: OnItemClickListener? = null
@@ -93,7 +93,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): androidx.recyclerview.widget.RecyclerView.ViewHolder {
         when (viewType) {
             R.layout.item_scan_title -> {
                 return TitleHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_scan_title, parent, false))
@@ -106,7 +106,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
     }
 
     @SuppressLint("MissingPermission")
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, p1: Int) {
+    override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, p1: Int) {
         if (holder is TitleHolder) {
             holder.title!!.text = mBondDevices[p1].title
         } else if (holder is ScanResultHolder) {
@@ -146,7 +146,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
 
     override fun getItemCount(): Int = mBondDevices.size + mScanDevices.size
 
-    class TitleHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class TitleHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
         var title: TextView? = null
 
         init {
@@ -154,7 +154,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
         }
     }
 
-    class ScanResultHolder(itemView: View, l: OnItemClickListener) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
+    class ScanResultHolder(itemView: View, l: OnItemClickListener) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView), View.OnClickListener {
         override fun onClick(v: View?) {
             if (listener != null) {
                 if (v!!.id == R.id.bl_del_bond_iv) {

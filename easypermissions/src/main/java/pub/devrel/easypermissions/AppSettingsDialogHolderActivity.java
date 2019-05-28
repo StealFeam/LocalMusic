@@ -4,9 +4,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.RestrictTo;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.RestrictTo;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AppSettingsDialogHolderActivity extends AppCompatActivity implements DialogInterface.OnClickListener {

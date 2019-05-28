@@ -6,10 +6,10 @@ import android.app.DialogFragment;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
-import android.support.annotation.RestrictTo;
-import android.support.annotation.StringRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.StringRes;
 
 /**
  * {@link DialogFragment} to display rationale for permission requests when the request comes from

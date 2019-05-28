@@ -2,7 +2,6 @@ package com.zy.ppmusic.service
 
 import android.app.IntentService
 import android.content.Intent
-import android.support.v4.content.LocalBroadcastManager
 import com.zy.ppmusic.utils.PrintLog
 
 /**
@@ -20,7 +19,7 @@ class LoopService : IntentService(TAG) {
     override fun onHandleIntent(intent: Intent?) {
         PrintLog.e("onHandleIntent....." + (intent?.toString() ?: "intent为空"))
         while (loopStart) {
-            LocalBroadcastManager.getInstance(this).sendBroadcast(
+            androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).sendBroadcast(
                     Intent(ACTION))
             try {
                 Thread.sleep(1000)

@@ -1,6 +1,6 @@
 package com.zy.ppmusic.widget;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * @author stealfeam

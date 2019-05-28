@@ -12,21 +12,18 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.ResultReceiver
 import android.provider.DocumentsContract
-import android.support.annotation.Keep
-import android.support.design.widget.BottomSheetDialog
-import android.support.v4.content.ContextCompat
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.support.v4.view.ViewCompat
-import android.support.v4.view.ViewPager
-import android.support.v7.app.AlertDialog
-import android.support.v7.view.menu.MenuBuilder
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.*
+import androidx.annotation.Keep
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.view.menu.MenuBuilder
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
@@ -57,7 +54,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
     /*** 媒体控制器*/
     private var mMediaController: MediaControllerCompat? = null
     /*** 播放列表的recycler*/
-    private var mMediaQueueRecycler: RecyclerView? = null
+    private var mMediaQueueRecycler: androidx.recyclerview.widget.RecyclerView? = null
     /*** 展示播放列表的dialog*/
     private var mMediaQueueDialog: BottomSheetDialog? = null
     /*** 播放列表的适配器*/
@@ -83,7 +80,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
     /*** 倒计时Recycler的适配器*/
     private var mTimeClockAdapter: TimeClockAdapter? = null
     /*** 倒计时选择弹窗Recycler*/
-    private var mTimeClockRecycler: RecyclerView? = null
+    private var mTimeClockRecycler: androidx.recyclerview.widget.RecyclerView? = null
     /*** 倒计时展示的自定义TextView*/
     private var mBorderTextView: BorderTextView? = null
     /*** 播放列表弹窗的contentView*/
@@ -222,11 +219,11 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
 
 
     /*专辑图片位置改变监听*/
-    private val mHeadChangeListener = object : ViewPager.OnPageChangeListener {
+    private val mHeadChangeListener = object : androidx.viewpager.widget.ViewPager.OnPageChangeListener {
         private var dragBeforeIndex = -1
 
         override fun onPageScrollStateChanged(state: Int) {
-            if (state == ViewPager.SCROLL_STATE_DRAGGING) {
+            if (state == androidx.viewpager.widget.ViewPager.SCROLL_STATE_DRAGGING) {
                 dragBeforeIndex = vp_show_media_head.currentItem
             }
         }
@@ -333,11 +330,11 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             mMediaQueueAdapter?.selectIndex = DataProvider.get().getMediaIndex(mCurrentMediaIdStr!!)
         }
         mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
-                (mMediaQueueAdapter?.selectIndex?:0 + 1), DataProvider.get().pathList.size)
+                (mMediaQueueAdapter?.selectIndex?.plus(1) ?: 1), DataProvider.get().pathList.size)
         mMediaQueueDialog?.setContentView(mPlayQueueContentView!!)
         mMediaQueueRecycler?.adapter = mMediaQueueAdapter
-        mMediaQueueRecycler?.layoutManager = LinearLayoutManager(this)
-        mMediaQueueRecycler?.addItemDecoration(RecycleViewDecoration(this, LinearLayoutManager.VERTICAL,
+        mMediaQueueRecycler?.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
+        mMediaQueueRecycler?.addItemDecoration(RecycleViewDecoration(this, androidx.recyclerview.widget.LinearLayoutManager.VERTICAL,
                 R.drawable.recyclerview_vertical_line, UIUtils.dp2px(this, 25)))
         mMediaQueueAdapter?.setData(DataProvider.get().queueItemList)
         mMediaQueueDialog?.show()
@@ -414,11 +411,6 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
                 //0000-0000
                 val rootId = getRootId(mPresenter!!.getGrantedRootUri())
                 println("rootId...$rootId,和rootId相比的值--$this")
-//                if (contains(rootId).not()) {
-//                    println("不包含")
-//                    toast(this@MediaActivity, "删除失败")
-//                    return
-//                }
                 try {
                     val delUri = DocumentsContract.buildDocumentUriUsingTree(Uri.parse(mPresenter.getChildrenUri()),
                             "$rootId:${substringAfter(rootId)}")
@@ -483,8 +475,8 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
     private fun createTimeClockDialog() {
         mTimeClockDialog = BottomSheetDialog(this)
         mTimeContentView = LayoutInflater.from(this).inflate(R.layout.layout_time_lock, null)
-        mTimeClockRecycler = mTimeContentView?.findViewById(R.id.time_selector_recycler) as RecyclerView?
-        mTimeClockRecycler?.layoutManager = LinearLayoutManager(this)
+        mTimeClockRecycler = mTimeContentView?.findViewById(R.id.time_selector_recycler) as androidx.recyclerview.widget.RecyclerView?
+        mTimeClockRecycler?.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
         mTimeClockAdapter = TimeClockAdapter()
         //无用的参数直接下划线表示
         mTimeClockAdapter?.setOnItemClickListener(OnItemViewClickListener { _, position ->
@@ -635,7 +627,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
     }
 
 
-    var loader: Loader? = null
+    private var loader: Loader? = null
 
     /**
      * 显示加载框

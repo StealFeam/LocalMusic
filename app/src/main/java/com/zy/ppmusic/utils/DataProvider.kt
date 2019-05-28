@@ -10,7 +10,7 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
-import android.support.v4.util.ArrayMap
+import androidx.collection.ArrayMap
 import android.text.TextUtils
 import android.util.Log
 import com.zy.ppmusic.App
@@ -27,7 +27,7 @@ class DataProvider private constructor() {
     @Volatile
     var queueItemList: ArrayList<MediaSessionCompat.QueueItem>
     val mediaItemList: ArrayList<MediaBrowserCompat.MediaItem>
-    private val mapMetadataArray: ArrayMap<String, MediaMetadataCompat>
+    private val mapMetadataArray: androidx.collection.ArrayMap<String, MediaMetadataCompat>
     /**
      * 扫描到的路径
      */
@@ -50,7 +50,7 @@ class DataProvider private constructor() {
 
     init {
         musicInfoEntities = ArrayList()
-        mapMetadataArray = ArrayMap()
+        mapMetadataArray = androidx.collection.ArrayMap()
         queueItemList = ArrayList()
         mediaItemList = ArrayList()
         mediaIdList = ArrayList()

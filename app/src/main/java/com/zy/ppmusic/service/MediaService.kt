@@ -7,11 +7,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.os.*
-import android.support.v4.content.LocalBroadcastManager
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.MediaBrowserServiceCompat
+import androidx.media.MediaBrowserServiceCompat
 import android.support.v4.media.MediaDescriptionCompat
-import android.support.v4.media.session.MediaButtonReceiver
+import androidx.media.session.MediaButtonReceiver
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
@@ -162,7 +162,7 @@ class MediaService : MediaBrowserServiceCompat() {
                 + flags + "], startId = [" + startId + "]")
         initPlayBack()
         //也可以在这接收通知按钮的event事件
-        MediaButtonReceiver.handleIntent(mMediaSessionCompat, intent)
+        androidx.media.session.MediaButtonReceiver.handleIntent(mMediaSessionCompat, intent)
         return Service.START_NOT_STICKY
     }
 
@@ -431,7 +431,7 @@ class MediaService : MediaBrowserServiceCompat() {
 
     fun stopLoop() {
         if (receiver != null) {
-            LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver!!)
+            androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver!!)
         }
         stopService(Intent(this, LoopService::class.java))
     }
@@ -442,7 +442,7 @@ class MediaService : MediaBrowserServiceCompat() {
         }
         stopLoop()
         startService(Intent(this, LoopService::class.java))
-        LocalBroadcastManager.getInstance(this).registerReceiver(receiver!!, filter)
+        androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).registerReceiver(receiver!!, filter)
     }
 
     /**

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/media_content_root"
@@ -11,7 +11,7 @@
     android:orientation="vertical"
     tools:context="com.zy.ppmusic.mvp.view.MediaActivity">
 
-    <android.support.v7.widget.Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/tb_media"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -34,7 +34,7 @@
         android:layout_weight="1"
         android:layout_height="0dp">
 
-        <android.support.v4.view.ViewPager
+        <androidx.viewpager.widget.ViewPager
             android:id="@+id/vp_show_media_head"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
@@ -47,23 +47,21 @@
         <!--android:layout_height="0dp"-->
         <!--android:layout_weight="1" />-->
 
-    <android.support.v7.widget.LinearLayoutCompat
+    <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <android.support.v7.widget.AppCompatTextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/control_display_time_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/dp10"
-            android:layout_marginLeft="@dimen/dp5"
-            android:layout_marginRight="@dimen/dp10"
             android:layout_marginStart="@dimen/dp5"
             android:text="@string/string_time_init"
             android:textSize="@dimen/sp11" />
 
-        <android.support.v7.widget.AppCompatSeekBar
+        <androidx.appcompat.widget.AppCompatSeekBar
             android:id="@+id/control_display_progress"
             style="@style/SelfSeekBarStyle"
             android:layout_width="0dp"
@@ -73,20 +71,18 @@
             android:max="100"
             android:progress="0" />
 
-        <android.support.v7.widget.AppCompatTextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/control_display_duration_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/dp5"
-            android:layout_marginLeft="@dimen/dp10"
-            android:layout_marginRight="@dimen/dp5"
             android:layout_marginStart="@dimen/dp10"
             android:text="@string/string_time_init"
             android:textSize="@dimen/sp11" />
 
-    </android.support.v7.widget.LinearLayoutCompat>
+    </androidx.appcompat.widget.LinearLayoutCompat>
 
-    <android.support.v7.widget.LinearLayoutCompat
+    <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/dp5"
@@ -94,7 +90,7 @@
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
-        <android.support.v7.widget.AppCompatImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/control_action_loop_model"
             android:layout_width="@dimen/dp40"
             android:layout_height="@dimen/dp40"
@@ -103,7 +99,7 @@
             android:padding="@dimen/dp8"
             android:src="@drawable/ic_loop_mode_normal_svg" />
 
-        <android.support.v7.widget.AppCompatImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/control_action_play_pause"
             android:layout_width="@dimen/dp40"
             android:layout_height="@dimen/dp40"
@@ -111,7 +107,7 @@
             android:contentDescription="@string/action_start_pause"
             android:src="@drawable/ic_black_play" />
 
-        <android.support.v7.widget.AppCompatImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/control_action_show_queue"
             android:layout_width="@dimen/dp40"
             android:layout_height="@dimen/dp40"
@@ -120,7 +116,7 @@
             android:padding="@dimen/dp5"
             android:src="@drawable/ic_menu" />
 
-    </android.support.v7.widget.LinearLayoutCompat>
+    </androidx.appcompat.widget.LinearLayoutCompat>
 
     <View
         android:id="@+id/v_bottom_line"
@@ -128,4 +124,4 @@
         android:layout_height="@dimen/dp15"
         android:gravity="bottom|end"
         android:visibility="visible" />
-</android.support.v7.widget.LinearLayoutCompat>
+</androidx.appcompat.widget.LinearLayoutCompat>

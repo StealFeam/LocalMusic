@@ -3,11 +3,10 @@ package com.zy.ppmusic.widget;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -15,7 +14,6 @@ import android.util.SparseBooleanArray;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.LinearLayout;
 
 import com.zy.ppmusic.R;
 import com.zy.ppmusic.utils.PrintLog;
@@ -24,7 +22,7 @@ import com.zy.ppmusic.utils.PrintLog;
 /**
  * @author stealfeam
  */
-public class WaveRefreshView extends LinearLayout {
+public class WaveRefreshView extends View {
     private static final String TAG = "WaveRefreshView";
     /**
      * 最小宽度占屏幕的比例

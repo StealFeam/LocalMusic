@@ -9,10 +9,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.SwitchCompat
-import android.support.v7.widget.Toolbar
+import androidx.recyclerview.widget.RecyclerView
+import androidx.appcompat.widget.SwitchCompat
+import androidx.appcompat.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -241,7 +240,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
 //                }
 //            })
             mScanResultRecycler!!.adapter = mScanResultAdapter
-            mScanResultRecycler!!.layoutManager = LinearLayoutManager(this)
+            mScanResultRecycler!!.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
         } else {
             mScanResultAdapter!!.updateBondedDevices(mScanDeviceList!!)
             mScanResultAdapter!!.notifyDataSetChanged()

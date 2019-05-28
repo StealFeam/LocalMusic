@@ -10,10 +10,10 @@
     <!--<uses-permission android:name="android.permission.BLUETOOTH" />-->
     <!--<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />-->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!--<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />-->
     <!--<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />-->
-    <!--<uses-permission android:name="android.permission.INTERNET" />-->
+
     <application
         android:name="com.zy.ppmusic.App"
         android:allowBackup="false"
@@ -25,20 +25,22 @@
         tools:ignore="GoogleAppIndexingWarning">
 
         <activity
-            android:name=".mvp.view.BlScanActivity"
+            android:name="com.zy.ppmusic.mvp.view.BlScanActivity"
             android:theme="@style/AppTheme.NoActionBar.Translate" />
 
         <service
             android:name=".service.MediaService"
             android:exported="false">
+
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
+
         </service>
 
-        <service android:name=".service.LoopService" />
+        <service android:name=".service.LoopService"/>
 
-        <receiver android:name="android.support.v4.media.session.MediaButtonReceiver">
+        <receiver android:name="androidx.media.session.MediaButtonReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
@@ -61,7 +63,7 @@
 
         </activity>
 
-        <activity android:name=".mvp.view.ErrorActivity" />
+        <activity android:name=".mvp.view.ErrorActivity"/>
 
         <meta-data
             android:name="android.max_aspect"

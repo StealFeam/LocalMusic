@@ -3,9 +3,9 @@ package com.zy.ppmusic.widget
 import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
+import androidx.fragment.app.DialogFragment
 import android.support.v4.media.session.MediaControllerCompat
-import android.support.v7.app.AppCompatDialog
+import androidx.appcompat.app.AppCompatDialog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,7 +20,7 @@ import com.zy.ppmusic.utils.Constant
  * @author stealfeam
  * @date 2018/6/16
  */
-class ChooseStyleDialog : DialogFragment(), IChooseNotifyStyleContract.IChooseNotifyStyleView {
+class ChooseStyleDialog : androidx.fragment.app.DialogFragment(), IChooseNotifyStyleContract.IChooseNotifyStyleView {
     private val mPresenter: ChooseNotifyStylePresenter by lazy {
         ChooseNotifyStylePresenter(this)
     }

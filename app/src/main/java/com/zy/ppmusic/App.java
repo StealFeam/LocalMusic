@@ -4,11 +4,9 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Debug;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.DisplayMetrics;
 
-import com.squareup.leakcanary.LeakCanary;
 import com.zy.ppmusic.data.db.DataBaseManager;
 import com.zy.ppmusic.utils.Constant;
 import com.zy.ppmusic.utils.CrashHandler;
@@ -76,31 +74,10 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         mAppInstance = this;
-        if (!BuildConfig.IS_DEBUG) {
-            CrashHandler handler = new CrashHandler(this);
-            handler.attach();
-            Debug.stopMethodTracing();
-        } else {
-            LeakCanary.install(this);
-        }
-        mDbCacheManager = DataBaseManager.getInstance().initDb(this);
+        CrashHandler handler = new CrashHandler(this);
+        handler.attach();
 
-//        Matrix.Builder builder = new Matrix.Builder(this); // build matrix
-//        builder.patchListener(new TestPluginListener(this)); // add general pluginListener
-//        DynamicConfigImplDemo dynamicConfig = new DynamicConfigImplDemo(); // dynamic config
-//
-//        // init plugin
-//        IOCanaryPlugin ioCanaryPlugin = new IOCanaryPlugin(new IOConfig.Builder()
-//                .dynamicConfig(dynamicConfig)
-//                .build());
-//        //add to matrix
-//        builder.plugin(ioCanaryPlugin);
-//
-//        //init matrix
-//        Matrix.init(builder.build());
-//
-//        // start plugin
-//        ioCanaryPlugin.start();
+        mDbCacheManager = DataBaseManager.getInstance().initDb(this);
     }
 
 

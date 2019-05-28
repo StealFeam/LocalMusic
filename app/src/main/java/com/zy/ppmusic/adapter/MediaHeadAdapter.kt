@@ -1,8 +1,8 @@
 package com.zy.ppmusic.adapter
 
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentStatePagerAdapter
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentStatePagerAdapter
 import com.zy.ppmusic.mvp.view.frag.MediaHeadFragment
 import com.zy.ppmusic.utils.DataProvider
 
@@ -13,7 +13,7 @@ import java.util.ArrayList
  * @date 2017/12/26
  */
 
-class MediaHeadAdapter(fm: FragmentManager, pathList: List<String>) : FragmentStatePagerAdapter(fm) {
+class MediaHeadAdapter(fm: androidx.fragment.app.FragmentManager, pathList: List<String>) : androidx.fragment.app.FragmentStatePagerAdapter(fm) {
     private val mPathList: MutableList<String>
     private var isInit = true
 
@@ -42,7 +42,7 @@ class MediaHeadAdapter(fm: FragmentManager, pathList: List<String>) : FragmentSt
         return super.getItemPosition(`object`)
     }
 
-    override fun getItem(position: Int): Fragment {
+    override fun getItem(position: Int): androidx.fragment.app.Fragment {
         if (this.mPathList.isEmpty()) {
             return MediaHeadFragment.createInstance(null)
         }
