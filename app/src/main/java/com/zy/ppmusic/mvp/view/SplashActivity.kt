@@ -15,6 +15,7 @@ import com.zy.ppmusic.utils.SpUtils
 import kotlinx.android.synthetic.main.activity_splash.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
+import kotlin.system.exitProcess
 
 class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     private val requestCode = 0x010
@@ -44,7 +45,6 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
     }
 
     private fun createLoadingAnim(): Animation {
-        println("动画时长：：：$animDuration")
         return AlphaAnimation(0.4f, 1f).apply {
             fillAfter = true
             duration = animDuration
@@ -54,7 +54,6 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
                 override fun onAnimationStart(a: Animation?) = PrintLog.e("onAnimationStart....")
 
                 override fun onAnimationEnd(a: Animation?) {
-                    PrintLog.e("onAnimationEnd......")
                     if (EasyPermissions.hasPermissions(applicationContext, getString(R.string.string_read_external)
                                     , getString(R.string.string_write_external))) {
                         actionToMain()
@@ -102,7 +101,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
                 preference.edit().putBoolean("isInitPermission", true).apply()
             } else {
                 finish()
-                System.exit(0)
+                exitProcess(0)
             }
         }
     }
@@ -112,7 +111,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         if (requestCode == AppSettingsDialog.DEFAULT_SETTINGS_REQ_CODE) {
             if (resultCode == -1) {
                 finish()
-                System.exit(-1)
+                exitProcess(-1)
             } else {
                 if (EasyPermissions.hasPermissions(applicationContext, getString(R.string.string_read_external)
                                 , getString(R.string.string_write_external))) {

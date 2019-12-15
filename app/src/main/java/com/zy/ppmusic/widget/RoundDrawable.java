@@ -13,7 +13,6 @@ import androidx.annotation.Nullable;
  * @author stealfeam
  * @date 2018/1/15
  */
-
 public class RoundDrawable extends Drawable {
     private Paint mPaint;
     private int mRadius;

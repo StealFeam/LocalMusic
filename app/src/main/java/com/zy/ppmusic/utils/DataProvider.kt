@@ -50,7 +50,7 @@ class DataProvider private constructor() {
 
     init {
         musicInfoEntities = ArrayList()
-        mapMetadataArray = androidx.collection.ArrayMap()
+        mapMetadataArray = ArrayMap()
         queueItemList = ArrayList()
         mediaItemList = ArrayList()
         mediaIdList = ArrayList()

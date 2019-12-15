@@ -1,18 +1,13 @@
 package com.zy.ppmusic.adapter
 
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentStatePagerAdapter
 import com.zy.ppmusic.mvp.view.frag.MediaHeadFragment
 import com.zy.ppmusic.utils.DataProvider
-
 import java.util.ArrayList
 
 /**
  * @author stealfeam
  * @date 2017/12/26
  */
-
 class MediaHeadAdapter(fm: androidx.fragment.app.FragmentManager, pathList: List<String>) : androidx.fragment.app.FragmentStatePagerAdapter(fm) {
     private val mPathList: MutableList<String>
     private var isInit = true

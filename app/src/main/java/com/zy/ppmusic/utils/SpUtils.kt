@@ -8,7 +8,7 @@ import com.zy.ppmusic.App
  * @author stealfeam
  * @since 2018/9/6
  */
-class SpUtils {
+class SpUtils private constructor() {
     private val spName = "cache_share"
     private val DEFAULT_STRING_VALUE = "default"
     private val DEFAULT_INT_VALUE = 0

@@ -18,9 +18,7 @@ public class DataBaseManager {
     private DaoMaster.DevOpenHelper mOpenHelper;
     private DaoSession mSession;
 
-    private DataBaseManager() {
-
-    }
+    private DataBaseManager() { }
 
     private static class InstanceHolder{
         private static final DataBaseManager INSTANCE = new DataBaseManager();

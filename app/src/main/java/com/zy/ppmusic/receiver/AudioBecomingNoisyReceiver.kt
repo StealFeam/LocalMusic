@@ -16,8 +16,7 @@ import com.zy.ppmusic.utils.PrintLog
  * 当手机来电话或者播放其他的媒体时
  */
 class AudioBecomingNoisyReceiver(private val context: Context) : BroadcastReceiver() {
-    @Volatile
-    private var mIsRegistered = false
+    @Volatile private var mIsRegistered = false
     private val mAudioNoisyIntentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
     private var mCallBack: AudioNoisyCallBack? = null
 

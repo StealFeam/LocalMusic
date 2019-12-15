@@ -10,7 +10,6 @@ import java.util.Locale
  * @author stealfeam
  * @date 2017/12/27
  */
-
 object PrintLog {
     private var mClassName: String? = null
     private var mMethodName: String? = null

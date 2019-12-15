@@ -153,7 +153,6 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                         Log.e(TAG, "dispatchTouchEvent: 这是到最右侧时触发");
                         return true;
                     }
-
                     return isLastIntercepted && mInterceptDownTime == ev.getDownTime();
                 }
                 break;

@@ -33,7 +33,6 @@ public class RecycleViewDecoration extends RecyclerView.ItemDecoration {
         padding = new int[4];
     }
 
-
     /**
      * padding为可变参数，顺序为left,top,right,bottom
      */

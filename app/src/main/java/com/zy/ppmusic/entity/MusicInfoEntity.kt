@@ -25,10 +25,7 @@ class MusicInfoEntity : Serializable {
      */
     var iconData: ByteArray? = null
 
-    var isExits: Boolean = false
-            get(){
-            return FileUtils.isExits(queryPath)
-        }
+    var isExits: Boolean = FileUtils.isExits(queryPath ?: "")
 
     constructor() {}
 

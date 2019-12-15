@@ -63,7 +63,7 @@ object NotificationUtils {
         val builder = initBuilder(context, mNotificationManager)
         builder.setVisibility(androidx.core.app.NotificationCompat.VISIBILITY_PUBLIC)
         builder.setContentIntent(mediaSession.controller.sessionActivity)
-        builder.setDeleteIntent(androidx.media.session.MediaButtonReceiver.buildMediaButtonPendingIntent(context,
+        builder.setDeleteIntent(MediaButtonReceiver.buildMediaButtonPendingIntent(context,
                 PlaybackStateCompat.ACTION_STOP))
         builder.setVisibility(androidx.core.app.NotificationCompat.VISIBILITY_PUBLIC)
         builder.setSmallIcon(R.drawable.ic_small_notify)
@@ -75,29 +75,24 @@ object NotificationUtils {
             builder.color = ContextCompat.getColor(context, R.color.colorTheme)
         }
 
-        builder.addAction(R.drawable.ic_previous, "上一首",
-                androidx.media.session.MediaButtonReceiver.buildMediaButtonPendingIntent(context,
+        builder.addAction(R.drawable.ic_previous, "上一首", MediaButtonReceiver.buildMediaButtonPendingIntent(context,
                         PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS))
 
         //设置显示的按钮信息
         if (isPlaying) {
-            builder.addAction(R.drawable.ic_system_style_pause, "暂停",
-                    androidx.media.session.MediaButtonReceiver.buildMediaButtonPendingIntent(context,
+            builder.addAction(R.drawable.ic_system_style_pause, "暂停", MediaButtonReceiver.buildMediaButtonPendingIntent(context,
                             PlaybackStateCompat.ACTION_PLAY_PAUSE))
         } else {
-            builder.addAction(R.drawable.ic_system_style_play, "播放",
-                    androidx.media.session.MediaButtonReceiver.buildMediaButtonPendingIntent(context,
+            builder.addAction(R.drawable.ic_system_style_play, "播放", MediaButtonReceiver.buildMediaButtonPendingIntent(context,
                             PlaybackStateCompat.ACTION_PLAY))
         }
 
-        builder.addAction(R.drawable.ic_system_style_next, "下一首",
-                androidx.media.session.MediaButtonReceiver.buildMediaButtonPendingIntent(context,
+        builder.addAction(R.drawable.ic_system_style_next, "下一首", MediaButtonReceiver.buildMediaButtonPendingIntent(context,
                         PlaybackStateCompat.ACTION_SKIP_TO_NEXT))
 
-        builder.addAction(R.drawable.ic_system_style_stop, "关闭",
-                androidx.media.session.MediaButtonReceiver.buildMediaButtonPendingIntent(context,
+        builder.addAction(R.drawable.ic_system_style_stop, "关闭", MediaButtonReceiver.buildMediaButtonPendingIntent(context,
                         PlaybackStateCompat.ACTION_STOP))
-        val mediaStyle: androidx.media.app.NotificationCompat.MediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
+        val mediaStyle: NotificationCompat.MediaStyle = NotificationCompat.MediaStyle()
         mediaStyle.setMediaSession(mediaSession.sessionToken)
         mediaStyle.setShowActionsInCompactView(1, 2, 3)
 
@@ -160,29 +155,23 @@ object NotificationUtils {
         }
 
         if (descriptionCompat != null) {
-            Log.e(TAG, "postNotification: title=" + descriptionCompat.title +
-                    ",subTitle=" + descriptionCompat.subtitle)
-            contentView.setTextViewText(R.id.notify_display_title, StringUtils
-                    .ifEmpty(descriptionCompat.title.toString(), UIUtils.getString(R.string.unknown_name)))
-            contentView.setTextViewText(R.id.notify_display_sub_title, StringUtils
-                    .ifEmpty(descriptionCompat.subtitle.toString(), UIUtils.getString(R.string.unknown_author)))
+            Log.e(TAG, "postNotification: title=" + descriptionCompat.title + ",subTitle=" + descriptionCompat.subtitle)
+            contentView.setTextViewText(R.id.notify_display_title, StringUtils.ifEmpty(descriptionCompat.title.toString(), UIUtils.getString(R.string.unknown_name)))
+            contentView.setTextViewText(R.id.notify_display_sub_title, StringUtils.ifEmpty(descriptionCompat.subtitle.toString(), UIUtils.getString(R.string.unknown_author)))
         } else {
             Log.e(TAG, "postNotification: description is null")
         }
         contentView.setImageViewResource(R.id.notify_action_next,R.drawable.ic_next)
         contentView.setImageViewResource(R.id.notify_action_close,R.mipmap.ic_black_close)
 
-        contentView.setOnClickPendingIntent(R.id.notify_action_play_pause,
-                androidx.media.session.MediaButtonReceiver.buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_PLAY_PAUSE))
-        contentView.setOnClickPendingIntent(R.id.notify_action_next,
-                androidx.media.session.MediaButtonReceiver.buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_SKIP_TO_NEXT))
-        contentView.setOnClickPendingIntent(R.id.notify_action_close,
-                androidx.media.session.MediaButtonReceiver.buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_STOP))
+        contentView.setOnClickPendingIntent(R.id.notify_action_play_pause, MediaButtonReceiver.buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_PLAY_PAUSE))
+        contentView.setOnClickPendingIntent(R.id.notify_action_next, MediaButtonReceiver.buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_SKIP_TO_NEXT))
+        contentView.setOnClickPendingIntent(R.id.notify_action_close, MediaButtonReceiver.buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_STOP))
 
         val builder = initBuilder(context, mNotificationManager)
         builder.setContent(contentView)
         builder.setContentIntent(sessionCompat.controller.sessionActivity)
-        builder.setDeleteIntent(androidx.media.session.MediaButtonReceiver.buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_STOP))
+        builder.setDeleteIntent(MediaButtonReceiver.buildMediaButtonPendingIntent(context, PlaybackStateCompat.ACTION_STOP))
         builder.setVisibility(androidx.core.app.NotificationCompat.VISIBILITY_PUBLIC)
         builder.setSmallIcon(R.drawable.ic_small_notify)
 
@@ -197,27 +186,21 @@ object NotificationUtils {
      * @return 生成好的builder
      */
     private fun initBuilder(context: Context, notificationManager: NotificationManager): androidx.core.app.NotificationCompat.Builder {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             //获取通道
             var notificationChannel: NotificationChannel? = notificationManager.getNotificationChannel(TAG)
             if (notificationChannel == null) {
                 val group = NotificationChannelGroup(NOTIFY_CHANNEL_ID, context.getString(R.string.app_name))
                 notificationManager.createNotificationChannelGroup(group)
 
-                notificationChannel = NotificationChannel(NOTIFY_CHANNEL_ID,
-                        context.getString(R.string.app_name), NotificationManager.IMPORTANCE_DEFAULT)
+                notificationChannel = NotificationChannel(NOTIFY_CHANNEL_ID, context.getString(R.string.app_name), NotificationManager.IMPORTANCE_DEFAULT)
 
                 notificationChannel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 notificationChannel.group = group.id
-                //设置通知音效
                 notificationChannel.setSound(null, null)
-                //取消提示灯显示
                 notificationChannel.enableLights(false)
-                //取消震动
                 notificationChannel.enableVibration(false)
-                //取消显示角标
                 notificationChannel.setShowBadge(false)
-                notificationChannel.description = "这是描述"
                 notificationManager.createNotificationChannel(notificationChannel)
             }
         }

@@ -6,14 +6,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import androidx.annotation.NonNull;
 import android.util.DisplayMetrics;
-
 import com.zy.ppmusic.data.db.DataBaseManager;
 import com.zy.ppmusic.utils.Constant;
 import com.zy.ppmusic.utils.CrashHandler;
 import com.zy.ppmusic.utils.SpUtils;
-
 import java.lang.ref.WeakReference;
-
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 
@@ -35,8 +32,6 @@ public class App extends Application {
         //px = density * dp
         //density= dpi / 160
         //px = dp * (dpi / 160)
-
-        //以360dpi
         final float targetDensity = appDisplayMetrics.widthPixels / 360;
         final int targetDensityDpi = (int) (160 * targetDensity);
 
@@ -79,8 +74,6 @@ public class App extends Application {
 
         mDbCacheManager = DataBaseManager.getInstance().initDb(this);
     }
-
-
 
     public DataBaseManager getDatabaseManager(){
         return mDbCacheManager;

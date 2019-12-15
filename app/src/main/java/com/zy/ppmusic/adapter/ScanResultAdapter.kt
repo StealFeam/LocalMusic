@@ -18,8 +18,7 @@ import kotlin.collections.ArrayList
 /**
  * @author ZY
  */
-class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
-        androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
+class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var mBondDevices: ArrayList<ScanResultEntity> = ArrayList()
     private val mScanDevices: ArrayList<ScanResultEntity> = ArrayList()
     private var listener: OnItemClickListener? = null
@@ -132,7 +131,6 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) :
             } else {
                 holder.delBond!!.visibility = View.GONE
             }
-
         }
     }
 

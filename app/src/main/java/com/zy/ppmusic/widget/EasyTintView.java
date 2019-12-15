@@ -27,8 +27,8 @@ import java.util.Locale;
 
 /**
  * @author stealfeam
- * 问题1:创建多个实例
- * 问题2：每次都要寻找ViewGroup
+ * 问题1: 创建多个实例
+ * 问题2: 每次都要寻找ViewGroup
  */
 public class EasyTintView extends AppCompatTextView {
     public static final int TINT_LONG = 3000;

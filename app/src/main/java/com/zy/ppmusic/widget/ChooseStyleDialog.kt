@@ -34,9 +34,7 @@ class ChooseStyleDialog : androidx.fragment.app.DialogFragment(), IChooseNotifyS
         }
         mRadioGroup = rootView.findViewById(R.id.rb_choose_parent)
         val localCheckId = mPresenter.getLocalStyle()
-        val checkId = if (localCheckId >= 0)
-            localCheckId else
-            R.id.rb_choose_custom
+        val checkId = if (localCheckId >= 0) localCheckId else R.id.rb_choose_custom
         mRadioGroup.check(checkId)
         mRadioGroup.setOnCheckedChangeListener { _, checkedId ->
             activity?.apply {
@@ -49,7 +47,6 @@ class ChooseStyleDialog : androidx.fragment.app.DialogFragment(), IChooseNotifyS
                 }
             }
         }
-
         return rootView
     }
 

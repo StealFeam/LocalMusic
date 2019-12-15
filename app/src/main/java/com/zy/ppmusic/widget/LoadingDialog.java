@@ -34,8 +34,7 @@ public class LoadingDialog extends AppCompatDialog {
             return;
         }
         if (mContentView == null) {
-            mContentView = LayoutInflater
-                    .from(mContextWeak.get()).inflate(R.layout.loading_layout, null);
+            mContentView = LayoutInflater.from(mContextWeak.get()).inflate(R.layout.loading_layout, null);
             setContentView(mContentView);
         }
         mContentView.setVisibility(View.VISIBLE);

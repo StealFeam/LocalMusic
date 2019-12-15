@@ -115,7 +115,6 @@ public class TimBackGroundDrawable extends Drawable {
                 mPath.lineTo(area.width(), area.height() / 3);
                 break;
         }
-
         mPath.lineTo(0, area.height());
         mPath.close();
         canvas.clipPath(mPath);

@@ -37,8 +37,7 @@ public class PlayQueueAdapter extends AbstractSingleTypeAdapter {
         this.selectIndex = selectIndex;
     }
 
-    public PlayQueueAdapter() {
-    }
+    public PlayQueueAdapter() { }
 
     public void setData(List<MediaSessionCompat.QueueItem> mData) {
         this.mData = mData;

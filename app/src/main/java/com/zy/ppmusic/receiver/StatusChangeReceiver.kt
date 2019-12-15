@@ -47,7 +47,6 @@ class StatusChangeReceiver(ref: BlScanActivity) : BroadcastReceiver() {
                 println("other action=" + intent.action)
             }
         }
-
     }
 
 }

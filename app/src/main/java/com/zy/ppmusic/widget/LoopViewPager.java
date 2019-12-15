@@ -114,7 +114,6 @@ public class LoopViewPager extends ViewPager {
                 if (mSkipToFirst) {
                     setCurrentItem(0, false);
                     mSkipToFirst = false;
-                    mSkipToFirst = false;
                     return true;
                 }
                 break;

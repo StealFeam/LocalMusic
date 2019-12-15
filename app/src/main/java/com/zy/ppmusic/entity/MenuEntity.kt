@@ -6,18 +6,13 @@ import android.os.Parcelable
 /**
  * @author stealfeam
  */
-class MenuEntity : Parcelable {
+class MenuEntity() : Parcelable {
     var icon: Int = 0
     var title: String? = null
 
-    constructor(icon: Int, title: String) {
-        this.icon = icon
-        this.title = title
-    }
-
-    protected constructor(`in`: Parcel) {
-        icon = `in`.readInt()
-        title = `in`.readString()
+    constructor(parcel: Parcel) : this() {
+        icon = parcel.readInt()
+        title = parcel.readString()
     }
 
     override fun describeContents(): Int {
@@ -29,16 +24,13 @@ class MenuEntity : Parcelable {
         dest.writeString(title)
     }
 
-    companion object {
+    companion object CREATOR : Parcelable.Creator<MenuEntity> {
+        override fun createFromParcel(parcel: Parcel): MenuEntity {
+            return MenuEntity(parcel)
+        }
 
-        val CREATOR: Parcelable.Creator<MenuEntity> = object : Parcelable.Creator<MenuEntity> {
-            override fun createFromParcel(`in`: Parcel): MenuEntity {
-                return MenuEntity(`in`)
-            }
-
-            override fun newArray(size: Int): Array<MenuEntity> {
-                return newArray(size)
-            }
+        override fun newArray(size: Int): Array<MenuEntity?> {
+            return arrayOfNulls(size)
         }
     }
 }

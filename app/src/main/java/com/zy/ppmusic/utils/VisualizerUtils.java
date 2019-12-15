@@ -7,13 +7,11 @@ import android.media.audiofx.Visualizer;
  * @author stealfeam
  * @date 2017/12/25
  */
-
 public class VisualizerUtils {
     private static VisualizerUtils instance = new VisualizerUtils();
     private Visualizer visualizer;
 
-    public VisualizerUtils() {
-    }
+    public VisualizerUtils() { }
 
     private static VisualizerUtils get() {
         return instance;

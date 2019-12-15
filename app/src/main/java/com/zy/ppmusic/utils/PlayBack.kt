@@ -147,7 +147,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
                     }
                     reset.await()
                     mMediaPlayer?.seekTo(seekPosition)
-                    if(shouldPlay){
+                    if(shouldPlay) {
                         play()
                     }
                 }
@@ -205,7 +205,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
     }
 
     private fun getAudioFocus() {
-        val result: Int = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        val result: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val builder = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
             builder.setOnAudioFocusChangeListener(this)
             //设置音频焦点被占用自动暂停
@@ -353,8 +353,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
         PrintLog.d("onAudioFocusChange() called with: focusChange = [$focusChange]")
         if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
             mAudioFocus = AUDIO_FOCUSED
-        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS ||
-                focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
+        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS || focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
                 || focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
             val canDuck = focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK
             mAudioFocus = if (canDuck) AUDIO_NO_FOCUS_CAN_DUCK else AUDIO_NO_FOCUS_NO_DUCK

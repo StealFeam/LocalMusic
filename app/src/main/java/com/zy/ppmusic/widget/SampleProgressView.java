@@ -108,18 +108,15 @@ public class SampleProgressView extends View {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                int x = (int) event.getX();
-                int y = (int) event.getY();
-                boolean result = mLineArea.contains(x, y);
-                if (result) {
-                    currentState = STATE_TOUCH;
-                    invalidate();
-                }
-                return result;
-            default:
-                break;
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            int x = (int) event.getX();
+            int y = (int) event.getY();
+            boolean result = mLineArea.contains(x, y);
+            if (result) {
+                currentState = STATE_TOUCH;
+                invalidate();
+            }
+            return result;
         }
         return super.dispatchTouchEvent(event);
     }

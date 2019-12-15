@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.greenrobot.greendao'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android-extensions'
 
 android {
@@ -47,46 +48,31 @@ android {
     lintOptions {
         abortOnError true
     }
-    kotlin {
-        experimental {
-            coroutines "enable"
-        }
-    }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    //    java测试库
     androidTestImplementation('androidx.test.espresso:espresso-core:3.1.0', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    //一些测试库
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.mockito:mockito-core:2.19.0'
     testImplementation 'org.powermock:powermock-module-junit4:1.7.3'
     testImplementation 'org.powermock:powermock-module-junit4-rule:1.7.3'
     testImplementation 'org.powermock:powermock-api-mockito2:1.7.3'
     testImplementation 'org.powermock:powermock-classloading-xstream:1.7.3'
-    //    系统库
     implementation deps.lib.cardview
     implementation deps.lib.design
-    //    Glide相关 显示专辑图片
     implementation deps.lib.glide
-    //    annotationProcessor 'com.github.bumptech.glide:compiler:4.7.1'
-    //  kotlin支持 双引号代表可以使用表达式
+    // annotationProcessor 'com.github.bumptech.glide:compiler:4.7.1'
     implementation deps.lib.kotlin_jdk
     implementation deps.lib.kotlin_coroutines
-//    koin https://github.com/InsertKoinIO/koin
+    //    koin https://github.com/InsertKoinIO/koin
     implementation deps.lib.koin
-    //    constraint库
     implementation deps.lib.constraint
-    //    greendao数据库
     implementation deps.lib.greendao
-    //    权限申请库
     implementation project(':easypermissions')
-    //ViewModel and LiveData
     implementation deps.lib.lifecycle
-    //leak检测
     debugImplementation deps.lib.leakcanary
     releaseImplementation deps.lib.leakcanary_no_op
 }
