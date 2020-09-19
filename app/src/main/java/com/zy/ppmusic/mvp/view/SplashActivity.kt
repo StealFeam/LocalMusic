@@ -68,7 +68,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         }
     }
 
-    override fun getResources(): Resources = App.getInstance().resources
+    override fun getResources(): Resources = App.instance!!.resources
 
     fun actionToMain() {
         MediaActivity.action(this)

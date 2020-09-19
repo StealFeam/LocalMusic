@@ -27,7 +27,7 @@ class DataProvider private constructor() {
     @Volatile
     var queueItemList: ArrayList<MediaSessionCompat.QueueItem>
     val mediaItemList: ArrayList<MediaBrowserCompat.MediaItem>
-    private val mapMetadataArray: androidx.collection.ArrayMap<String, MediaMetadataCompat>
+    private val mapMetadataArray: ArrayMap<String, MediaMetadataCompat>
     /**
      * 扫描到的路径
      */
@@ -58,7 +58,7 @@ class DataProvider private constructor() {
 
     fun transFormStringData(pathList: ArrayList<String>) {
         clearData()
-        queryMedia(App.getInstance(), pathList)
+        queryMedia(App.appBaseContext, pathList)
     }
 
     private fun isMemoryHasData():Boolean{
@@ -80,11 +80,11 @@ class DataProvider private constructor() {
             }
         }
         PrintLog.e("未检查到本地缓存-----$forceCache")
-        ScanMusicFile.get().startScan(App.getInstance(),object:ScanMusicFile.OnScanCompleteListener{
+        ScanMusicFile.get().startScan(App.appBaseContext, object:ScanMusicFile.OnScanCompleteListener{
             override fun onComplete(paths: ArrayList<String>) {
                 transFormStringData(paths)
                 //缓存到本地
-                FileUtils.saveObject(musicInfoEntities,Constant.CACHE_FILE_PATH)
+                FileUtils.saveObject(musicInfoEntities, Constant.CACHE_FILE_PATH)
             }
         })
     }
@@ -121,7 +121,7 @@ class DataProvider private constructor() {
                 PrintLog.print(itemPath)
             }
             //根据音频地址获取uri，区分为内部存储和外部存储
-            val audioUri = MediaStore.Audio.Media.getContentUriForPath(itemPath)
+            val audioUri = MediaStore.Audio.Media.getContentUriForPath(itemPath) ?: continue
             //仅查询是音乐的文件
             val query = contentResolver.query(audioUri, null,
                     MediaStore.Audio.Media.IS_MUSIC + "=?", arrayOf("1"), null)
@@ -157,6 +157,7 @@ class DataProvider private constructor() {
             val artist = query.getString(query.getColumnIndex(MediaStore.Audio.Media.ARTIST))
             val duration = query.getLong(query.getColumnIndex(MediaStore.Audio.Media.DURATION))
             val size = query.getString(query.getColumnIndex(MediaStore.Audio.Media.SIZE))
+            // RELATIVE_PATH
             val queryPath = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DATA))
             //过滤本地不存在的媒体文件
             if (!FileUtils.isExits(queryPath)) {
@@ -204,7 +205,7 @@ class DataProvider private constructor() {
                 val mediaDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
                 var length: Long = 0
                 if (!TextUtils.isEmpty(mediaDuration)) {
-                    length = mediaDuration.toLong()
+                    length = mediaDuration?.toLong() ?: continue
                     if (length < 20 * 1000) {
                         continue
                     }

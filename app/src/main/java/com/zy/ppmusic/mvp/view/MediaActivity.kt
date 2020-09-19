@@ -270,7 +270,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item!!.itemId) {
             R.id.menu_media_scan -> {
                 showMsg(getString(R.string.start_scanning_the_local_file))
@@ -581,12 +581,12 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         mHeadAdapter?.setPathList(DataProvider.get().pathList)
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
+    override fun onSaveInstanceState(outState: Bundle) {
         //清除状态缓存，避免出现异常，界面刷新由onStart方法中完成
         //猜测是由于fragment数据大小超出限制
 //        outState?.clear()
         super.onSaveInstanceState(Bundle())
-        println("onSaveInstanceState............................." + outState?.toString())
+        println("onSaveInstanceState.............................$outState")
     }
 
     override fun loadFinished(isForce: Boolean) {

@@ -14,7 +14,7 @@ fun loge(tag: String, str: String) {
 }
 
 fun toast(msg: String) {
-    Toast.makeText(App.getAppBaseContext(), msg, Toast.LENGTH_SHORT).show()
+    Toast.makeText(App.appBaseContext, msg, Toast.LENGTH_SHORT).show()
 }
 
 fun String.isFileExits(): Boolean {

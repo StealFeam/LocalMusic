@@ -19,12 +19,12 @@ class DeviceFoundReceiver(weakReference: BlScanActivity) : BroadcastReceiver() {
         Log.d(TAG, "onReceive() called with: context = [$context], intent = [$intent]")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             if (intent.action == BluetoothDevice.ACTION_FOUND) {
-                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE) ?: return
                 weakReference.get()?.foundNewDevice(device)
             }
         } else {
             if (BluetoothDevice.ACTION_FOUND == intent.action) {
-                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE) ?: return
                 weakReference.get()?.foundNewDevice(device)
             }
         }

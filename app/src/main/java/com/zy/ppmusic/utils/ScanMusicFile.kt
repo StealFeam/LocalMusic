@@ -29,7 +29,7 @@ class ScanMusicFile private constructor() {
      */
     private var mExternalStoragePath: String? = null
 
-    fun startScan(c: Context,l:OnScanCompleteListener) {
+    fun startScan(c: Context, l:OnScanCompleteListener) {
         val context = c.applicationContext
         if (mInnerStoragePath == null) {
             mInnerStoragePath = FileUtils.getStoragePath(context, false)

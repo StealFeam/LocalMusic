@@ -37,15 +37,10 @@ class ChooseStyleDialog : androidx.fragment.app.DialogFragment(), IChooseNotifyS
         val checkId = if (localCheckId >= 0) localCheckId else R.id.rb_choose_custom
         mRadioGroup.check(checkId)
         mRadioGroup.setOnCheckedChangeListener { _, checkedId ->
-            activity?.apply {
-                val mediaController = MediaControllerCompat.getMediaController(requireActivity())
-                mediaController?.let {
-                    val extra = Bundle()
-                    extra.putInt(Constant.CHOOSE_STYLE_EXTRA, checkedId)
-                    mediaController.sendCommand(MediaService.COMMAND_CHANGE_NOTIFY_STYLE,
-                            extra, null)
-                }
-            }
+            val mediaController = MediaControllerCompat.getMediaController(requireActivity())
+            val extra = Bundle()
+            extra.putInt(Constant.CHOOSE_STYLE_EXTRA, checkedId)
+            mediaController.sendCommand(MediaService.COMMAND_CHANGE_NOTIFY_STYLE, extra, null)
         }
         return rootView
     }
@@ -54,7 +49,7 @@ class ChooseStyleDialog : androidx.fragment.app.DialogFragment(), IChooseNotifyS
         return AppCompatDialog(activity, R.style.NotifyDialogStyle)
     }
 
-    override fun onDismiss(dialog: DialogInterface?) {
+    override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
         mPresenter.changeStyle(mRadioGroup.checkedRadioButtonId)
     }

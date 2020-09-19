@@ -6,6 +6,7 @@ import android.os.Environment
 import android.os.storage.StorageManager
 import android.text.TextUtils
 import android.util.Log
+import com.zy.ppmusic.App
 import java.io.*
 import java.lang.reflect.Array
 
@@ -22,8 +23,8 @@ object FileUtils {
 
     val downloadFile: String
         get() {
-            val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            return downloadDir.absolutePath
+            val downloadDir = App.appBaseContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+            return downloadDir?.absolutePath ?: ""
         }
 
     /**
@@ -32,32 +33,9 @@ object FileUtils {
      */
     fun getStoragePath(mContext: Context, isExternalStorage: Boolean): String? {
         val mStorageManager = mContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val storageVolumes = mStorageManager.storageVolumes
-            for (storageVolume in storageVolumes) {
-                storageVolume.getDescription(mContext)
-            }
+        for (volume in mStorageManager.storageVolumes) {
+            if (volume.isRemovable == isExternalStorage) return volume.directory?.absolutePath
         }
-        val storageVolumeClazz: Class<*>
-        try {
-            storageVolumeClazz = Class.forName("android.os.storage.StorageVolume")
-            val getVolumeList = mStorageManager.javaClass.getMethod("getVolumeList")
-            val getPath = storageVolumeClazz.getMethod("getPath")
-            val isRemovable = storageVolumeClazz.getMethod("isRemovable")
-            val result = getVolumeList.invoke(mStorageManager)
-            val length = Array.getLength(result)
-            for (i in 0 until length) {
-                val storageVolumeElement = Array.get(result, i)
-                val path = getPath.invoke(storageVolumeElement) as String
-                val removable = isRemovable.invoke(storageVolumeElement) as Boolean
-                if (isExternalStorage == removable) {
-                    return path
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
         return null
     }
 
@@ -252,11 +230,10 @@ object FileUtils {
             return false
         }
         File(path).apply {
-            if(this.exists()){
+            if (this.exists()) {
                 return this.delete()
             }
         }
         return false
     }
-
 }

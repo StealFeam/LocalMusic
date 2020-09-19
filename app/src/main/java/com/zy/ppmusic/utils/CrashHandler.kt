@@ -29,6 +29,7 @@ class CrashHandler(private val mContext: Context) : Thread.UncaughtExceptionHand
         if (e == null) {
             return
         }
+        e.printStackTrace()
         val it = Intent(mContext, ErrorActivity::class.java)
         it.putExtra(ErrorActivity.ERROR_INFO, e)
         it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

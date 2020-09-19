@@ -7,7 +7,6 @@ import android.support.v4.media.session.MediaControllerCompat
 import com.zy.ppmusic.mvp.base.AbstractBasePresenter
 import com.zy.ppmusic.mvp.base.IBaseModel
 import com.zy.ppmusic.mvp.base.IBaseView
-import com.zy.ppmusic.utils.ScanMusicFile
 
 /**
  * @author stealfeam

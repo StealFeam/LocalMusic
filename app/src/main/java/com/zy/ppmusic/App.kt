@@ -1,86 +1,59 @@
-package com.zy.ppmusic;
+package com.zy.ppmusic
 
-import android.app.Activity;
-import android.app.Application;
-import android.content.Context;
-import android.content.SharedPreferences;
-import androidx.annotation.NonNull;
-import android.util.DisplayMetrics;
-import com.zy.ppmusic.data.db.DataBaseManager;
-import com.zy.ppmusic.utils.Constant;
-import com.zy.ppmusic.utils.CrashHandler;
-import com.zy.ppmusic.utils.SpUtils;
-import java.lang.ref.WeakReference;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
+import android.app.Activity
+import android.app.Application
+import android.content.Context
+import android.content.SharedPreferences
+import com.zy.ppmusic.data.db.DataBaseManager
+import com.zy.ppmusic.utils.Constant
+import com.zy.ppmusic.utils.CrashHandler
+import com.zy.ppmusic.utils.SpUtils.Companion.get
+import java.lang.ref.WeakReference
 
 /**
  * @author stealfeam
  */
-public class App extends Application {
+class App : Application() {
 
-    public static App getInstance() {
-        return mAppInstance;
+    var databaseManager: DataBaseManager? = null
+        private set
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+        get().putOperator { editor: SharedPreferences.Editor ->
+            editor.putLong(Constant.SP_APP_ATTACH_TIME, System.currentTimeMillis())
+            null
+        }
+        val handler = CrashHandler(this)
+        handler.attach()
+        databaseManager = DataBaseManager.getInstance().initDb(this)
     }
 
-    private static App mAppInstance;
+    val context: Context
+        get() = this.applicationContext
 
-    public static void setCustomDensity(@NonNull Activity activity) {
-        final Application application = App.getInstance();
-        final DisplayMetrics appDisplayMetrics = application.getResources().getDisplayMetrics();
+    companion object {
+        var instance: App? = null
 
-        //px = density * dp
-        //density= dpi / 160
-        //px = dp * (dpi / 160)
-        final float targetDensity = appDisplayMetrics.widthPixels / 360;
-        final int targetDensityDpi = (int) (160 * targetDensity);
+        @JvmStatic fun setCustomDensity(activity: Activity) {
+            val application: Application? = instance
+            val appDisplayMetrics = application!!.resources.displayMetrics
 
-        appDisplayMetrics.density = targetDensity;
-        appDisplayMetrics.densityDpi = targetDensityDpi;
-        appDisplayMetrics.scaledDensity = targetDensity;
+            //px = density * dp
+            //density= dpi / 160
+            //px = dp * (dpi / 160)
+            val targetDensity = appDisplayMetrics.widthPixels / 360.toFloat()
+            val targetDensityDpi = (160 * targetDensity).toInt()
+            appDisplayMetrics.density = targetDensity
+            appDisplayMetrics.densityDpi = targetDensityDpi
+            appDisplayMetrics.scaledDensity = targetDensity
+            val activityDisplayMetrics = activity.resources.displayMetrics
+            activityDisplayMetrics.scaledDensity = targetDensity
+            activityDisplayMetrics.density = activityDisplayMetrics.scaledDensity
+            activityDisplayMetrics.densityDpi = targetDensityDpi
+        }
 
-        final DisplayMetrics activityDisplayMetrics = activity.getResources().getDisplayMetrics();
-        activityDisplayMetrics.density = activityDisplayMetrics.scaledDensity = targetDensity;
-        activityDisplayMetrics.densityDpi = targetDensityDpi;
+        @JvmStatic val appBaseContext: Context get() = instance!!.baseContext
     }
-
-    private static WeakReference<Context> baseContext;
-
-    public static Context getAppBaseContext(){
-        return baseContext.get();
-    }
-
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(base);
-        baseContext = new WeakReference<>(base);
-        SpUtils.get().putOperator(new Function1<SharedPreferences.Editor, Unit>() {
-            @Override
-            public Unit invoke(SharedPreferences.Editor editor) {
-                editor.putLong(Constant.SP_APP_ATTACH_TIME, System.currentTimeMillis());
-                return null;
-            }
-        });
-    }
-
-    private DataBaseManager mDbCacheManager;
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        mAppInstance = this;
-        CrashHandler handler = new CrashHandler(this);
-        handler.attach();
-
-        mDbCacheManager = DataBaseManager.getInstance().initDb(this);
-    }
-
-    public DataBaseManager getDatabaseManager(){
-        return mDbCacheManager;
-    }
-
-    public Context getContext() {
-        return this.getApplicationContext();
-    }
-
 }

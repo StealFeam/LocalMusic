@@ -19,23 +19,6 @@ public abstract class AbstractBaseMvpActivity<P extends AbstractBasePresenter> e
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (BuildConfig.IS_DEBUG) {
-            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-                    .detectAll()
-                    .detectCustomSlowCalls()
-                    .permitAll()
-                    .penaltyDeath()
-                    .penaltyDialog()
-                    .penaltyLog()
-                    .build());
-            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                    .detectLeakedSqlLiteObjects()
-                    .detectLeakedClosableObjects()
-                    .detectAll()
-                    .penaltyLog()
-                    .penaltyDeath()
-                    .build());
-        }
         App.setCustomDensity(this);
         featureBeforeCreate();
         setContentView(getContentViewId());

@@ -26,6 +26,7 @@ import com.zy.ppmusic.receiver.AudioBecomingNoisyReceiver
 import com.zy.ppmusic.receiver.LoopReceiver
 import com.zy.ppmusic.utils.*
 import kotlinx.coroutines.*
+import kotlin.system.exitProcess
 
 /**
  * @author stealfeam
@@ -162,21 +163,21 @@ class MediaService : MediaBrowserServiceCompat() {
                 + flags + "], startId = [" + startId + "]")
         initPlayBack()
         //也可以在这接收通知按钮的event事件
-        androidx.media.session.MediaButtonReceiver.handleIntent(mMediaSessionCompat, intent)
+        MediaButtonReceiver.handleIntent(mMediaSessionCompat, intent)
         return Service.START_NOT_STICKY
     }
 
-    override fun onGetRoot(clientPackageName: String, clientUId: Int, bundle: Bundle?): MediaBrowserServiceCompat.BrowserRoot? {
+    override fun onGetRoot(clientPackageName: String, clientUId: Int, bundle: Bundle?): BrowserRoot? {
         Log.d(TAG, "onGetRoot() called with: clientPackageName = [" + clientPackageName +
                 "], clientUId = [" + clientUId + "], bundle = [" + bundle + "]")
         return if (clientPackageName == packageName) {
-            MediaBrowserServiceCompat.BrowserRoot(MY_ROOT_ID, bundle)
+            BrowserRoot(MY_ROOT_ID, bundle)
         } else {
-            MediaBrowserServiceCompat.BrowserRoot(EMPTY_ROOT_ID, bundle)
+            BrowserRoot(EMPTY_ROOT_ID, bundle)
         }
     }
 
-    override fun onLoadChildren(s: String, result: MediaBrowserServiceCompat.Result<List<MediaBrowserCompat.MediaItem>>) {
+    override fun onLoadChildren(s: String, result: Result<List<MediaBrowserCompat.MediaItem>>) {
         Log.d(TAG, "service onLoadChildren() called with: s = [$s], result = [$result]")
         if (s == MY_ROOT_ID) {
             result.detach()
@@ -208,7 +209,7 @@ class MediaService : MediaBrowserServiceCompat() {
     private fun handleStopRequest(isNeedEnd: Boolean) {
         Log.d(TAG, "handleStopRequest() called with: isNeedEnd = [$isNeedEnd]")
         if (!isNeedEnd) {
-            changeMediaByMode(true, true)
+            changeMediaByMode(isNext = true, true)
         } else {
             if (mPlayBack!!.state == PlaybackStateCompat.STATE_PLAYING) {
                 handlePlayOrPauseRequest()
@@ -220,8 +221,8 @@ class MediaService : MediaBrowserServiceCompat() {
             mAudioReceiver?.unregister()
             stopForeground(true)
             stopSelf()
-            android.os.Process.killProcess(Process.myPid())
-            System.exit(-1)
+            Process.killProcess(Process.myPid())
+            exitProcess(-1)
         }
     }
 
@@ -282,7 +283,7 @@ class MediaService : MediaBrowserServiceCompat() {
      */
     private fun savePlayingRecord() {
         PrintLog.d("开始保存记录-----")
-        App.getInstance().databaseManager.apply {
+        App.instance?.databaseManager?.apply {
             deleteAll()
             insetEntity(buildCacheEntity())
         }
@@ -416,7 +417,7 @@ class MediaService : MediaBrowserServiceCompat() {
         super.onDestroy()
         Log.d(TAG, "onDestroy() called")
         NotificationUtils.cancelAllNotify(this)
-        App.getInstance().databaseManager.closeConn()
+        App.instance?.databaseManager?.closeConn()
         mAudioReceiver?.unregister()
         mMediaSessionCompat?.release()
         if (mCountDownTimer != null) {
@@ -431,7 +432,7 @@ class MediaService : MediaBrowserServiceCompat() {
 
     fun stopLoop() {
         if (receiver != null) {
-            androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver!!)
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver!!)
         }
         stopService(Intent(this, LoopService::class.java))
     }
@@ -442,7 +443,7 @@ class MediaService : MediaBrowserServiceCompat() {
         }
         stopLoop()
         startService(Intent(this, LoopService::class.java))
-        androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).registerReceiver(receiver!!, filter)
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver!!, filter)
     }
 
     /**
@@ -451,8 +452,8 @@ class MediaService : MediaBrowserServiceCompat() {
     fun updatePositionToSession() {
         GlobalScope.launch(Dispatchers.IO) {
             val bundle = Bundle()
-            bundle.putInt(MediaService.UPDATE_POSITION_EVENT, mPlayBack!!.currentStreamPosition)
-            mMediaSessionCompat?.sendSessionEvent(MediaService.UPDATE_POSITION_EVENT, bundle)
+            bundle.putInt(UPDATE_POSITION_EVENT, mPlayBack!!.currentStreamPosition)
+            mMediaSessionCompat?.sendSessionEvent(UPDATE_POSITION_EVENT, bundle)
         }
     }
 
@@ -470,12 +471,6 @@ class MediaService : MediaBrowserServiceCompat() {
                 lastChangeMis = System.currentTimeMillis()
             }
             PrintLog.d("mediaId-----$mediaId")
-//            if (mUpdateRunnable == null) {
-//                mUpdateRunnable = UpdateRunnable(this)
-//            }
-//            mUpdateRunnable?.setMediaId(mediaId)
-//            mUpdateRunnable?.setSeekToPosition(shouldSeekToPosition)
-//            mUpdateRunnable?.isPlayWhenPrepared(shouldPlayWhenPrepared)
             GlobalScope.launch(Dispatchers.Default) {
                 updateTask(mediaId, shouldPlayWhenPrepared, shouldSeekToPosition)
             }
@@ -569,7 +564,7 @@ class MediaService : MediaBrowserServiceCompat() {
                 } else if (ACTION_PLAY_INIT == action) {
                     GlobalScope.launch(Dispatchers.Main) {
                         val job = async(Dispatchers.IO) {
-                            return@async App.getInstance().databaseManager.entity
+                            return@async App.instance!!.databaseManager!!.entity
                         }
                         val cacheEntity = job.await()
                         if (cacheEntity != null) {
@@ -618,64 +613,47 @@ class MediaService : MediaBrowserServiceCompat() {
 
         override fun onSkipToNext() {
             Log.d(TAG, "onSkipToNext() called")
-            changeMediaByMode(true, false)
+            changeMediaByMode(isNext = true, false)
         }
 
         override fun onSkipToPrevious() {
             Log.d(TAG, "onSkipToPrevious() called")
-            changeMediaByMode(false, false)
+            changeMediaByMode(isNext = false, false)
         }
 
         override fun onMediaButtonEvent(mediaButtonEvent: Intent): Boolean {
-            val keyEvent = mediaButtonEvent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT)
-            when {
-                keyEvent.action == KeyEvent.ACTION_DOWN -> {
+            val keyEvent = mediaButtonEvent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT) ?: return true
+            when (keyEvent.action) {
+                KeyEvent.ACTION_DOWN -> {
                     Log.w(TAG, "onMediaButtonEvent: up=" + keyEvent.action +
                             ",code=" + keyEvent.keyCode)
                     when (keyEvent.keyCode) {
                         //点击下一首
-                        KeyEvent.KEYCODE_MEDIA_NEXT -> changeMediaByMode(true, false)
+                        KeyEvent.KEYCODE_MEDIA_NEXT -> changeMediaByMode(isNext = true, false)
                         //点击关闭
                         KeyEvent.KEYCODE_MEDIA_STOP -> handleStopRequest(true)
                         //点击上一首（目前没有）
-                        KeyEvent.KEYCODE_MEDIA_PREVIOUS -> changeMediaByMode(false, false)
+                        KeyEvent.KEYCODE_MEDIA_PREVIOUS -> changeMediaByMode(isNext = false, false)
                         //点击播放按钮
                         KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY -> {
                             Log.e(TAG, "onMediaButtonEvent: 点击了播放按钮")
                             handlePlayOrPauseRequest()
                         }
-                        else -> {
-                        }
                     }
                 }
-                keyEvent.action == KeyEvent.ACTION_UP -> {
+                KeyEvent.ACTION_UP -> {
                     //如果有线耳机上的播放键快速点击两次且时间在300毫秒以内，则视为下一首
                     if (keyEvent.keyCode == KeyEvent.KEYCODE_HEADSETHOOK) {
                         PrintLog.d("按钮抬起走了这里")
                         loge(keyEvent.toString())
                         mHandler.postDelayed(playRunnable, 300)
-//                        val job = GlobalScope.launch(Dispatchers.IO) {
-//                            delay(300)
-//                            handlePlayOrPauseRequest()
-//                        }
                         if (mLastHeadSetEventTime > 0 && (keyEvent.eventTime - mLastHeadSetEventTime) < 300) {
                             mHandler.removeCallbacks(playRunnable)
-//                            job.cancel()
-                            changeMediaByMode(true, false)
+                            changeMediaByMode(isNext = true, false)
                         }
-                        loge("last=$mLastHeadSetEventTime,current=${keyEvent.eventTime}")
                         mLastHeadSetEventTime = keyEvent.eventTime
-
-                        //                    if (keyEvent.eventTime - mLastHeadSetEventTime > secondMis) {
-                        //                        changeMediaByMode(true, false)
-                        //                        PrintLog.d("之后下一首")
-                        //                    } else {
-                        //                        PrintLog.d("之后暂停或者播放")
-                        //                        handlePlayOrPauseRequest()
-                        //                    }
                     }
-                    Log.w(TAG, "onMediaButtonEvent: action=" + keyEvent.action +
-                            ",code=" + keyEvent.keyCode)
+                    Log.w(TAG, "onMediaButtonEvent: action=" + keyEvent.action + ",code=" + keyEvent.keyCode)
                 }
                 else -> loge(keyEvent.toString())
             }
@@ -700,7 +678,7 @@ class MediaService : MediaBrowserServiceCompat() {
                             cb?.send(COMMAND_UPDATE_QUEUE_CODE, Bundle())
                             if (isForce) {
                                 //读取本地数据库
-                                return@async App.getInstance().databaseManager.entity
+                                return@async App.instance!!.databaseManager!!.entity
                             }
                             return@async MusicDbEntity()
                         }

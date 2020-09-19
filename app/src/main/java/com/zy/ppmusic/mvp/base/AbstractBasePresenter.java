@@ -7,7 +7,7 @@ import java.lang.ref.WeakReference;
  * @date 2018/1/12
  */
 
-public abstract class AbstractBasePresenter<V extends IBaseView,M extends IBaseModel> {
+public abstract class AbstractBasePresenter<V extends IBaseView, M extends IBaseModel> {
     protected WeakReference<V> mView;
     protected M mModel;
 
