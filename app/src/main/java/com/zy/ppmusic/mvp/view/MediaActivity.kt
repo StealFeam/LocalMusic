@@ -135,11 +135,9 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
     override fun createPresenter(): MediaPresenterImpl = MediaPresenterImpl(this)
 
     private fun setUpTitleBar() {
-        tb_media.setBackgroundColor(ContextCompat.getColor(this, R.color.colorTheme))
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            tb_media.elevation = 0f
-        }
-        setSupportActionBar(tb_media)
+        mediaToolbar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorTheme))
+        mediaToolbar.elevation = 0f
+        setSupportActionBar(mediaToolbar)
     }
 
     private fun setUpTopEdgeView(){
@@ -782,11 +780,7 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
             control_display_progress.progress = (percent * 100f).toInt()
             control_display_duration_tv.text = DateUtil.get().getTime(endPosition)
         }
-        startPosition = if (startPosition > endPosition) {
-            endPosition
-        } else {
-            startPosition
-        }
+        startPosition = takeIf { startPosition > endPosition }?.endPosition ?: startPosition
         control_display_time_tv.text = DateUtil.get().getTime(startPosition)
     }
 
@@ -974,21 +968,17 @@ open class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMedia
         //停止进度更新
         stopLoop()
         //释放控制器
-        if (mMediaController != null) {
-            mMediaController?.unregisterCallback(mControllerCallBack)
-            mMediaController = null
-            MediaControllerCompat.setMediaController(this, null)
-        }
+        mMediaController?.unregisterCallback(mControllerCallBack)
+        mMediaController = null
+        MediaControllerCompat.setMediaController(this, null)
         //取消播放状态监听
-        if (mMediaBrowser != null) {
-            //在一些特殊情况，状态还是正在连接时调用getRoot会出现状态错误
-            if (mMediaBrowser!!.isConnected && mMediaBrowser?.root != null) {
-                mMediaBrowser?.unsubscribe(mMediaBrowser!!.root, subscriptionCallBack)
-            }
-            //断开与媒体服务的链接
-            mMediaBrowser?.disconnect()
-            mMediaBrowser = null
+        //在一些特殊情况，状态还是正在连接时调用getRoot会出现状态错误
+        if (mMediaBrowser?.isConnected == true && mMediaBrowser?.root != null) {
+            mMediaBrowser?.unsubscribe(mMediaBrowser!!.root, subscriptionCallBack)
         }
+        //断开与媒体服务的链接
+        mMediaBrowser?.disconnect()
+        mMediaBrowser = null
     }
 
 

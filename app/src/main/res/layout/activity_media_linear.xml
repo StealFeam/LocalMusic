@@ -12,7 +12,7 @@
     tools:context="com.zy.ppmusic.mvp.view.MediaActivity">
 
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/tb_media"
+        android:id="@+id/mediaToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:background="@color/colorTheme"

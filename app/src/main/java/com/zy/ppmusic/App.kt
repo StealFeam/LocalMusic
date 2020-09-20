@@ -26,7 +26,7 @@ class App : Application() {
             null
         }
         val handler = CrashHandler(this)
-        handler.attach()
+        if (!BuildConfig.IS_DEBUG) handler.attach()
         databaseManager = DataBaseManager.getInstance().initDb(this)
     }
 

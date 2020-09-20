@@ -33,8 +33,32 @@ object FileUtils {
      */
     fun getStoragePath(mContext: Context, isExternalStorage: Boolean): String? {
         val mStorageManager = mContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager
-        for (volume in mStorageManager.storageVolumes) {
-            if (volume.isRemovable == isExternalStorage) return volume.directory?.absolutePath
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            for (volume in mStorageManager.storageVolumes) {
+                if (volume.isRemovable == isExternalStorage) {
+                    volume.directory?.absolutePath
+                }
+            }
+        } else {
+            val storageVolumeClazz: Class<*>
+            try {
+                storageVolumeClazz = Class.forName("android.os.storage.StorageVolume")
+                val getVolumeList = mStorageManager.javaClass.getMethod("getVolumeList")
+                val getPath = storageVolumeClazz.getMethod("getPath")
+                val isRemovable = storageVolumeClazz.getMethod("isRemovable")
+                val result = getVolumeList.invoke(mStorageManager) ?: Any()
+                val length = Array.getLength(result)
+                for (i in 0 until length) {
+                    val storageVolumeElement = Array.get(result, i)
+                    val path = getPath.invoke(storageVolumeElement) as String
+                    val removable = isRemovable.invoke(storageVolumeElement) as Boolean
+                    if (isExternalStorage == removable) {
+                        return path
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
         return null
     }
@@ -225,7 +249,7 @@ object FileUtils {
     }
 
     fun deleteFile(path: String?): Boolean {
-        if (TextUtils.isEmpty(path)) {
+        if (path.isNullOrEmpty()) {
             System.err.println("删除文件失败，路径为空")
             return false
         }
