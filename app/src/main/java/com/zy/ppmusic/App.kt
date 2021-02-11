@@ -21,9 +21,8 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        get().putOperator { editor: SharedPreferences.Editor ->
+        get().putOperator { editor ->
             editor.putLong(Constant.SP_APP_ATTACH_TIME, System.currentTimeMillis())
-            null
         }
         val handler = CrashHandler(this)
         if (!BuildConfig.IS_DEBUG) handler.attach()
