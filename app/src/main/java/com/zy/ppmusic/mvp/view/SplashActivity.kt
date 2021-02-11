@@ -7,12 +7,13 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
+import androidx.appcompat.widget.AppCompatTextView
 import com.zy.ppmusic.App
 import com.zy.ppmusic.R
 import com.zy.ppmusic.utils.Constant
 import com.zy.ppmusic.utils.PrintLog
 import com.zy.ppmusic.utils.SpUtils
-import kotlinx.android.synthetic.main.activity_splash.*
+import com.zy.ppmusic.utils.Void
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import kotlin.system.exitProcess
@@ -20,7 +21,8 @@ import kotlin.system.exitProcess
 class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     private val requestCode = 0x010
     private val mPreferenceName = "SPLASH"
-    private var animDuration:Long = 1500
+    private var animDuration: Long = 1500
+    private val splashTextView: AppCompatTextView by lazy { findViewById(R.id.splashTextView) }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
@@ -41,7 +43,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
 
     override fun onResume() {
         super.onResume()
-        tv_splash_open.startAnimation(createLoadingAnim())
+        splashTextView.startAnimation(createLoadingAnim())
     }
 
     private fun createLoadingAnim(): Animation {
@@ -49,9 +51,9 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
             fillAfter = true
             duration = animDuration
             setAnimationListener(object : Animation.AnimationListener {
-                override fun onAnimationRepeat(a: Animation?) = PrintLog.e("onAnimationRepeat....")
+                override fun onAnimationRepeat(a: Animation?) = Void
 
-                override fun onAnimationStart(a: Animation?) = PrintLog.e("onAnimationStart....")
+                override fun onAnimationStart(a: Animation?) = Void
 
                 override fun onAnimationEnd(a: Animation?) {
                     if (EasyPermissions.hasPermissions(applicationContext, getString(R.string.string_read_external)
@@ -127,20 +129,9 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
 
     override fun onPermissionsGranted(requestCode: Int, perms: List<String>?) = actionToMain()
 
-    override fun onStop() {
-        super.onStop()
-        if (tv_splash_open.animation != null) {
-            tv_splash_open.animation.cancel()
-            tv_splash_open.animation = null
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-        if (tv_splash_open.animation != null) {
-            tv_splash_open.animation.cancel()
-            tv_splash_open.animation = null
-        }
+        splashTextView.animation?.cancel()
+        splashTextView.animation = null
     }
-
 }
