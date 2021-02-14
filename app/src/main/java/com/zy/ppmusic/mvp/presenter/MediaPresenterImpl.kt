@@ -49,7 +49,7 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         }
         mView.get()?.showLoading()
         scanningScope.launch {
-            DataProvider.get().loadData(isRefresh)
+            withContext(Dispatchers.IO) { DataProvider.get().loadData(isRefresh) }
             mView.get()?.hideLoading()
             mView.get()?.loadFinished(isRefresh)
         }

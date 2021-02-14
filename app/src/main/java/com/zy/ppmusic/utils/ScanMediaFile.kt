@@ -7,7 +7,7 @@ import com.zy.ppmusic.App
 import kotlinx.coroutines.*
 
 import java.io.File
-import java.util.ArrayList
+import java.util.*
 import kotlin.coroutines.resume
 
 /**
@@ -52,47 +52,49 @@ class ScanMediaFile private constructor() {
         if (mPathList.size > 0) {
             mPathList.clear()
         }
+        val startTime = System.currentTimeMillis()
         Log.d(TAG, "run: 扫描开始")
         if (mInnerStoragePath != null) {
-            searchFile(File(mInnerStoragePath))
+            searchFile(File(mInnerStoragePath!!))
             Log.e(TAG, "run: 扫描内部存储结束")
         }
         if (mExternalStoragePath != null) {
-            searchFile(File(mExternalStoragePath))
+            searchFile(File(mExternalStoragePath!!))
             Log.e(TAG, "run: 扫描外部存储结束")
         }
-        Log.d(TAG, "run: 扫描结束")
+        Log.d(TAG, "run: 扫描结束 cost=${System.currentTimeMillis() - startTime}")
         l.onComplete(mPathList)
     }
     private val dot = "."
-
     /**
      * 遍历文件目录下的所有文件
      *
      * @param file 需要扫描的文件目录
      */
     private fun searchFile(file: File) {
-        if (file.isDirectory && file.listFiles() != null) {
-            //过滤android系统目录
+        if (file.isDirectory && file.listFiles()?.isNullOrEmpty() == false) {
+            // 过滤android系统目录
             if (file.absolutePath.contains("com.android.")) {
                 return
             }
-            file.listFiles()?.forEach {
+            // 过滤隐藏文件
+            if (file.isHidden) return
+            // 过滤以点开头的文件夹或文件
+            if (file.absolutePath.startsWith(dot)) return
+            file.listFiles { _, name ->
+                Constant.FILTER_DIRS.none { segment -> name.splitToSequence("/").any { it == segment } }
+            }?.filter {
+                //过滤没有后缀名的文件
+                val index = it.name.lastIndexOf(dot)
+                val length = it.name.length
+                //xxx.x以及xxx.xxxxx格式不支持
+                index <= 0 || index > length - 2 || index < length - 4
+            }?.forEach {
                 searchFile(it)
             }
             return
         }
         println(file.absolutePath)
-        //过滤没有后缀名的文件
-        if (!file.name.contains(dot)) {
-            return
-        }
-        val index = file.name.lastIndexOf(dot)
-        val length = file.name.length
-        //xxx.x以及xxx.xxxxx格式不支持
-        if (index > length - 2 || index < length - 4) {
-            return
-        }
         //判断文件的类型是否支持
         SupportMediaType.SUPPORT_TYPE.forEach {
             if (file.name.endsWith(it)) {
@@ -119,14 +121,6 @@ class ScanMediaFile private constructor() {
 
     companion object {
         private val TAG = "ScanMusicFile"
-        /**
-         * 扫描的数量发生了变化
-         */
-        private val COUNT_CHANGE = 0X001
-        /**
-         * 扫描完成
-         */
-        private val SCAN_COMPLETE = 0X000
 
         fun get(): ScanMediaFile {
             return ScanInstance.instance
