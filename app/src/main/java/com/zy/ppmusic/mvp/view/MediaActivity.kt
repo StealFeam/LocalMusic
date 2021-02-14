@@ -233,11 +233,11 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
 
     /*专辑图片位置改变监听*/
-    private val mHeadChangeListener = object : androidx.viewpager.widget.ViewPager.OnPageChangeListener {
+    private val mHeadChangeListener = object : ViewPager.OnPageChangeListener {
         private var dragBeforeIndex = -1
 
         override fun onPageScrollStateChanged(state: Int) {
-            if (state == androidx.viewpager.widget.ViewPager.SCROLL_STATE_DRAGGING) {
+            if (state == ViewPager.SCROLL_STATE_DRAGGING) {
                 dragBeforeIndex = contentViewPager.currentItem
             }
         }
