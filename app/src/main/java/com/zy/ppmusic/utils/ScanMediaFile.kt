@@ -28,6 +28,7 @@ class ScanMediaFile private constructor() {
      * 外部存储路径
      */
     private var mExternalStoragePath: String? = null
+    private val dot = "."
 
     suspend fun scanInternalMedia(c: Context) = coroutineScope {
         FileUtils.getStoragePath(c, isExternalStorage = false)?.let { scanMediaBySystem(it) }
@@ -65,7 +66,7 @@ class ScanMediaFile private constructor() {
         Log.d(TAG, "run: 扫描结束 cost=${System.currentTimeMillis() - startTime}")
         l.onComplete(mPathList)
     }
-    private val dot = "."
+
     /**
      * 遍历文件目录下的所有文件
      *

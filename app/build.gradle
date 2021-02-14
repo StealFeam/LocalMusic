@@ -9,8 +9,8 @@ android {
         applicationId "com.zy.ppmusic"
         minSdkVersion 24 // Android 7.0
         targetSdkVersion 30
-        versionCode 12
-        versionName "1.1.6"
+        versionCode 15
+        versionName "1.2.0"
         resConfigs 'zh'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
