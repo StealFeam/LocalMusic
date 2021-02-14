@@ -9,6 +9,7 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.*
 import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -435,6 +436,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 } catch (e: SecurityException) {
                     mPresenter?.setGrantedRootUri("", "")
                     doSupportDelAction(position)
+                } catch (e: Exception) {
+                    handleFinallyChoice(this)
                 }
             }
         } else {
@@ -443,6 +446,16 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                 startActivityForResult(this, requestDelPermissionCode)
             }
+        }
+    }
+
+    private fun handleFinallyChoice(path: String) {
+        try {
+            MediaStore.createDeleteRequest(contentResolver, listOf(Uri.parse(path))).send()
+            toast("删除成功")
+        } catch (e: Exception) {
+            toast("删除失败")
+            e.printStackTrace()
         }
     }
 

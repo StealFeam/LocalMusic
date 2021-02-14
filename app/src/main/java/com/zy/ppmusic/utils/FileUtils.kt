@@ -15,7 +15,7 @@ import java.lang.reflect.Array
  * 2.通过首页展示
  * 3.设计首页加载的框架
  *
- * @author ZY
+ * @author stealfeam
  */
 
 object FileUtils {
@@ -36,7 +36,7 @@ object FileUtils {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             for (volume in mStorageManager.storageVolumes) {
                 if (volume.isRemovable == isExternalStorage) {
-                    volume.directory?.absolutePath
+                    return volume.directory?.absolutePath
                 }
             }
         } else {

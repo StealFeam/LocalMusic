@@ -1,21 +1,21 @@
 package com.zy.ppmusic.utils
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
-import android.os.Message
+import android.media.MediaScannerConnection
 import android.util.Log
+import com.zy.ppmusic.App
+import kotlinx.coroutines.*
 
 import java.io.File
-import java.lang.ref.WeakReference
 import java.util.ArrayList
+import kotlin.coroutines.resume
 
 /**
  * 扫描本地音乐文件
  *
- * @author lengs
+ * @author StealFeam
  */
-class ScanMusicFile private constructor() {
+class ScanMediaFile private constructor() {
     /**
      * 扫描到的音乐路径集合
      */
@@ -29,7 +29,21 @@ class ScanMusicFile private constructor() {
      */
     private var mExternalStoragePath: String? = null
 
-    fun startScan(c: Context, l:OnScanCompleteListener) {
+    suspend fun scanInternalMedia(c: Context) = coroutineScope {
+        FileUtils.getStoragePath(c, isExternalStorage = false)?.let { scanMediaBySystem(it) }
+    }
+
+    suspend fun scanExternalMedia(c: Context) = coroutineScope {
+        FileUtils.getStoragePath(c, isExternalStorage = true)?.let { scanMediaBySystem(it) }
+    }
+
+    private suspend fun scanMediaBySystem(vararg path: String) = suspendCancellableCoroutine<Void> {
+        MediaScannerConnection.scanFile(App.instance!!, path, null) { _, _ ->
+            it.resume(Void)
+        }
+    }
+
+    fun startScan(c: Context, l: OnScanCompleteListener) {
         val context = c.applicationContext
         if (mInnerStoragePath == null) {
             mInnerStoragePath = FileUtils.getStoragePath(context, false)
@@ -63,12 +77,12 @@ class ScanMusicFile private constructor() {
             if (file.absolutePath.contains("com.android.")) {
                 return
             }
-            val items = file.listFiles()
-            for (item in items) {
-                searchFile(item)
+            file.listFiles()?.forEach {
+                searchFile(it)
             }
             return
         }
+        println(file.absolutePath)
         //过滤没有后缀名的文件
         if (!file.name.contains(dot)) {
             return
@@ -92,7 +106,7 @@ class ScanMusicFile private constructor() {
     }
 
     private object ScanInstance {
-        val instance = ScanMusicFile()
+        val instance = ScanMediaFile()
     }
 
     interface OnScanCompleteListener {
@@ -114,7 +128,7 @@ class ScanMusicFile private constructor() {
          */
         private val SCAN_COMPLETE = 0X000
 
-        fun get(): ScanMusicFile {
+        fun get(): ScanMediaFile {
             return ScanInstance.instance
         }
     }

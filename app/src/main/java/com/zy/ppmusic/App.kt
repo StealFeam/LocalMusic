@@ -3,12 +3,10 @@ package com.zy.ppmusic
 import android.app.Activity
 import android.app.Application
 import android.content.Context
-import android.content.SharedPreferences
 import com.zy.ppmusic.data.db.DataBaseManager
 import com.zy.ppmusic.utils.Constant
 import com.zy.ppmusic.utils.CrashHandler
 import com.zy.ppmusic.utils.SpUtils.Companion.get
-import java.lang.ref.WeakReference
 
 /**
  * @author stealfeam

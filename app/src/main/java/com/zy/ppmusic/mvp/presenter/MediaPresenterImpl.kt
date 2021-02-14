@@ -16,6 +16,8 @@ import kotlinx.coroutines.*
  */
 class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         IMediaActivityContract.AbstractMediaActivityPresenter(view) {
+    private val scanningScope = MainScope()
+
     override fun getChildrenUri(): String {
         return mModel.getGrantedChildrenUri()
     }
@@ -40,32 +42,14 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         mModel.attachController(controller)
     }
 
-//    override fun refreshQueue(isRefresh: Boolean) {
-//        if (mView.get() == null) {
-//            PrintLog.i("view is null")
-//            return
-//        }
-//        mView.get()?.showLoading()
-//        TaskPool.executeSyc(Runnable {
-//            mLoadCompleteListener.flag = isRefresh
-//            DataProvider.get().loadData(isRefresh,mLoadCompleteListener)
-//        })
-//    }
-
     override fun refreshQueue(isRefresh: Boolean) {
         if (mView.get() == null) {
             PrintLog.i("view is null")
             return
         }
         mView.get()?.showLoading()
-        //创建协程环境
-        //CoroutineScope注释代码
-        GlobalScope.launch(Dispatchers.Main) {
-            val job = async(Dispatchers.IO){
-                DataProvider.get().loadData(isRefresh)
-                return@async
-            }
-            job.await()
+        scanningScope.launch {
+            DataProvider.get().loadData(isRefresh)
             mView.get()?.hideLoading()
             mView.get()?.loadFinished(isRefresh)
         }
@@ -113,9 +97,4 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) :
         super.detachViewAndModel()
         mModel.shutdown()
     }
-
-    companion object {
-        private const val TAG = "MediaPresenterImpl"
-    }
-
 }

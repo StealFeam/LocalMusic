@@ -5,6 +5,7 @@ import android.database.Cursor
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
@@ -13,9 +14,12 @@ import android.support.v4.media.session.MediaSessionCompat
 import androidx.collection.ArrayMap
 import android.text.TextUtils
 import android.util.Log
+import androidx.core.content.ContentResolverCompat
 import com.zy.ppmusic.App
 import com.zy.ppmusic.entity.MusicInfoEntity
+import kotlinx.coroutines.*
 import java.util.*
+import kotlin.coroutines.resume
 
 /**
  * 数据转换
@@ -56,41 +60,90 @@ class DataProvider private constructor() {
         mediaIdList = ArrayList()
     }
 
-    fun transFormStringData(pathList: ArrayList<String>) {
+    fun transformData(pathList: ArrayList<String>) {
         clearData()
         queryMedia(App.appBaseContext, pathList)
     }
 
-    private fun isMemoryHasData():Boolean{
+    private fun isMemoryHasData():Boolean {
         return pathList.size > 0
     }
 
-    fun loadData(forceCache:Boolean){
-        if(!forceCache){
-            //返回内存中数据
+    suspend fun loadData(forceCache: Boolean) = suspendCancellableCoroutine<Void> { cont ->
+        if (!forceCache) {
+            // 返回内存中数据
             PrintLog.e("开始检查内存缓存")
-            if(isMemoryHasData()){
-                return
+            if (isMemoryHasData()) {
+                cont.resume(Void)
+                return@suspendCancellableCoroutine
             }
             PrintLog.e("开始检查文件缓存")
             FileUtils.readObject(Constant.CACHE_FILE_PATH)?.apply {
                 PrintLog.e("读取到本地缓存列表------")
                 transFormData(this as ArrayList<MusicInfoEntity>)
-                return
+                cont.resume(Void)
+                return@suspendCancellableCoroutine
             }
         }
         PrintLog.e("未检查到本地缓存-----$forceCache")
-        ScanMusicFile.get().startScan(App.appBaseContext, object:ScanMusicFile.OnScanCompleteListener{
-            override fun onComplete(paths: ArrayList<String>) {
-                transFormStringData(paths)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            CoroutineScope(Job() + Dispatchers.IO).launch {
+                ScanMediaFile.get().scanInternalMedia(App.instance!!)
+                ScanMediaFile.get().scanExternalMedia(App.instance!!)
+                clearData()
+                val projection = arrayOf(
+                    MediaStore.Audio.Media.ALBUM_ID,
+                    MediaStore.Audio.Media.DISPLAY_NAME,
+                    MediaStore.Audio.Media.DURATION,
+                    MediaStore.Audio.Media.SIZE,
+                    MediaStore.Audio.Media.TITLE,
+                    MediaStore.Audio.Media.ARTIST,
+                    MediaStore.Audio.Media.AUTHOR,
+                    MediaStore.Audio.Media.DATA,
+                    MediaStore.Audio.Media.RELATIVE_PATH
+                )
+                val externalQuery = ContentResolverCompat.query(
+                    App.instance?.contentResolver,
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    projection,
+                    MediaStore.Audio.Media.IS_MUSIC + "=?",
+                    arrayOf("1"),
+                    null,
+                    null
+                )
+                externalQuery?.use { cursor ->
+                    val mediaMetadataRetriever = MediaMetadataRetriever()
+                    queryContent(cursor, mediaMetadataRetriever)
+                    mediaMetadataRetriever.release()
+                }
+                val internalQuery = ContentResolverCompat.query(
+                    App.instance?.contentResolver,
+                    MediaStore.Audio.Media.INTERNAL_CONTENT_URI,
+                    projection,
+                    MediaStore.Audio.Media.IS_MUSIC + "=?",
+                    arrayOf("1"),
+                    null,
+                    null
+                )
+                internalQuery?.use { cursor ->
+                    val mediaMetadataRetriever = MediaMetadataRetriever()
+                    queryContent(cursor, mediaMetadataRetriever)
+                    mediaMetadataRetriever.release()
+                }
                 //缓存到本地
                 FileUtils.saveObject(musicInfoEntities, Constant.CACHE_FILE_PATH)
+                cont.resume(Void)
             }
-        })
-    }
-
-    interface OnLoadCompleteListener{
-        fun onLoadComplete()
+        } else {
+            ScanMediaFile.get().startScan(App.appBaseContext, object: ScanMediaFile.OnScanCompleteListener{
+                override fun onComplete(paths: ArrayList<String>) {
+                    transformData(paths)
+                    //缓存到本地
+                    FileUtils.saveObject(musicInfoEntities, Constant.CACHE_FILE_PATH)
+                    cont.resume(Void)
+                }
+            })
+        }
     }
 
     private fun clearData() {
