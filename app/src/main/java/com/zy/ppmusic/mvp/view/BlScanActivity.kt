@@ -8,7 +8,6 @@ import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Build
 import androidx.recyclerview.widget.RecyclerView
 import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
@@ -29,8 +28,8 @@ import com.zy.ppmusic.receiver.DeviceFoundReceiver
 import com.zy.ppmusic.receiver.StatusChangeReceiver
 import com.zy.ppmusic.utils.PrintLog
 import com.zy.ppmusic.utils.UIUtils
+import com.zy.ppmusic.widget.DragFinishLayout
 import com.zy.ppmusic.widget.EasyTintView
-import kotlinx.android.synthetic.main.activity_bl_scan.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import java.util.*
@@ -89,7 +88,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
             }
         }
 
-        root_bl_content.setDragFinishListener {
+        findViewById<DragFinishLayout>(R.id.root_bl_content).setDragFinishListener {
             finish()
         }
     }
@@ -175,9 +174,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
                 if (device != null) {
                     val state = device.bondState
                     if (state == BluetoothDevice.BOND_BONDED) {
-                        var realPosition = 0
-                        if (!mScanResultAdapter!!.isBondedDevice(position)) {
-                        }
+                        val realPosition = 0
                         if (mPresenter!!.removeBondDevice(mScanDeviceList!![realPosition].device!!)) {
                             mScanDeviceList!!.removeAt(realPosition)
                             println("移除配对")
@@ -261,8 +258,8 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when (item!!.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
             R.id.action_refresh -> {
                 mPresenter!!.getExitsDevices()
             }
@@ -347,10 +344,10 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
         }
     }
 
+    /**
+     * 当设备配对状态变化时回调
+     */
     @SuppressLint("MissingPermission")
-            /**
-             * 当设备配对状态变化时回调
-             */
     fun onDeviceBondStateChanged(state: Int, device: BluetoothDevice) {
         when (state) {
             BluetoothDevice.BOND_BONDED -> {
@@ -364,9 +361,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
                 println("Device:" + device.name + " not bonded.")
                 //不知道是蓝牙耳机的关系还是什么原因，经常配对不成功
                 //配对不成功的话，重新尝试配对
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    device.createBond()
-                }
+                device.createBond()
             }
         }
     }
@@ -427,8 +422,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
         if (mPresenter!!.getConnectDevice() != null) {
             mScanDeviceList!!.forEachIndexed { _, scanResultEntity ->
                 if (scanResultEntity.device != null) {
-                    val state = mPresenter!!.getConnectState(scanResultEntity.device!!)
-                    when (state) {
+                    when (mPresenter!!.getConnectState(scanResultEntity.device!!)) {
                         BluetoothA2dp.STATE_CONNECTING -> {
                             scanResultEntity.state = "正在连接"
                         }
@@ -451,7 +445,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
      *  找到新设备添加到列表中
      */
     fun foundNewDevice(device: BluetoothDevice) {
-        println("新发现的设备。。。" + device.toString())
+        println("新发现的设备。。。$device")
         mScanResultAdapter!!.foundNewDevice(ScanResultEntity(R.layout.item_scan_child, device))
     }
 

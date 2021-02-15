@@ -5,6 +5,7 @@ import android.database.Cursor
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
@@ -13,9 +14,13 @@ import android.support.v4.media.session.MediaSessionCompat
 import androidx.collection.ArrayMap
 import android.text.TextUtils
 import android.util.Log
+import androidx.core.content.ContentResolverCompat
 import com.zy.ppmusic.App
 import com.zy.ppmusic.entity.MusicInfoEntity
+import kotlinx.coroutines.*
 import java.util.*
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * 数据转换
@@ -27,7 +32,7 @@ class DataProvider private constructor() {
     @Volatile
     var queueItemList: ArrayList<MediaSessionCompat.QueueItem>
     val mediaItemList: ArrayList<MediaBrowserCompat.MediaItem>
-    private val mapMetadataArray: androidx.collection.ArrayMap<String, MediaMetadataCompat>
+    private val mapMetadataArray: ArrayMap<String, MediaMetadataCompat>
     /**
      * 扫描到的路径
      */
@@ -56,41 +61,90 @@ class DataProvider private constructor() {
         mediaIdList = ArrayList()
     }
 
-    fun transFormStringData(pathList: ArrayList<String>) {
+    fun transformData(pathList: ArrayList<String>) {
         clearData()
-        queryMedia(App.getInstance(), pathList)
+        queryMedia(App.appBaseContext, pathList)
     }
 
-    private fun isMemoryHasData():Boolean{
+    private fun isMemoryHasData():Boolean {
         return pathList.size > 0
     }
 
-    fun loadData(forceCache:Boolean){
-        if(!forceCache){
-            //返回内存中数据
+    suspend fun loadData(forceCache: Boolean) = suspendCancellableCoroutine<Void> { cont ->
+        if (!forceCache) {
+            // 返回内存中数据
             PrintLog.e("开始检查内存缓存")
-            if(isMemoryHasData()){
-                return
+            if (isMemoryHasData()) {
+                cont.resume(Void)
+                return@suspendCancellableCoroutine
             }
             PrintLog.e("开始检查文件缓存")
             FileUtils.readObject(Constant.CACHE_FILE_PATH)?.apply {
                 PrintLog.e("读取到本地缓存列表------")
                 transFormData(this as ArrayList<MusicInfoEntity>)
-                return
+                cont.resume(Void)
+                return@suspendCancellableCoroutine
             }
         }
         PrintLog.e("未检查到本地缓存-----$forceCache")
-        ScanMusicFile.get().startScan(App.getInstance(),object:ScanMusicFile.OnScanCompleteListener{
-            override fun onComplete(paths: ArrayList<String>) {
-                transFormStringData(paths)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            CoroutineScope(Job() + Dispatchers.IO).launch {
+                ScanMediaFile.get().scanInternalMedia(App.instance!!)
+                ScanMediaFile.get().scanExternalMedia(App.instance!!)
+                clearData()
+                val projection = arrayOf(
+                    MediaStore.Audio.Media.ALBUM_ID,
+                    MediaStore.Audio.Media.DISPLAY_NAME,
+                    MediaStore.Audio.Media.DURATION,
+                    MediaStore.Audio.Media.SIZE,
+                    MediaStore.Audio.Media.TITLE,
+                    MediaStore.Audio.Media.ARTIST,
+                    MediaStore.Audio.Media.AUTHOR,
+                    MediaStore.Audio.Media.DATA,
+                    MediaStore.Audio.Media.RELATIVE_PATH
+                )
+                val externalQuery = ContentResolverCompat.query(
+                    App.instance?.contentResolver,
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    projection,
+                    MediaStore.Audio.Media.IS_MUSIC + "=?",
+                    arrayOf("1"),
+                    null,
+                    null
+                )
+                externalQuery?.use { cursor ->
+                    val mediaMetadataRetriever = MediaMetadataRetriever()
+                    queryContent(cursor, mediaMetadataRetriever)
+                    mediaMetadataRetriever.release()
+                }
+                val internalQuery = ContentResolverCompat.query(
+                    App.instance?.contentResolver,
+                    MediaStore.Audio.Media.INTERNAL_CONTENT_URI,
+                    projection,
+                    MediaStore.Audio.Media.IS_MUSIC + "=?",
+                    arrayOf("1"),
+                    null,
+                    null
+                )
+                internalQuery?.use { cursor ->
+                    val mediaMetadataRetriever = MediaMetadataRetriever()
+                    queryContent(cursor, mediaMetadataRetriever)
+                    mediaMetadataRetriever.release()
+                }
                 //缓存到本地
-                FileUtils.saveObject(musicInfoEntities,Constant.CACHE_FILE_PATH)
+                FileUtils.saveObject(musicInfoEntities, Constant.CACHE_FILE_PATH)
+                cont.resume(Void)
             }
-        })
-    }
-
-    interface OnLoadCompleteListener{
-        fun onLoadComplete()
+        } else {
+            ScanMediaFile.get().startScan(App.appBaseContext, object: ScanMediaFile.OnScanCompleteListener{
+                override fun onComplete(paths: ArrayList<String>) {
+                    transformData(paths)
+                    //缓存到本地
+                    FileUtils.saveObject(musicInfoEntities, Constant.CACHE_FILE_PATH)
+                    cont.resume(Void)
+                }
+            })
+        }
     }
 
     private fun clearData() {
@@ -121,7 +175,7 @@ class DataProvider private constructor() {
                 PrintLog.print(itemPath)
             }
             //根据音频地址获取uri，区分为内部存储和外部存储
-            val audioUri = MediaStore.Audio.Media.getContentUriForPath(itemPath)
+            val audioUri = MediaStore.Audio.Media.getContentUriForPath(itemPath) ?: continue
             //仅查询是音乐的文件
             val query = contentResolver.query(audioUri, null,
                     MediaStore.Audio.Media.IS_MUSIC + "=?", arrayOf("1"), null)
@@ -157,6 +211,7 @@ class DataProvider private constructor() {
             val artist = query.getString(query.getColumnIndex(MediaStore.Audio.Media.ARTIST))
             val duration = query.getLong(query.getColumnIndex(MediaStore.Audio.Media.DURATION))
             val size = query.getString(query.getColumnIndex(MediaStore.Audio.Media.SIZE))
+            // RELATIVE_PATH
             val queryPath = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DATA))
             //过滤本地不存在的媒体文件
             if (!FileUtils.isExits(queryPath)) {
@@ -204,7 +259,7 @@ class DataProvider private constructor() {
                 val mediaDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
                 var length: Long = 0
                 if (!TextUtils.isEmpty(mediaDuration)) {
-                    length = mediaDuration.toLong()
+                    length = mediaDuration?.toLong() ?: continue
                     if (length < 20 * 1000) {
                         continue
                     }
@@ -231,24 +286,18 @@ class DataProvider private constructor() {
        return MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, infoEntity.mediaId)
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, infoEntity.queryPath)
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE,
-                        StringUtils.ifEmpty(infoEntity.musicName, getMusicName(infoEntity.queryPath)))
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, StringUtils.ifEmpty(infoEntity.musicName, getMusicName(infoEntity.queryPath)))
                 .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, infoEntity.iconData?.let {
                     BitmapFactory.decodeByteArray(it, 0, it.size, loadPicOption)
                 })
-                //作者
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE,
-                        StringUtils.ifEmpty(infoEntity.artist, "<未知作者>"))
-                .putString(MediaMetadataCompat.METADATA_KEY_AUTHOR,
-                        StringUtils.ifEmpty(infoEntity.artist, "<未知作者>"))
-                //时长
-                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, infoEntity.duration)
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, StringUtils.ifEmpty(infoEntity.artist, "<未知作者>")) // 作者
+                .putString(MediaMetadataCompat.METADATA_KEY_AUTHOR, StringUtils.ifEmpty(infoEntity.artist, "<未知作者>"))
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, infoEntity.duration) // 时长
                 .build()
     }
 
     private fun buildQueueItem(descriptionCompat: MediaDescriptionCompat): MediaSessionCompat.QueueItem {
-        return MediaSessionCompat.QueueItem(descriptionCompat, descriptionCompat.mediaId?.hashCode()?.toLong()
-                ?: UUID.randomUUID().hashCode().toLong())
+        return MediaSessionCompat.QueueItem(descriptionCompat, descriptionCompat.mediaId?.hashCode()?.toLong() ?: UUID.randomUUID().hashCode().toLong())
     }
 
     private fun buildMediaItem(descriptionCompat: MediaDescriptionCompat): MediaBrowserCompat.MediaItem {
@@ -275,13 +324,22 @@ class DataProvider private constructor() {
         }
     }
 
-    fun removeItem(index: Int) {
+    private fun removeItem(index: Int) {
         pathList.removeAt(index)
         musicInfoEntities?.removeAt(index)
         mapMetadataArray.remove(this.mediaIdList[index])
-        queueItemList.removeAt(index)
         mediaIdList.removeAt(index)
         mediaItemList.removeAt(index)
+    }
+
+    fun removeQueueAt(index: Int) {
+        queueItemList.removeAt(index)
+    }
+
+    suspend fun removeItemIncludeFile(index: Int) = coroutineScope {
+        removeItem(index)
+        // 更新缓存
+        FileUtils.saveObject(musicInfoEntities, Constant.CACHE_FILE_PATH)
     }
 
     /**
@@ -314,15 +372,19 @@ class DataProvider private constructor() {
     }
 
     fun getMediaIndex(mediaId: String?): Int {
-        return if (mediaIdList.contains(mediaId)) {
+        return if (mediaId.isNullOrEmpty()) {
+            -1
+        } else {
             mediaIdList.indexOf(mediaId)
-        } else 0
+        }
     }
 
     fun getMetadataItem(mediaId: String): MediaMetadataCompat? {
         return if (mapMetadataArray.containsKey(mediaId)) {
             mapMetadataArray[mediaId]
-        } else null
+        } else {
+            null
+        }
     }
 
     override fun toString(): String {

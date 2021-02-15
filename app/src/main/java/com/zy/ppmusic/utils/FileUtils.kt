@@ -6,6 +6,7 @@ import android.os.Environment
 import android.os.storage.StorageManager
 import android.text.TextUtils
 import android.util.Log
+import com.zy.ppmusic.App
 import java.io.*
 import java.lang.reflect.Array
 
@@ -14,7 +15,7 @@ import java.lang.reflect.Array
  * 2.通过首页展示
  * 3.设计首页加载的框架
  *
- * @author ZY
+ * @author stealfeam
  */
 
 object FileUtils {
@@ -22,8 +23,8 @@ object FileUtils {
 
     val downloadFile: String
         get() {
-            val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            return downloadDir.absolutePath
+            val downloadDir = App.appBaseContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+            return downloadDir?.absolutePath ?: ""
         }
 
     /**
@@ -32,32 +33,33 @@ object FileUtils {
      */
     fun getStoragePath(mContext: Context, isExternalStorage: Boolean): String? {
         val mStorageManager = mContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val storageVolumes = mStorageManager.storageVolumes
-            for (storageVolume in storageVolumes) {
-                storageVolume.getDescription(mContext)
-            }
-        }
-        val storageVolumeClazz: Class<*>
-        try {
-            storageVolumeClazz = Class.forName("android.os.storage.StorageVolume")
-            val getVolumeList = mStorageManager.javaClass.getMethod("getVolumeList")
-            val getPath = storageVolumeClazz.getMethod("getPath")
-            val isRemovable = storageVolumeClazz.getMethod("isRemovable")
-            val result = getVolumeList.invoke(mStorageManager)
-            val length = Array.getLength(result)
-            for (i in 0 until length) {
-                val storageVolumeElement = Array.get(result, i)
-                val path = getPath.invoke(storageVolumeElement) as String
-                val removable = isRemovable.invoke(storageVolumeElement) as Boolean
-                if (isExternalStorage == removable) {
-                    return path
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            for (volume in mStorageManager.storageVolumes) {
+                if (volume.isRemovable == isExternalStorage) {
+                    return volume.directory?.absolutePath
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } else {
+            val storageVolumeClazz: Class<*>
+            try {
+                storageVolumeClazz = Class.forName("android.os.storage.StorageVolume")
+                val getVolumeList = mStorageManager.javaClass.getMethod("getVolumeList")
+                val getPath = storageVolumeClazz.getMethod("getPath")
+                val isRemovable = storageVolumeClazz.getMethod("isRemovable")
+                val result = getVolumeList.invoke(mStorageManager) ?: Any()
+                val length = Array.getLength(result)
+                for (i in 0 until length) {
+                    val storageVolumeElement = Array.get(result, i)
+                    val path = getPath.invoke(storageVolumeElement) as String
+                    val removable = isRemovable.invoke(storageVolumeElement) as Boolean
+                    if (isExternalStorage == removable) {
+                        return path
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
-
         return null
     }
 
@@ -220,7 +222,6 @@ object FileUtils {
         }
     }
 
-
     fun getPathFile(path: String): File {
         return createFileIfNotExits(path)
     }
@@ -247,16 +248,15 @@ object FileUtils {
     }
 
     fun deleteFile(path: String?): Boolean {
-        if (TextUtils.isEmpty(path)) {
+        if (path.isNullOrEmpty()) {
             System.err.println("删除文件失败，路径为空")
             return false
         }
         File(path).apply {
-            if(this.exists()){
+            if (this.exists()) {
                 return this.delete()
             }
         }
         return false
     }
-
 }

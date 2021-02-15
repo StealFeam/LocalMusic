@@ -12,7 +12,7 @@ import com.zy.ppmusic.utils.Constant
  */
 class ChooseNotifyStyleModel : IChooseNotifyStyleContract.IChooseNotifyStyleModel {
     private val localSharePreference: SharedPreferences by lazy {
-        App.getInstance().context.getSharedPreferences(Constant.LOCAL_CHOOSE_FILE, Context.MODE_PRIVATE)
+        App.instance!!.context.getSharedPreferences(Constant.LOCAL_CHOOSE_FILE, Context.MODE_PRIVATE)
     }
     private var localId = 0
 

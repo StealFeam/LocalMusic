@@ -26,7 +26,7 @@ class StatusChangeReceiver(ref: BlScanActivity) : BroadcastReceiver() {
             }
             BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {//蓝牙配对广播
                 val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.BOND_NONE)
-                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE) ?: return
                 reference?.get()?.onDeviceBondStateChanged(bondState, device)
             }
             //连接状态广播

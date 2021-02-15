@@ -12,7 +12,7 @@
     tools:context="com.zy.ppmusic.mvp.view.MediaActivity">
 
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/tb_media"
+        android:id="@+id/mediaToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:background="@color/colorTheme"
@@ -24,7 +24,7 @@
         app:titleTextColor="@color/colorWhite" />
 
     <View
-        android:id="@+id/media_title_tint"
+        android:id="@+id/mediaTitleTintView"
         android:layout_width="match_parent"
         tools:background="@color/colorTheme"
         android:layout_height="@dimen/dp30" />
@@ -35,7 +35,7 @@
         android:layout_height="0dp">
 
         <androidx.viewpager.widget.ViewPager
-            android:id="@+id/vp_show_media_head"
+            android:id="@+id/contentViewPager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 
@@ -53,7 +53,7 @@
         android:orientation="horizontal">
 
         <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/control_display_time_tv"
+            android:id="@+id/playingTimeTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/dp10"
@@ -62,7 +62,7 @@
             android:textSize="@dimen/sp11" />
 
         <androidx.appcompat.widget.AppCompatSeekBar
-            android:id="@+id/control_display_progress"
+            android:id="@+id/mediaSeekBar"
             style="@style/SelfSeekBarStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -72,7 +72,7 @@
             android:progress="0" />
 
         <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/control_display_duration_tv"
+            android:id="@+id/durationTimeTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/dp5"
@@ -91,7 +91,7 @@
         android:orientation="horizontal">
 
         <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/control_action_loop_model"
+            android:id="@+id/loopModelImageView"
             android:layout_width="@dimen/dp40"
             android:layout_height="@dimen/dp40"
             android:layout_weight="1"
@@ -100,7 +100,7 @@
             android:src="@drawable/ic_loop_mode_normal_svg" />
 
         <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/control_action_play_pause"
+            android:id="@+id/playOrPauseImageView"
             android:layout_width="@dimen/dp40"
             android:layout_height="@dimen/dp40"
             android:layout_weight="1"
@@ -108,7 +108,7 @@
             android:src="@drawable/ic_black_play" />
 
         <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/control_action_show_queue"
+            android:id="@+id/showPlayQueueImageView"
             android:layout_width="@dimen/dp40"
             android:layout_height="@dimen/dp40"
             android:layout_weight="1"
@@ -119,9 +119,10 @@
     </androidx.appcompat.widget.LinearLayoutCompat>
 
     <View
-        android:id="@+id/v_bottom_line"
+        android:id="@+id/bottomTintView"
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp15"
         android:gravity="bottom|end"
         android:visibility="visible" />
+
 </androidx.appcompat.widget.LinearLayoutCompat>

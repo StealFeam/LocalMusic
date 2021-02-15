@@ -18,7 +18,6 @@ import org.jetbrains.annotations.Nullable;
  * @author stealfeam
  */
 public class BorderTextView extends AppCompatTextView implements ViewGroup.OnHierarchyChangeListener {
-    private static final String TAG = "BorderTextView";
     private FrameLayout mRootView;
     private boolean isAdded;
 

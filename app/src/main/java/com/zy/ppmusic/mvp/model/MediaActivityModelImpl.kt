@@ -65,8 +65,7 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
         GlobalScope.launch(Dispatchers.Main) {
             val job = async(Dispatchers.IO){
                 initCachePreference(c)
-                return@async mCachePreference?.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE)
-                        ?: 0
+                return@async mCachePreference?.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE) ?: 0
             }
             val mode = job.await()
             e.invoke(mode)
@@ -75,7 +74,7 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
     }
 
     override fun removeQueueItem(position: Int) {
-        GlobalScope.launch(Dispatchers.IO){
+        GlobalScope.launch(Dispatchers.IO) {
             mControllerWeak?.get()?.removeQueueItem(DataProvider.get().queueItemList[position].description)
         }
     }

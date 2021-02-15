@@ -1,8 +1,13 @@
 #安装体验(Download)
 <br/>
-    <li>app/release/日期最新的apk</li>
+    <li>app/release/app-release.apk</li>
 <br/>
 
+**新版说明**
+- 由于Android 11的限制，无法全盘扫描，所以通过系统的媒体库进行获取数据。
+- Android 10以下的版本还是通过全盘扫描，但是通过过滤文件夹的方式提高了扫描速度
+  如果你的文件没有出现在列表中，可以在这个com.zy.ppmusic.utils.Constant.kt文件中修改。
+  
 #友情提示
 <br/>
 如果出现问题请提交issue或者联系我 2295573743@qq.com

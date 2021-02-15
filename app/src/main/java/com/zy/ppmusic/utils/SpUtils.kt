@@ -25,7 +25,7 @@ class SpUtils private constructor() {
     }
 
     private val spInstance: SharedPreferences by lazy(LazyThreadSafetyMode.NONE) {
-        App.getAppBaseContext().getSharedPreferences(spName, Context.MODE_PRIVATE)
+        App.appBaseContext.getSharedPreferences(spName, Context.MODE_PRIVATE)
     }
 
     fun putString(key: String, value: String) {

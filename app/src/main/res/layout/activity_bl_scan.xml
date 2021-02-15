@@ -2,8 +2,10 @@
 <com.zy.ppmusic.widget.DragFinishLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root_bl_content"
     android:background="@color/colorWhite"
+    tools:ignoreViewBinding="true"
     android:fitsSystemWindows="true"
     android:orientation="vertical">
 

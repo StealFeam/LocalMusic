@@ -17,6 +17,7 @@ import com.zy.ppmusic.utils.PrintLog
 import com.zy.ppmusic.utils.StreamUtils
 import java.io.File
 import java.io.PrintWriter
+import kotlin.system.exitProcess
 
 /**
  * @author stealfeam
@@ -24,6 +25,7 @@ import java.io.PrintWriter
  * 错误页面，用来处理应用崩溃显示友好界面
  */
 class ErrorActivity : AppCompatActivity() {
+
     companion object {
         const val ERROR_INFO = "ERROR_INFO"
     }
@@ -41,11 +43,13 @@ class ErrorActivity : AppCompatActivity() {
 
     private fun writeMsgToLocal() {
         val errorInfo = intent.getSerializableExtra(ERROR_INFO) as Throwable
-        if(ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
-            PrintLog.e(errorInfo.message?:"error msg is null")
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            PrintLog.e(errorInfo.message ?: "error msg is null")
             return
         }
-        val writer = PrintWriter(File(FileUtils.downloadFile + "/music_error_log.txt"))
+        val errorFile = File(FileUtils.downloadFile + "/music_error_log.txt")
+        if (!errorFile.exists()) errorFile.createNewFile()
+        val writer = PrintWriter(errorFile)
         writer.println("---- " + DateUtil.get().getTime(System.currentTimeMillis()) + " ----")
         errorInfo.printStackTrace(writer)
         writer.flush()
@@ -61,7 +65,7 @@ class ErrorActivity : AppCompatActivity() {
                     activity?.finish()
                     dismiss()
                     Process.killProcess(Process.myPid())
-                    System.exit(0)
+                    exitProcess(0)
                 }.create()
     }
 }

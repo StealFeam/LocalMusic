@@ -19,9 +19,9 @@ object UIUtils {
         return (px / density + 0.5f).toInt()
     }
     @JvmStatic fun getString(id: Int): String {
-        return App.getInstance().resources.getString(id)
+        return App.instance!!.resources.getString(id)
     }
     @JvmStatic fun getColor(id: Int): Int {
-        return ContextCompat.getColor(App.getInstance(), id)
+        return ContextCompat.getColor(App.instance!!, id)
     }
 }
