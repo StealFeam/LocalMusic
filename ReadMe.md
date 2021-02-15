@@ -6,7 +6,7 @@
 **新版说明**
 - 由于Android 11的限制，无法全盘扫描，所以通过系统的媒体库进行获取数据。
 - Android 10以下的版本还是通过全盘扫描，但是通过过滤文件夹的方式提高了扫描速度
-  如果你的文件没有出现在列表中，可以在这个com.zy.ppmusic.utils.Constant.kt文件中修改。
+  如果你的文件没有出现在列表中，可以在这个[com.zy.ppmusic.utils.Constant.kt](https://github.com/StealFeam/LocalMusic/blob/master/app/src/main/java/com/zy/ppmusic/utils/Constant.kt)文件中修改。
   
 #友情提示
 <br/>
