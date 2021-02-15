@@ -222,7 +222,6 @@ object FileUtils {
         }
     }
 
-
     fun getPathFile(path: String): File {
         return createFileIfNotExits(path)
     }

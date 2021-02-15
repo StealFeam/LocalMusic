@@ -322,9 +322,7 @@ class MediaService : MediaBrowserServiceCompat() {
             mAudioReceiver?.unregister()
         }
 
-        val stateBuilder = PlaybackStateCompat.Builder()
-                .setActions(playbackActions)
-
+        val stateBuilder = PlaybackStateCompat.Builder().setActions(playbackActions)
         stateBuilder.setState(state, position, 1.0f, SystemClock.elapsedRealtime())
         if (mCurrentMedia != null) {
             stateBuilder.setActiveQueueItemId(mCurrentMedia!!.queueId)
@@ -361,29 +359,31 @@ class MediaService : MediaBrowserServiceCompat() {
     private fun removeQueueItemAt(removeIndex: Int) {
         if (removeIndex == -1) {
             Log.e(TAG, "removeQueueItemAt: the index is $removeIndex")
+            updateQueue()
             return
         }
         Log.e(TAG, "removeQueueItemAt: $removeIndex")
         //如果删除的是当前播放的歌曲，则播放新的曲目
-        if (DataProvider.get().getMediaIndex(mPlayBack?.currentMediaId) == removeIndex) {
+        if (DataProvider.get().getQueueItemList().indexOf(mCurrentMedia) == removeIndex) {
             val state = mPlayBack?.state
             if (state == PlaybackStateCompat.STATE_PLAYING) {
                 mPlayBack?.pause()
             }
-            DataProvider.get().removeItem(removeIndex)
+            DataProvider.get().removeQueueAt(removeIndex)
             updateQueue()
             if (DataProvider.get().mediaIdList.isNotEmpty()) {
                 //删除的是前列表倒数第二个曲目的时候直接播放替代的曲目
                 if (removeIndex <= DataProvider.get().mediaIdList.size - 1) {
                     onMediaChange(DataProvider.get().mediaIdList[removeIndex], state == PlaybackStateCompat.STATE_PLAYING)
-                } else {//删除的是前列表最后一个曲目播放列表的第一个曲目
+                } else {
+                    //删除的是前列表最后一个曲目播放列表的第一个曲目
                     onMediaChange(DataProvider.get().mediaIdList[0], state == PlaybackStateCompat.STATE_PLAYING)
                 }
             } else {
                 mPlayBack?.stopPlayer()
             }
         } else {
-            DataProvider.get().removeItem(removeIndex)
+            DataProvider.get().removeQueueAt(removeIndex)
             updateQueue()
         }
     }
@@ -465,9 +465,9 @@ class MediaService : MediaBrowserServiceCompat() {
      */
     fun onMediaChange(mediaId: String?, shouldPlayWhenPrepared: Boolean, shouldSeekToPosition: Long = 0) {
         if (DataProvider.get().pathList.isNotEmpty()) {
-            if(System.currentTimeMillis() - lastChangeMis < 800){
+            if (System.currentTimeMillis() - lastChangeMis < 800) {
                 return
-            }else{
+            } else {
                 lastChangeMis = System.currentTimeMillis()
             }
             PrintLog.d("mediaId-----$mediaId")
@@ -505,20 +505,18 @@ class MediaService : MediaBrowserServiceCompat() {
         mPlayBack ?: initPlayBack()
         //设置媒体信息
         val track = DataProvider.get().metadataCompatList[mediaId]
-        //触发MediaControllerCompat.Callback->onMetadataChanged方法
-        if (track != null) {
-            mMediaSessionCompat?.setMetadata(track)
-        } else {
-            println("----track is null----")
-        }
+        // 触发MediaControllerCompat.Callback->onMetadataChanged方法
+        mMediaSessionCompat?.setMetadata(track)
+        PrintLog.e("update track is $track")
         val index = DataProvider.get().getMediaIndex(mediaId)
+        if (index < 0) return
         mCurrentMedia = DataProvider.get().getQueueItemList()[index]
         if (seekToPosition > 0) {
             val extra = Bundle()
             extra.putLong(LOCAL_CACHE_POSITION_EVENT, seekToPosition)
             mMediaSessionCompat?.sendSessionEvent(LOCAL_CACHE_POSITION_EVENT, extra)
         }
-        mPlayBack?.preparedWithMediaId(mediaId,seekToPosition.toInt(),isShouldPlay)
+        mPlayBack?.preparedWithMediaId(mediaId,seekToPosition.toInt(), isShouldPlay)
     }
 
     private fun updateQueue() {

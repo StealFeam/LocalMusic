@@ -85,11 +85,11 @@ class ScanMediaFile private constructor() {
             file.listFiles { _, name ->
                 Constant.FILTER_DIRS.none { segment -> name.splitToSequence("/").any { it == segment } }
             }?.filter {
-                //过滤没有后缀名的文件
+                // 过滤没有后缀名的文件
                 val index = it.name.lastIndexOf(dot)
                 val length = it.name.length
-                //xxx.x以及xxx.xxxxx格式不支持
-                index <= 0 || index > length - 2 || index < length - 4
+                // xxx.x以及xxx.xxxxx格式不支持
+                it.isDirectory || !(index <= 0 || index > length - 2 || index < length - 4)
             }?.forEach {
                 searchFile(it)
             }

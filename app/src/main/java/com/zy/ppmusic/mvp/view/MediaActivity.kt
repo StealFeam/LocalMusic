@@ -225,7 +225,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 mPresenter?.playWithId("-1", extra)
             }
         }
-        //播放列表监听
         showPlayQueueImageView.setOnClickListener {
             createBottomQueueDialog()
         }
@@ -347,6 +346,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 (mMediaQueueAdapter?.selectIndex?.plus(1) ?: 1), DataProvider.get().pathList.size)
         mMediaQueueDialog?.setContentView(mPlayQueueContentView!!)
         mMediaQueueRecycler?.adapter = mMediaQueueAdapter
+        mMediaQueueDialog?.dismissWithAnimation = true
         mMediaQueueRecycler?.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
         mMediaQueueRecycler?.addItemDecoration(RecycleViewDecoration(this, androidx.recyclerview.widget.LinearLayoutManager.VERTICAL,
                 R.drawable.recyclerview_vertical_line, UIUtils.dp2px(this, 25)))
@@ -374,7 +374,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     /**
      * 显示确认删除提示
      */
-    @SuppressLint("InflateParams")
     private fun createDelQueueItemDialog(position: Int) {
         val delContentBinding = DlContentDelItemBinding.inflate(layoutInflater)
         val delContentView = delContentBinding.root
@@ -384,20 +383,9 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 .setTitle(getString(R.string.string_sure_del))
                 .setView(delContentView)
                 .setPositiveButton(getString(R.string.string_del)) { _, _ ->
-                    if (delContentBinding.checkboxDlContentMessage.isChecked) {
-                        val path = DataProvider.get().getPath(position)
-                        val result = mPresenter?.deleteFile(path) ?: false
-                        if (result) {
-                            if (path.isNullOrEmpty()) {
-                                return@setPositiveButton
-                            }
-                            sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse(path)))
-                            notifyDelItem(DataProvider.get().getMediaIndex(path.hashCode().toString()))
-                        } else {
-                            doSupportDelAction(position)
-                        }
-                    } else {
-                        notifyDelItem(position)
+                    when (val success = mPresenter?.deleteFile(delContentBinding.checkboxDlContentMessage.isChecked, position)) {
+                        null -> needDocumentPermission(position)
+                        else -> toast(if (success) "删除成功" else "删除失败")
                     }
                 }
                 .setNegativeButton(getString(R.string.string_cancel)) { d, _ ->
@@ -412,50 +400,11 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
     }
 
-    /**
-     * 修复5.0后无法删除外部存储文件
-     */
-    @SuppressLint("NewApi")
-    private fun doSupportDelAction(position: Int) {
-        if (mPresenter!!.getGrantedRootUri().isNotEmpty()) {
-            DataProvider.get().getPath(position)?.apply {
-                //0000-0000
-                val rootId = getRootId(mPresenter!!.getGrantedRootUri())
-                println("rootId...$rootId,和rootId相比的值--$this")
-                try {
-                    val delUri = DocumentsContract.buildDocumentUriUsingTree(Uri.parse(mPresenter.getChildrenUri()),
-                            "$rootId:${substringAfter(rootId)}")
-                    println("删除的uri----$delUri")
-                    if (DocumentsContract.deleteDocument(contentResolver, delUri)) {
-                        toast("删除成功")
-                        notifyDelItem(position)
-                    } else {
-                        println("执行删除错误")
-                        toast("删除失败")
-                    }
-                } catch (e: SecurityException) {
-                    mPresenter?.setGrantedRootUri("", "")
-                    doSupportDelAction(position)
-                } catch (e: Exception) {
-                    handleFinallyChoice(this)
-                }
-            }
-        } else {
-            toast("需要授予权限")
-            doDelActionPosition = position
-            Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
-                startActivityForResult(this, requestDelPermissionCode)
-            }
-        }
-    }
-
-    private fun handleFinallyChoice(path: String) {
-        try {
-            MediaStore.createDeleteRequest(contentResolver, listOf(Uri.parse(path))).send()
-            toast("删除成功")
-        } catch (e: Exception) {
-            toast("删除失败")
-            e.printStackTrace()
+    override fun needDocumentPermission(position: Int) {
+        toast("需要授予权限")
+        doDelActionPosition = position
+        Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+            startActivityForResult(this, requestDelPermissionCode)
         }
     }
 
@@ -478,7 +427,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 DocumentsContract.getTreeDocumentId(intent.data))
             mPresenter?.setGrantedRootUri(intent.data!!.toString(), childrenUri.toString())
             if (doDelActionPosition != -1) {
-                doSupportDelAction(doDelActionPosition)
+                mPresenter?.deleteFile(includeFile = true, doDelActionPosition)
                 doDelActionPosition = -1
             }
         }
@@ -779,8 +728,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
 
         //播放列表加载失败
-        override fun onError(parentId: String) =
-                PrintLog.print("SubscriptionCallback onError called.....")
+        override fun onError(parentId: String) = PrintLog.print("SubscriptionCallback onError called.....")
     }
 
     private fun updateTime() {
@@ -793,6 +741,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             val percent = ((startPosition * 1.0f) / endPosition * 1.0f)
             mediaSeekBar.progress = (percent * 100f).toInt()
             durationTimeTextView.text = DateUtil.get().getTime(endPosition)
+        } else {
+            durationTimeTextView.text = resources.getString(R.string.string_time_init)
         }
         startPosition = takeIf { startPosition > endPosition }?.endPosition ?: startPosition
         playingTimeTextView.text = DateUtil.get().getTime(startPosition)
@@ -814,9 +764,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             mCurrentMediaIdStr = metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID)
             endPosition = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
             updateTime()
-            val position = mCurrentMediaIdStr?.let {
-                DataProvider.get().getMediaIndex(it)
-            } ?: 0
+            val position: Int? = mCurrentMediaIdStr?.let { DataProvider.get().getMediaIndex(it) }
+            if (position == null || position < 0) return
             //只在dialog显示时刷新
             mMediaQueueDialog?.apply {
                 if (this.isShowing) {
@@ -841,6 +790,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             PrintLog.print("onQueueChanged called size=${queue?.size}")
             if (queue == null || queue.isEmpty()) {
                 setMediaInfo(getString(R.string.app_name), getString(R.string.app_name))
+                mMediaQueueDialog?.dismiss()
                 return
             }
             contentViewPager.clearOnPageChangeListeners()
@@ -852,8 +802,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 //                    updateQueueSize(currentIndex + 1, DataProvider.get().pathList.size)
                     mMediaQueueAdapter?.selectIndex = currentIndex
                     mMediaQueueAdapter?.setData(queue)
-                    mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
-                            currentIndex + 1, queue.size)
+                    mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position), currentIndex + 1, queue.size)
                 }
             }
             showMsg("更新播放列表")
@@ -866,6 +815,10 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             PrintLog.print("position=" + state?.position + ",buffer=" + state?.bufferedPosition)
             PrintLog.print("endPosition=$endPosition")
             startPosition = state?.position ?: 0
+            if (DataProvider.get().pathList.isEmpty()) {
+                setMediaInfo(getString(R.string.app_name), getString(R.string.app_name))
+                mMediaQueueDialog?.dismiss()
+            }
             updateTime()
             handlePlayState(state?.state ?: PlaybackStateCompat.STATE_NONE)
         }
@@ -916,10 +869,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 }
             }
         }
-    }
-
-    private fun notifyDelItem(position: Int) {
-        mPresenter?.removeQueueItem(position)
     }
 
     /**

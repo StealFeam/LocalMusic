@@ -20,6 +20,7 @@ import com.zy.ppmusic.entity.MusicInfoEntity
 import kotlinx.coroutines.*
 import java.util.*
 import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * 数据转换
@@ -285,24 +286,18 @@ class DataProvider private constructor() {
        return MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, infoEntity.mediaId)
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, infoEntity.queryPath)
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE,
-                        StringUtils.ifEmpty(infoEntity.musicName, getMusicName(infoEntity.queryPath)))
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, StringUtils.ifEmpty(infoEntity.musicName, getMusicName(infoEntity.queryPath)))
                 .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, infoEntity.iconData?.let {
                     BitmapFactory.decodeByteArray(it, 0, it.size, loadPicOption)
                 })
-                //作者
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE,
-                        StringUtils.ifEmpty(infoEntity.artist, "<未知作者>"))
-                .putString(MediaMetadataCompat.METADATA_KEY_AUTHOR,
-                        StringUtils.ifEmpty(infoEntity.artist, "<未知作者>"))
-                //时长
-                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, infoEntity.duration)
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, StringUtils.ifEmpty(infoEntity.artist, "<未知作者>")) // 作者
+                .putString(MediaMetadataCompat.METADATA_KEY_AUTHOR, StringUtils.ifEmpty(infoEntity.artist, "<未知作者>"))
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, infoEntity.duration) // 时长
                 .build()
     }
 
     private fun buildQueueItem(descriptionCompat: MediaDescriptionCompat): MediaSessionCompat.QueueItem {
-        return MediaSessionCompat.QueueItem(descriptionCompat, descriptionCompat.mediaId?.hashCode()?.toLong()
-                ?: UUID.randomUUID().hashCode().toLong())
+        return MediaSessionCompat.QueueItem(descriptionCompat, descriptionCompat.mediaId?.hashCode()?.toLong() ?: UUID.randomUUID().hashCode().toLong())
     }
 
     private fun buildMediaItem(descriptionCompat: MediaDescriptionCompat): MediaBrowserCompat.MediaItem {
@@ -329,13 +324,22 @@ class DataProvider private constructor() {
         }
     }
 
-    fun removeItem(index: Int) {
+    private fun removeItem(index: Int) {
         pathList.removeAt(index)
         musicInfoEntities?.removeAt(index)
         mapMetadataArray.remove(this.mediaIdList[index])
-        queueItemList.removeAt(index)
         mediaIdList.removeAt(index)
         mediaItemList.removeAt(index)
+    }
+
+    fun removeQueueAt(index: Int) {
+        queueItemList.removeAt(index)
+    }
+
+    suspend fun removeItemIncludeFile(index: Int) = coroutineScope {
+        removeItem(index)
+        // 更新缓存
+        FileUtils.saveObject(musicInfoEntities, Constant.CACHE_FILE_PATH)
     }
 
     /**
@@ -368,15 +372,19 @@ class DataProvider private constructor() {
     }
 
     fun getMediaIndex(mediaId: String?): Int {
-        return if (mediaIdList.contains(mediaId)) {
+        return if (mediaId.isNullOrEmpty()) {
+            -1
+        } else {
             mediaIdList.indexOf(mediaId)
-        } else 0
+        }
     }
 
     fun getMetadataItem(mediaId: String): MediaMetadataCompat? {
         return if (mapMetadataArray.containsKey(mediaId)) {
             mapMetadataArray[mediaId]
-        } else null
+        } else {
+            null
+        }
     }
 
     override fun toString(): String {

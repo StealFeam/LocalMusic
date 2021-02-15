@@ -20,7 +20,9 @@ interface IMediaActivityContract {
 
         fun setRepeatMode(mode:Int)
 
-        fun setDeleteResult(isSuccess:Boolean,path:String?)
+        fun setDeleteResult(isSuccess:Boolean, path:String?)
+
+        fun needDocumentPermission(position: Int)
 
         /**
          * 显示LoadingDialog
@@ -65,7 +67,9 @@ interface IMediaActivityContract {
          * @param path 本地文件路径
          * @return 删除结果
          */
-        abstract fun deleteFile(path: String?):Boolean
+        abstract fun deleteFile(path: String?): Boolean
+
+        abstract fun deleteFile(includeFile: Boolean, position: Int): Boolean?
 
         /**
          * 向服务发送命令
@@ -112,7 +116,6 @@ interface IMediaActivityContract {
          * 上一首
          */
         abstract fun skipPrevious()
-
     }
 
     interface IMediaActivityModel : IBaseModel {
