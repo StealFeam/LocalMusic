@@ -2,16 +2,17 @@ package com.zy.ppmusic.data.db;
 
 import android.content.Context;
 
+import androidx.annotation.Keep;
+
 import com.zy.ppmusic.data.db.dao.DaoMaster;
 import com.zy.ppmusic.data.db.dao.DaoSession;
 import com.zy.ppmusic.data.db.dao.MusicDbEntityDao;
 import com.zy.ppmusic.entity.MusicDbEntity;
 
-import java.util.List;
-
 /**
  * @author stealfeam
  */
+@Keep
 public class DataBaseManager {
     private static final String TABLE_NAME = "local_db";
     private static final String TABLE_PATH_LIST = "path_list";
@@ -20,7 +21,7 @@ public class DataBaseManager {
 
     private DataBaseManager() { }
 
-    private static class InstanceHolder{
+    private static class InstanceHolder {
         private static final DataBaseManager INSTANCE = new DataBaseManager();
     }
 
@@ -53,9 +54,9 @@ public class DataBaseManager {
     public MusicDbEntity getEntity() {
         checkSession();
         long count = mSession.getDao(MusicDbEntity.class).count();
-        if(count == 0){
+        if (count == 0) {
             return null;
-        }else{
+        } else {
             return mSession.getMusicDbEntityDao().loadAll().get(0);
         }
     }
@@ -68,7 +69,7 @@ public class DataBaseManager {
 
     private void checkSession() {
         if (mSession == null) {
-            if(mOpenHelper == null){
+            if (mOpenHelper == null) {
                 System.err.println("please call initDb first...");
                 throw new NullPointerException("please call initDb first...");
             }

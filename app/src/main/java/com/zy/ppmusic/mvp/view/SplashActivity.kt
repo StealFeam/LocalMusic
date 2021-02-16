@@ -27,7 +27,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         val attachTime = SpUtils.get().getOperator {
-            it.getLong(Constant.SP_APP_ATTACH_TIME,System.currentTimeMillis())
+            it.getLong(Constant.SP_APP_ATTACH_TIME, System.currentTimeMillis())
         } as Long
         val diffTime = System.currentTimeMillis() - attachTime
         if (diffTime in 0 .. animDuration) {

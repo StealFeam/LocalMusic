@@ -51,6 +51,7 @@ import java.util.*
  *      1.MediaController.transportControls.playFromMediaId(String, Bundle);//只发送消息（最好与播放器状态相关）
  *      2.SessionCompat.sendCommand(String,Bundle,ResultReceiver);//需要获取结果
  */
+@Keep
 class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActivityContract.IMediaActivityView {
 
     private var mMediaBrowser: MediaBrowserCompat? = null
@@ -96,6 +97,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     private var isStarted = false
 
     /*** 接收媒体服务回传的信息，这里处理的是当前播放的位置和进度*/
+    @Keep
     inner class MediaResultReceive(activity: MediaActivity, handler: Handler) : ResultReceiver(handler) {
         private var mWeakView: WeakReference<MediaActivity> = WeakReference(activity)
 
@@ -187,7 +189,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         setUpBottomEdgeView()
         //专辑图片的圆形背景
         setUpCenterBackGround()
-
         mediaSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
@@ -685,6 +686,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     /**
      * 播放器相关回调
      */
+    @Keep
     private val subscriptionCallBack = object : MediaBrowserCompat.SubscriptionCallback() {
         //service加载完成列表回调
         override fun onChildrenLoaded(parentId: String, children: MutableList<MediaBrowserCompat.MediaItem>) {
@@ -751,6 +753,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     /**
      * 媒体控制
      */
+    @Keep
     private val mControllerCallBack = object : MediaControllerCompat.Callback() {
         //当前歌曲信息变化回调
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {

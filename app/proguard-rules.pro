@@ -30,10 +30,14 @@
 -keepclassmembers class * extends org.greenrobot.greendao.AbstractDao {
 public static java.lang.String TABLENAME;
 }
--keep class **$Properties
-# If you do not use SQLCipher:
--dontwarn org.greenrobot.greendao.database.**
-# If you do not use Rx:
+-keep class **$Properties { *; }
+
+# If you DO use SQLCipher:
+-keep class org.greenrobot.greendao.database.SqlCipherEncryptedHelper { *; }
+
+# If you do NOT use SQLCipher:
+-dontwarn net.sqlcipher.database.**
+# If you do NOT use RxJava:
 -dontwarn rx.**
 
 -keep public class * implements com.bumptech.glide.module.GlideModule
@@ -62,6 +66,10 @@ public static java.lang.String TABLENAME;
 }
 
 -keepclassmembernames public class android.support.v7.view.menu.MenuBuilder{*;}
+
+-keepclassmembernames class com.zy.ppmusic.service.MediaService
+-keepclasseswithmembers class com.zy.ppmusic.service.MediaService
+-keepclassmembers class com.zy.ppmusic.service.MediaService
 
 # 保留Serializable序列化的类不被混淆
 -keepclassmembers class * implements java.io.Serializable {

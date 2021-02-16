@@ -3,12 +3,14 @@ package com.zy.ppmusic.entity;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Generated;
+import org.greenrobot.greendao.annotation.Keep;
 
 /**
  * 记录上次播放媒体信息
  * @author stealfeam
  */
 @Entity
+@Keep
 public class MusicDbEntity {
     /**
      * 媒体的唯一id
