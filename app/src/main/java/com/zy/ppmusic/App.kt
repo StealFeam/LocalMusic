@@ -3,6 +3,7 @@ package com.zy.ppmusic
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import androidx.multidex.MultiDexApplication
 import com.zy.ppmusic.data.db.DataBaseManager
 import com.zy.ppmusic.utils.Constant
 import com.zy.ppmusic.utils.CrashHandler
@@ -11,7 +12,7 @@ import com.zy.ppmusic.utils.SpUtils.Companion.get
 /**
  * @author stealfeam
  */
-class App : Application() {
+class App : MultiDexApplication() {
 
     var databaseManager: DataBaseManager? = null
         private set
