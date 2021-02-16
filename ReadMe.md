@@ -8,7 +8,6 @@
   如果你的文件没有出现在列表中，可以在这个[com.zy.ppmusic.utils.Constant.kt](https://github.com/StealFeam/LocalMusic/blob/master/app/src/main/java/com/zy/ppmusic/utils/Constant.kt)文件中修改。
   
 # 友情提示
-<br/>
 如果出现问题请提交issue或者联系我 2295573743@qq.com
 出现闪退可查看本机中Download文件夹有个music_error_log.txt中有异常的详细信息
 如果能提供这个文件最好不过了
