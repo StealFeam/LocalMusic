@@ -1,7 +1,9 @@
 package com.zy.ppmusic.adapter
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
-import android.support.v7.widget.RecyclerView
+import android.os.Build
+import androidx.recyclerview.widget.RecyclerView
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +15,9 @@ import com.zy.ppmusic.entity.ScanResultEntity
 import java.util.*
 import kotlin.collections.ArrayList
 
+/**
+ * @author ZY
+ */
 class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var mBondDevices: ArrayList<ScanResultEntity> = ArrayList()
     private val mScanDevices: ArrayList<ScanResultEntity> = ArrayList()
@@ -36,11 +41,12 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
 
     fun clearData() {
         this.mBondDevices.clear()
+        this.mScanDevices.clear()
         notifyDataSetChanged()
     }
 
     fun foundNewDevice(entity: ScanResultEntity) {
-        if (isInList(entity.device)) {
+        if (isInList(entity.device!!)) {
             println("该设备已经存在列表了")
             return
         }
@@ -58,16 +64,21 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
             }
         }
         mBondDevices.forEachIndexed { _, scanResultEntity ->
-            if(scanResultEntity.device == device){
+            if (scanResultEntity.device == device) {
                 return true
             }
         }
         return false
     }
 
+    @SuppressWarnings("unused")
     fun deviceDisappeared(device: BluetoothDevice) {
         mScanDevices.forEachIndexed { index, scanResultEntity ->
-            if (Objects.equals(scanResultEntity.device.address, device.address)) {
+            if (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        Objects.equals(scanResultEntity.device?.address, device.address)
+                    } else {
+                        device.address == scanResultEntity.device?.address
+                    }) {
                 mScanDevices.removeAt(index)
                 return
             }
@@ -81,39 +92,49 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder? {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): androidx.recyclerview.widget.RecyclerView.ViewHolder {
         when (viewType) {
             R.layout.item_scan_title -> {
-                return TitleHolder(LayoutInflater.from(parent!!.context).inflate(R.layout.item_scan_title, parent, false))
+                return TitleHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_scan_title, parent, false))
             }
             R.layout.item_scan_child -> {
-                return ScanResultHolder(LayoutInflater.from(parent!!.context).
-                        inflate(R.layout.item_scan_child, parent, false), listener!!)
+                return ScanResultHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_scan_child, parent, false), listener!!)
             }
         }
-        return null
+        return TitleHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_scan_title, parent, false))
     }
 
-    override fun onBindViewHolder(p0: RecyclerView.ViewHolder?, p1: Int) {
-        if (p0 is TitleHolder) {
-            p0.title!!.text = mBondDevices[p1].title
-        } else if (p0 is ScanResultHolder) {
-            val entity:ScanResultEntity? = if(p1 < mBondDevices.size){
+    @SuppressLint("MissingPermission")
+    override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, p1: Int) {
+        if (holder is TitleHolder) {
+            holder.title!!.text = mBondDevices[p1].title
+        } else if (holder is ScanResultHolder) {
+            val entity: ScanResultEntity? = if (p1 < mBondDevices.size) {
                 mBondDevices[p1]
-            }else{
+            } else {
                 mScanDevices[p1 - mBondDevices.size]
             }
-            p0.name!!.text = entity!!.device.name
-            p0.name!!.tag = entity.device
-            println("position=" + p1 + "," + entity.state)
-            if (!TextUtils.isEmpty(entity.state)) {
-                p0.showState(entity.state)
+            holder.name!!.text = if (entity!!.device?.name == null) {
+                "unknown"
             } else {
-                p0.hideState()
+                entity.device?.name
+            }
+            holder.name!!.tag = entity.device
+            println("position=" + p1 + "," + entity.state)
+            if (mBondDevices.contains(entity)) {
+                if (!TextUtils.isEmpty(entity.state)) {
+                    holder.showState(entity.state!!)
+                } else {
+                    holder.hideState()
+                }
+                holder.delBond!!.visibility = View.VISIBLE
+            } else {
+                holder.delBond!!.visibility = View.GONE
             }
         }
     }
 
+    @SuppressWarnings("unused")
     private fun isTitlePosition(position: Int): Boolean {
         if (position == 0 || position == mBondDevices.size - 1) {
             return true
@@ -121,36 +142,41 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
         return false
     }
 
-    override fun getItemCount(): Int {
-        return mBondDevices.size + mScanDevices.size
-    }
+    override fun getItemCount(): Int = mBondDevices.size + mScanDevices.size
 
-    class TitleHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class TitleHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
         var title: TextView? = null
 
         init {
-            title = itemView.findViewById(R.id.tv_scan_result_title) as TextView
+            title = itemView.findViewById(R.id.tv_scan_result_title) as TextView?
         }
     }
 
-    class ScanResultHolder(itemView: View, l: OnItemClickListener) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
+    class ScanResultHolder(itemView: View, l: OnItemClickListener) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView), View.OnClickListener {
         override fun onClick(v: View?) {
             if (listener != null) {
-                listener!!.onItemClick(name!!.tag as BluetoothDevice, adapterPosition)
+                if (v!!.id == R.id.bl_del_bond_iv) {
+                    listener!!.onItemOtherClick(v, adapterPosition)
+                } else {
+                    listener!!.onItemClick(name!!.tag as BluetoothDevice, adapterPosition)
+                }
             }
         }
 
         var name: TextView? = null
-        var tvState: TextView? = null
+        private var tvState: TextView? = null
         var icon: ImageView? = null
-        var listener: OnItemClickListener? = null
+        private var listener: OnItemClickListener? = null
+        var delBond: ImageView? = null
 
         init {
             this.listener = l
             itemView.setOnClickListener(this)
-            icon = itemView.findViewById(R.id.iv_scan_result_icon) as ImageView
-            name = itemView.findViewById(R.id.tv_scan_result_name) as TextView
-            tvState = itemView.findViewById(R.id.tv_connect_state) as TextView
+            icon = itemView.findViewById(R.id.iv_scan_result_icon) as ImageView?
+            name = itemView.findViewById(R.id.tv_scan_result_name) as TextView?
+            tvState = itemView.findViewById(R.id.tv_connect_state) as TextView?
+            delBond = itemView.findViewById(R.id.bl_del_bond_iv) as ImageView?
+            delBond!!.setOnClickListener(this)
         }
 
         fun showState(state: String) {
@@ -170,6 +196,7 @@ class ScanResultAdapter(mData: ArrayList<ScanResultEntity>) : RecyclerView.Adapt
 
     abstract class OnItemClickListener {
         abstract fun onItemClick(device: BluetoothDevice, position: Int)
+        open fun onItemOtherClick(view: View?, position: Int) {}
     }
 
 }

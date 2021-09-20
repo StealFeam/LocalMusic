@@ -1,13 +1,13 @@
 apply plugin: 'com.android.library'
+
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.3"
+    compileSdkVersion build_versions.compileSdkVersion
 
     defaultConfig {
-        minSdkVersion 9
-        targetSdkVersion 25
-        versionCode 1
-        versionName "0.4.2"
+        minSdkVersion build_versions.minSdkVersion
+        targetSdkVersion build_versions.targetSdkVersion
+        versionCode build_versions.versionCode
+        versionName build_versions.versionName
     }
 
     buildTypes {
@@ -19,7 +19,8 @@ android {
 }
 
 dependencies {
-    compile "com.android.support:appcompat-v7:25.3.1"
+    api 'androidx.appcompat:appcompat:1.2.0'
+    api 'androidx.legacy:legacy-support-v4:1.0.0'
 }
 
 

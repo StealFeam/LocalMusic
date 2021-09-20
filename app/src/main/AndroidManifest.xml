@@ -1,74 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.zy.ppmusic">
 
+    <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!--<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />-->
+    <!--<uses-permission android:name="android.permission.BLUETOOTH" />-->
+    <!--<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />-->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!--<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />-->
+    <!--<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />-->
 
     <application
-        android:name=".App"
-        android:allowBackup="true"
+        android:name="com.zy.ppmusic.App"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_music_normal"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_music_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:requestLegacyExternalStorage="true"
+        tools:ignore="GoogleAppIndexingWarning">
+
         <activity
-            android:name=".bl.BlScanActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <!--<intent-filter>-->
-                <!--<action android:name="android.intent.action.MAIN" />-->
-                <!--<category android:name="android.intent.category.LAUNCHER" />-->
-            <!--</intent-filter>-->
-        </activity>
+            android:name="com.zy.ppmusic.mvp.view.BlScanActivity"
+            android:theme="@style/AppTheme.NoActionBar.Translate" />
 
         <service
             android:name=".service.MediaService"
-            android:exported="true">
+            android:exported="false">
+
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
+
         </service>
 
-        <receiver android:name="android.support.v4.media.session.MediaButtonReceiver">
+        <service android:name=".service.LoopService"/>
+
+        <receiver android:name="androidx.media.session.MediaButtonReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
 
         <activity
-            android:name=".ui.MediaActivity"
-            android:launchMode="singleTop">
+            android:name=".mvp.view.MediaActivity"
+            android:launchMode="singleTask" />
 
-        </activity>
-        <activity android:name=".ui.SplashActivity"
+        <activity
+            android:name=".mvp.view.SplashActivity"
+            android:launchMode="singleTop"
             android:theme="@style/AppTheme.SplashTheme">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
-        <meta-data
-            android:name="TA_APPKEY"
-            android:value="ATN61E1MV6UI" />
+        <activity android:name=".mvp.view.ErrorActivity"/>
 
         <meta-data
-            android:name="InstallChannel"
-            android:value="内部测试" />
-
-        <provider
-            android:name="com.tencent.mid.api.MidProvider"
-            android:authorities="com.zy.ppmusic.TENCENT.MID.V3"
-            android:exported="true" />
+            android:name="android.max_aspect"
+            android:value="2.8" />
 
     </application>
 

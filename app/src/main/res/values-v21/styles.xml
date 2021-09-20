@@ -1,10 +1,11 @@
 <resources>
 
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorTheme</item>
         <item name="colorPrimaryDark">@color/colorThemeDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorAccent">@color/colorTheme</item>
+        <item name="android:windowBackground">@null</item>
         <item name="android:statusBarColor">@color/colorTheme</item>
         <item name="android:navigationBarColor">@color/colorTheme</item>
     </style>
@@ -13,6 +14,14 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:statusBarColor">@color/colorTheme</item>
+    </style>
+
+
+    <style name="AppTheme.SplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:statusBarColor">@color/colorTheme</item>
         <item name="android:navigationBarColor">@color/colorTheme</item>
+        <item name="android:windowBackground">@color/colorTheme</item>
     </style>
 </resources>

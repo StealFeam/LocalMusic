@@ -1,8 +1,8 @@
 package pub.devrel.easypermissions.helper;
 
 import android.annotation.SuppressLint;
-import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentManager;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentManager;
 
 import pub.devrel.easypermissions.RationaleDialogFragmentCompat;
 

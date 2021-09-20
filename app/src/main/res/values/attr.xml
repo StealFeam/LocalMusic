@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="SampleProgressView">
+        <attr name="progress" format="float"/>
+        <attr name="colorProgress" format="color"/>
+        <attr name="colorPoint" format="color"/>
+        <attr name="colorUnReachProgress" format="color"/>
+        <attr name="textSize" format="dimension"/>
+        <attr name="textColor" format="color"/>
+    </declare-styleable>
+</resources>

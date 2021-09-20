@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorTheme"
-    tools:context="com.zy.ppmusic.ui.SplashActivity">
+    tools:viewBindingIgnore="true"
+    tools:context="com.zy.ppmusic.mvp.view.SplashActivity">
 
-    <TextView
-        android:id="@+id/tv_splash_open"
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/splashTextView"
         android:text="@string/app_name"
         android:textColor="@color/colorWhite"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/dp30"
+        android:gravity="center"
         android:textSize="@dimen/sp20"
         android:textStyle="italic"
         app:layout_constraintEnd_toEndOf="parent"
@@ -21,4 +22,4 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.25" />
 
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

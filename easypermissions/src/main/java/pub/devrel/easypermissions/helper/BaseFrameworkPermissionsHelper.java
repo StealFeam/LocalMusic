@@ -2,8 +2,8 @@ package pub.devrel.easypermissions.helper;
 
 import android.app.FragmentManager;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import pub.devrel.easypermissions.RationaleDialogFragment;
 

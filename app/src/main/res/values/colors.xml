@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorAccent">#009688</color>
-    <color name="colorTheme">#90CCC6</color>
-    <color name="colorThemeDark">#90CCC6</color>
+    <color name="colorTheme">#0096A6</color>
+    <color name="colorThemeDark">#0096A6</color>
     <color name="colorBlack">#2c2c2c</color>
     <color name="colorWhite">#ffffff</color>
+    <color name="colorGray">#F0F0F0</color>
+    <color name="colorDarkGray">#5F5F5F</color>
 </resources>

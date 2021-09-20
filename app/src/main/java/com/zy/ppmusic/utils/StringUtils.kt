@@ -1,18 +1,19 @@
 package com.zy.ppmusic.utils
 
+object StringUtils {
+    @JvmStatic fun ifEmpty(str: CharSequence?): Boolean = str?.isEmpty() != false
 
-class StringUtils {
-    companion object {
-        fun ifEmpty(str: CharSequence?): CharSequence? {
-            return ifEmpty(str, "unknown")
+    @JvmStatic fun ifEmpty(str: String?, emptyReturn: String?): String? =
+        if (str == null || str.isEmpty() || "null" == str) {
+            emptyReturn
+        } else {
+            str
         }
 
-        fun ifEmpty(str: CharSequence?, emptyReturn: CharSequence?): CharSequence? {
-            return if (str == null || str.isEmpty()) {
-                emptyReturn
-            } else {
-                str
-            }
+    @JvmStatic fun ifEquals(str: String?, str1: String?): Boolean =
+        if (ifEmpty(str) || ifEmpty(str1)) {
+            false
+        } else {
+            str == str1
         }
-    }
 }

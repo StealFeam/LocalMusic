@@ -2,7 +2,7 @@ package pub.devrel.easypermissions.helper;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Permissions helper for apps built against API < 23, which do not need runtime permissions.

@@ -1,47 +1,44 @@
 <resources>
-    <string name="app_name">LMusicPlayer</string>
-    <string name="action_settings">设置</string>
-    <string name="app_subtitle">日常听歌的好帮手</string>
-    <string name="local_music">LocalMusic</string>
-    <string name="email">2295573743@qq.com</string>
-    <string name="bl_title">蓝牙</string>
+    <string name="app_name">LoveMusic</string>
     <string name="normal_text">@string/app_name</string>
     <string name="scan_result_icon">扫描设备的标识</string>
     <string name="menu_refresh">刷新</string>
-    <string name="mic_head">音乐头像</string>
-    <string name="fun_des_img">功能图片</string>
     <string name="action_close_notify">关闭notification</string>
     <string name="action_start_pause">开始或者暂停</string>
     <string name="action_next">下一首</string>
     <string name="artist_headset">专辑封面</string>
-    <string name="action_previous">上一首</string>
-    <string name="string_add_all">全部加入播放队列</string>
     <string name="string_read_external">android.permission.READ_EXTERNAL_STORAGE</string>
     <string name="string_write_external">android.permission.WRITE_EXTERNAL_STORAGE</string>
-
     <string name="string_permission_read">只有得到本地存储权限才能获取到本地媒体文件</string>
     <string name="exit">退出</string>
     <string name="string_loop_mode">播放模式</string>
-    <string name="string_loop_model_list">顺序播放</string>
-    <string name="string_loop_model_only">单曲循环</string>
-    <string name="string_loop_model_random">随机播放</string>
     <string name="string_del_media">删除</string>
     <string name="string_sure_del">确认删除吗</string>
-    <string name="string_del_desc">此操作会同时删除本地文件</string>
     <string name="string_del">删除</string>
-    <string name="string_cancel">取消</string>
+    <string name="string_cancel">不想删了</string>
     <string name="string_custom_time_hint">自定义</string>
     <string name="string_sure">确定</string>
     <string name="itemImgDes">itemImg</string>
     <string name="string_time_init">00:00</string>
-    <string name="format_string_time_count_down_with_hour">%dh:%02dm:%02ds后关闭</string>
-    <string name="format_string_time_count_down_no_hour">%02d:%02d后关闭</string>
-    <string name="empty_play_queue" translatable="false">播放列表为空，未发现曲目</string>
-    <string name="queue_loading" translatable="false">加载列表中...</string>
-    <string name="loading_complete" translatable="false">加载完成</string>
-    <string name="format_string_search_media_count">扫描到%d首曲目</string>
+    <string name="empty_play_queue">播放列表为空，未发现曲目</string>
+    <string name="queue_loading">加载列表中…</string>
+    <string name="loading_complete">加载完成</string>
+    <string name="format_string_search_media_count" formatted="false">扫描到%d首曲目</string>
     <string name="no_media_searched">未扫描到曲目</string>
     <string name="start_scanning_the_local_file">开始扫描本地文件</string>
-    <string name="string_large_text">android.permission.READ_EXTERNAL_STORAGE|android.permission.READ_EXTERNAL_STORAGE</string>
     <string name="string_close">关闭</string>
+    <string name="string_queue_playing_position" formatted="false">正在播放%d/%d</string>
+    <string name="unknown_name">&lt;未知曲名&gt;</string>
+    <string name="unknown_author">&lt;未知作者&gt;</string>
+    <string name="show_name_and_author" formatted="false">%s-%s</string>
+    <string name="loading">loading…</string>
+    <string name="scan_media">扫描</string>
+    <string name="set_time_to_come_down">定时关闭</string>
+    <string name="unsupport_bluetooth">您的设备不支持蓝牙</string>
+    <string name="dialog_error_content_msg">抱歉，应用出现了点问题，请清除缓存后重新试一下吧(*^▽^*)</string>
+    <string name="dialog_error_sure">我知道了</string>
+    <string name="choose_notify_style">通知样式</string>
+    <string name="choose_custom_style">自定义样式</string>
+    <string name="choose_system_style">系统样式</string>
+    <string name="notification_sub_text">无乐不欢</string>
 </resources>
