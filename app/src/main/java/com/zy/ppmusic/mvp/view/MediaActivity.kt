@@ -223,7 +223,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             if (mCurrentMediaIdStr != null) {
                 mPresenter?.playWithId(mCurrentMediaIdStr!!, extra)
             } else {
-                PrintLog.print(getString(R.string.empty_play_queue))
+                logd(getString(R.string.empty_play_queue))
                 mPresenter?.playWithId("-1", extra)
             }
         }
@@ -231,7 +231,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             createBottomQueueDialog()
         }
         contentViewPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
-        contentViewPager.offscreenPageLimit = 2
+        contentViewPager.offscreenPageLimit = 3
         contentViewPager.registerOnPageChangeCallback(pageChangeCallback)
         contentViewPager.setPageTransformer(null)
     }
@@ -248,18 +248,31 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
         override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
             if (positionOffset == 0f && positionOffsetPixels == 0) {
+                // TODO 复现问题
                 if (dragBeforeIndex == contentViewPager.currentItem) {
                     return
                 }
-                PrintLog.i("-----------ViewPager index 更新 ${contentViewPager.currentItem}")
-                val currentMediaId = DataProvider.get().mediaIdList[contentViewPager.currentItem]
-                if (currentMediaId == mCurrentMediaIdStr) {
-                    return
-                }
-                PrintLog.e("准备播放第${contentViewPager.currentItem}首")
-                mPresenter?.skipToPosition(contentViewPager.currentItem.toLong())
+                logi("-----------ViewPager index 更新 ${contentViewPager.currentItem}")
+                skipToCurrentPosition()
             }
         }
+
+        /**
+         * 回到第一首或者最后一首调用
+         */
+        override fun onPageSelected(position: Int) {
+            logi("dragIndex====$dragBeforeIndex but now position is $position")
+            skipToCurrentPosition()
+        }
+    }
+
+    private fun skipToCurrentPosition() {
+        val currentMediaId = DataProvider.get().mediaIdList[contentViewPager.currentItem]
+        if (currentMediaId == mCurrentMediaIdStr) {
+            return
+        }
+        loge("准备播放第${contentViewPager.currentItem}首")
+        mPresenter?.skipToPosition(contentViewPager.currentItem.toLong())
     }
 
     @Keep
