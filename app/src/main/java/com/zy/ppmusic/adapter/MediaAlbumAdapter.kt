@@ -26,15 +26,16 @@ class MediaAlbumAdapter : RecyclerView.Adapter<MediaAlbumAdapter.MediaHolder>() 
     private val pathList: ArrayList<String> by lazy { ArrayList() }
 
     fun fillDataToAdapter(context: CoroutineScope, newPathList: List<String>?) {
-        context.launch {
+        if (newPathList == null) {
+            return
+        }
+        context.launch(Dispatchers.Main) {
             val diffResult: DiffUtil.DiffResult = withContext(Dispatchers.IO) {
                 getDiffResult(newPathList)
             }
             diffResult.dispatchUpdatesTo(this@MediaAlbumAdapter)
             pathList.clear()
-            if (newPathList != null) {
-                pathList.addAll(newPathList)
-            }
+            pathList.addAll(newPathList)
         }
     }
 

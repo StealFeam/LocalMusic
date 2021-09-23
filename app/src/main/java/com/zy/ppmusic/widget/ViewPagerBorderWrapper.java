@@ -21,6 +21,7 @@ import com.zy.ppmusic.utils.UIUtils;
 /**
  * @author stealfeam
  * @date 2018/3/22
+ * 循环列表的实现类
  * 只支持横向，还欠缺的是多指判断，耦合性相对高
  */
 public class ViewPagerBorderWrapper extends ViewGroup {
@@ -122,7 +123,6 @@ public class ViewPagerBorderWrapper extends ViewGroup {
             System.out.println("right======" + mRightView.getMeasuredWidth());
         }
     }
-
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
