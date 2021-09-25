@@ -88,18 +88,22 @@ class ScanMediaFile private constructor() {
                 }
                 if (tasks.isNotEmpty()) {
                     for (subTask in invokeAll(tasks)) {
-                        val subResult: List<String> = subTask.join()
-                        if (subResult.isNotEmpty()) {
-                            result.addAll(subResult)
+                        try {
+                            val subResult = subTask.fork().join()
+                            if (subResult.isNotEmpty()) {
+                                result.addAll(subResult)
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
                         }
                     }
                 }
             } else {
-                SupportMediaType.SUPPORT_TYPE.forEach {
-                    if (file.name.endsWith(it)) {
+                for (type in SupportMediaType.SUPPORT_TYPE) {
+                    if (file.name.endsWith(type)) {
                         val size = 1024L * 1024L
                         if (size < file.length()) {
-                            Log.w(TAG, file.absolutePath + ",length=" + file.length())
+                            logw(file.absolutePath + ",length=" + file.length())
                             result.add(file.absolutePath)
                         }
                     }
