@@ -10,10 +10,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.zy.ppmusic.R
 import com.zy.ppmusic.utils.DataProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.zy.ppmusic.utils.loge
+import kotlinx.coroutines.*
 import kotlin.collections.ArrayList
 
 /**
@@ -24,18 +22,20 @@ class MediaAlbumAdapter : RecyclerView.Adapter<MediaAlbumAdapter.MediaHolder>() 
     private val loadOptionsForImage: RequestOptions = RequestOptions()
             .circleCrop()
     private val pathList: ArrayList<String> by lazy { ArrayList() }
+    private var lastFillJob: Job? = null
 
     fun fillDataToAdapter(context: CoroutineScope, newPathList: List<String>?) {
         if (newPathList == null) {
             return
         }
-        context.launch(Dispatchers.Main) {
+        lastFillJob?.cancel()
+        lastFillJob = context.launch(Dispatchers.Main) {
             val diffResult: DiffUtil.DiffResult = withContext(Dispatchers.IO) {
                 getDiffResult(newPathList)
             }
-            diffResult.dispatchUpdatesTo(this@MediaAlbumAdapter)
             pathList.clear()
             pathList.addAll(newPathList)
+            diffResult.dispatchUpdatesTo(this@MediaAlbumAdapter)
         }
     }
 
