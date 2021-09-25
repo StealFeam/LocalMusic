@@ -66,10 +66,10 @@ dependencies {
     implementation 'com.github.bumptech.glide:glide:4.12.0'
     implementation 'androidx.multidex:multidex:2.0.1'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.30'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0'
     // koin https://github.com/InsertKoinIO/koin
-    implementation 'org.koin:koin-android:2.1.5'
+    implementation 'io.insert-koin:koin-android:3.1.2'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
     implementation 'org.greenrobot:greendao:3.3.0'
     implementation project(':easypermissions')
