@@ -380,11 +380,7 @@ class DataProvider private constructor() {
     }
 
     fun getMetadataItem(mediaId: String): MediaMetadataCompat? {
-        return if (mapMetadataArray.containsKey(mediaId)) {
-            mapMetadataArray[mediaId]
-        } else {
-            null
-        }
+        return mapMetadataArray[mediaId]
     }
 
     override fun toString(): String {

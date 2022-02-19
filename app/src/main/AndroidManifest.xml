@@ -41,7 +41,8 @@
 
         <service android:name=".service.LoopService"/>
 
-        <receiver android:name="androidx.media.session.MediaButtonReceiver">
+        <receiver android:name="androidx.media.session.MediaButtonReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
@@ -52,6 +53,7 @@
             android:launchMode="singleTask" />
 
         <activity
+            android:exported="true"
             android:name=".mvp.view.SplashActivity"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.SplashTheme">

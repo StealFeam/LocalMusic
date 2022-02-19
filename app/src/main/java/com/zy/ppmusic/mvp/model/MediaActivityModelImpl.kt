@@ -11,10 +11,7 @@ import android.support.v4.media.session.PlaybackStateCompat
 import com.zy.ppmusic.entity.MusicInfoEntity
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract
 import com.zy.ppmusic.utils.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.lang.ref.WeakReference
 
 /**
@@ -25,6 +22,8 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
     private val CACHE_MODE_KEY = "mode_key"
     private val CACHE_ROOT_URI = "root_uri"
     private val CACHE_CHILD_URI = "child_uri"
+
+    private val scope: CoroutineScope by lazy { CoroutineScope(Dispatchers.IO + Job()) }
 
     @Volatile
     private var mCachePreference: SharedPreferences? = null
@@ -62,7 +61,7 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
     override fun getLocalMode(c: Context, e: (Int) -> Unit) {
         //创建协程环境
         //CoroutineScope注释代码
-        GlobalScope.launch(Dispatchers.Main) {
+        scope.launch(Dispatchers.Main) {
             val job = async(Dispatchers.IO){
                 initCachePreference(c)
                 return@async mCachePreference?.getInt(CACHE_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE) ?: 0
@@ -74,7 +73,7 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
     }
 
     override fun removeQueueItem(position: Int) {
-        GlobalScope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
             mControllerWeak?.get()?.removeQueueItem(DataProvider.get().queueItemList[position].description)
         }
     }
@@ -87,13 +86,13 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
 
     override fun postSendCommand(method: String, params: Bundle,
                                  resultReceiver: ResultReceiver) {
-        GlobalScope.launch(Dispatchers.IO){
+        scope.launch(Dispatchers.IO) {
             mControllerWeak?.get()?.sendCommand(method, params, resultReceiver)
         }
     }
 
     override fun postPlayWithId(mediaId: String, extra: Bundle) {
-        GlobalScope.launch(Dispatchers.IO){
+        scope.launch(Dispatchers.IO) {
             mControllerWeak?.get()?.transportControls?.playFromMediaId(mediaId, extra)
         }
     }
@@ -104,7 +103,7 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
 
 
     override fun postSetRepeatMode(c: Context, mode: Int) {
-        GlobalScope.launch(Dispatchers.IO){
+        scope.launch(Dispatchers.IO) {
             mControllerWeak?.get()?.transportControls?.setRepeatMode(mode)
             changeLocalMode(c, mode)
         }
@@ -112,26 +111,27 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
 
     override fun postSkipNext() {
         mControllerWeak?.get()?.transportControls?.let {
-            GlobalScope.launch(Dispatchers.IO){
+            scope.launch(Dispatchers.IO) {
                 it.skipToNext()
             }
         }
     }
 
     override fun postSkipPrevious() {
-        GlobalScope.launch(Dispatchers.IO){
+        scope.launch(Dispatchers.IO) {
             mControllerWeak?.get()?.transportControls?.skipToPrevious()
         }
     }
 
     override fun postSkipToPosition(id: Long) {
-        GlobalScope.launch(Dispatchers.IO){
+        scope.launch(Dispatchers.IO) {
             PrintLog.e("Model准备传输-----")
             mControllerWeak?.get()?.transportControls?.skipToQueueItem(id)
         }
     }
 
     override fun shutdown() {
+        scope.cancel()
         mControllerWeak?.clear()
     }
 

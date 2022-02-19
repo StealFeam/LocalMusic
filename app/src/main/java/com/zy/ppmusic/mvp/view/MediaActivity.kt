@@ -6,10 +6,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
-import android.net.Uri
 import android.os.*
 import android.provider.DocumentsContract
-import android.provider.MediaStore
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -29,20 +27,24 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatSeekBar
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.widget.ViewPager2
 import com.zy.ppmusic.R
-import com.zy.ppmusic.adapter.MediaHeadAdapter
+import com.zy.ppmusic.adapter.MediaAlbumAdapter
 import com.zy.ppmusic.adapter.PlayQueueAdapter
 import com.zy.ppmusic.adapter.TimeClockAdapter
 import com.zy.ppmusic.adapter.base.OnItemViewClickListener
 import com.zy.ppmusic.databinding.ActivityMediaBinding
 import com.zy.ppmusic.databinding.DlContentDelItemBinding
+import com.zy.ppmusic.extension.addOnClickListener
 import com.zy.ppmusic.mvp.base.AbstractBaseMvpActivity
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract
 import com.zy.ppmusic.mvp.presenter.MediaPresenterImpl
 import com.zy.ppmusic.service.MediaService
 import com.zy.ppmusic.utils.*
 import com.zy.ppmusic.widget.*
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -92,13 +94,13 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     /*** 显示播放列表数量*/
     private var mQueueCountTv: TextView? = null
     /*** 歌曲图片适配器*/
-    private var mHeadAdapter: MediaHeadAdapter? = null
+    private var mediaAlbumAdapter: MediaAlbumAdapter? = null
     /*** 记录循环是否已经开始*/
     private var isStarted = false
 
     /*** 接收媒体服务回传的信息，这里处理的是当前播放的位置和进度*/
     @Keep
-    inner class MediaResultReceive(activity: MediaActivity, handler: Handler) : ResultReceiver(handler) {
+    class MediaResultReceive(activity: MediaActivity, handler: Handler) : ResultReceiver(handler) {
         private var mWeakView: WeakReference<MediaActivity> = WeakReference(activity)
 
         override fun onReceiveResult(resultCode: Int, resultData: Bundle) {
@@ -140,7 +142,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     private val mediaToolbar: Toolbar by lazy { binding.mediaToolbar }
     private val mediaTitleTintView: View by lazy { binding.mediaTitleTintView }
     private val bottomTintView: View by lazy { binding.bottomTintView }
-    private val contentViewPager: ViewPager by lazy { binding.contentViewPager }
+    private val contentViewPager: ViewPager2 by lazy { binding.contentViewPager }
     private val mediaSeekBar: AppCompatSeekBar by lazy { binding.mediaSeekBar }
     private val playingTimeTextView: AppCompatTextView by lazy { binding.playingTimeTextView }
     private val durationTimeTextView: AppCompatTextView by lazy { binding.durationTimeTextView }
@@ -181,6 +183,13 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         ViewCompat.setBackground(contentViewPager, vpDrawable)
     }
 
+    private fun setUpContentViewPager() {
+        contentViewPager.orientation = ViewPager2.ORIENTATION_HORIZONTAL
+        contentViewPager.offscreenPageLimit = 3
+        contentViewPager.registerOnPageChangeCallback(pageChangeCallback)
+        contentViewPager.setPageTransformer(null)
+    }
+
     private var mModeIndex = 0
 
     override fun initViews() {
@@ -189,6 +198,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         setUpBottomEdgeView()
         //专辑图片的圆形背景
         setUpCenterBackGround()
+        setUpContentViewPager()
         mediaSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
@@ -210,30 +220,29 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             }
         })
         //循环模式点击监听
-        loopModelImageView.setOnClickListener {
+        loopModelImageView.addOnClickListener {
             mModeIndex++
             setPlayMode(mModeIndex % 3)
         }
         //播放按钮监听
-        playOrPauseImageView.setOnClickListener {
+        playOrPauseImageView.addOnClickListener {
             //初始化的时候点击的按钮直接播放当前的media
             val extra = Bundle()
             extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_WITH_ID)
             if (mCurrentMediaIdStr != null) {
                 mPresenter?.playWithId(mCurrentMediaIdStr!!, extra)
             } else {
-                PrintLog.print(getString(R.string.empty_play_queue))
+                logd(getString(R.string.empty_play_queue))
                 mPresenter?.playWithId("-1", extra)
             }
         }
-        showPlayQueueImageView.setOnClickListener {
+        showPlayQueueImageView.addOnClickListener {
             createBottomQueueDialog()
         }
     }
 
-
     /*专辑图片位置改变监听*/
-    private val mHeadChangeListener = object : ViewPager.OnPageChangeListener {
+    private val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
         private var dragBeforeIndex = -1
 
         override fun onPageScrollStateChanged(state: Int) {
@@ -244,26 +253,31 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
         override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
             if (positionOffset == 0f && positionOffsetPixels == 0) {
+                // TODO 复现问题
                 if (dragBeforeIndex == contentViewPager.currentItem) {
                     return
                 }
-                PrintLog.i("-----------ViewPager index 更新 ${contentViewPager.currentItem}")
-                val currentMediaId = DataProvider.get().mediaIdList[contentViewPager.currentItem]
-                if (currentMediaId == mCurrentMediaIdStr) {
-                    return
-                }
-                PrintLog.e("准备播放第${contentViewPager.currentItem}首")
-                mPresenter?.skipToPosition(contentViewPager.currentItem.toLong())
+                logi("-----------ViewPager index 更新 ${contentViewPager.currentItem}")
+                skipToCurrentPosition()
             }
         }
 
         /**
-         * 直接跳转到最后一个或者第一个只有这个
+         * 回到第一首或者最后一首调用
          */
         override fun onPageSelected(position: Int) {
-            onPageScrolled(position, 0f, 0)
-            println("dragIndex====$dragBeforeIndex but now position is $position")
+            logi("dragIndex====$dragBeforeIndex but now position is $position")
+            skipToCurrentPosition()
         }
+    }
+
+    private fun skipToCurrentPosition() {
+        val currentMediaId = DataProvider.get().mediaIdList[contentViewPager.currentItem]
+        if (currentMediaId == mCurrentMediaIdStr) {
+            return
+        }
+        loge("准备播放第${contentViewPager.currentItem}首")
+        mPresenter?.skipToPosition(contentViewPager.currentItem.toLong())
     }
 
     @Keep
@@ -523,9 +537,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return super.onKeyDown(keyCode, event)
-        }
         when (keyCode) {
             KeyEvent.KEYCODE_MEDIA_NEXT,
             KeyEvent.KEYCODE_MEDIA_PAUSE,
@@ -538,13 +549,14 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         return super.onKeyDown(keyCode, event)
     }
 
-    private fun updateHead() = if (mHeadAdapter == null) {
-        mHeadAdapter = MediaHeadAdapter(supportFragmentManager, DataProvider.get().pathList)
-        contentViewPager.offscreenPageLimit = 2
-        contentViewPager.addOnPageChangeListener(mHeadChangeListener)
-        contentViewPager.adapter = mHeadAdapter
-    } else {
-        mHeadAdapter?.setPathList(DataProvider.get().pathList)
+    private fun initOrUpdateAdapter() {
+        lifecycleScope.launch {
+            if (mediaAlbumAdapter == null) {
+                mediaAlbumAdapter = MediaAlbumAdapter()
+                contentViewPager.adapter = mediaAlbumAdapter
+            }
+            mediaAlbumAdapter?.fillDataToAdapter(lifecycleScope, DataProvider.get().pathList)
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -622,8 +634,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             PrintLog.print("已连接服务....")
             //mMediaBrowser!!.root 对应service的BrowserRoot 可以是包名
             mMediaBrowser?.subscribe(mMediaBrowser!!.root, subscriptionCallBack)
-            mMediaController = MediaControllerCompat(this@MediaActivity,
-                    mMediaBrowser!!.sessionToken)
+            mMediaController = MediaControllerCompat(this@MediaActivity, mMediaBrowser!!.sessionToken)
             mResultReceive = MediaResultReceive(this@MediaActivity, Handler(Looper.myLooper() ?: Looper.getMainLooper()))
             MediaControllerCompat.setMediaController(this@MediaActivity, mMediaController)
             mMediaController?.registerCallback(mControllerCallBack)
@@ -692,8 +703,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         override fun onChildrenLoaded(parentId: String, children: MutableList<MediaBrowserCompat.MediaItem>) {
             PrintLog.print("onChildrenLoaded.....activity... size " + children.size)
             if (children.size > 0) {
-                if (mHeadAdapter == null) {
-                    updateHead()
+                if (mediaAlbumAdapter == null) {
+                    initOrUpdateAdapter()
                 }
                 //如果当前在播放状态
                 if (mMediaController?.playbackState?.state != PlaybackStateCompat.STATE_NONE) {
@@ -796,8 +807,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 mMediaQueueDialog?.dismiss()
                 return
             }
-            contentViewPager.clearOnPageChangeListeners()
-            updateHead()
+            contentViewPager.unregisterOnPageChangeCallback(pageChangeCallback)
+            initOrUpdateAdapter()
             mMediaQueueDialog?.let {
                 if (it.isShowing) {
                     val currentIndex = DataProvider.get().getMediaIndex(mCurrentMediaIdStr!!)
@@ -809,7 +820,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 }
             }
             showMsg("更新播放列表")
-            contentViewPager.addOnPageChangeListener(mHeadChangeListener)
+            contentViewPager.registerOnPageChangeCallback(pageChangeCallback)
         }
 
         //播放器状态改变回调
@@ -938,15 +949,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         mMediaBrowser = null
     }
 
-
-    override fun onStop() {
-        super.onStop()
-        PrintLog.print("onStop called")
-        if (isFinishing) {
-            println("即将关闭----")
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         PrintLog.print("MediaActivity is destroy")
@@ -954,7 +956,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         disConnectService()
 
         //去除ViewPager的监听
-        contentViewPager.clearOnPageChangeListeners()
+        contentViewPager.unregisterOnPageChangeCallback(pageChangeCallback)
         ViewCompat.setBackground(mediaTitleTintView, null)
         ViewCompat.setBackground(contentViewPager, null)
         ViewCompat.setBackground(bottomTintView, null)

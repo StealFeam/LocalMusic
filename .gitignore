@@ -9,7 +9,8 @@
 /captures
 /.externalNativeBuild
 /bugreport.txt
-/.idea/*
+/.idea/*.*
+/.idea/*.xml
 
 
 

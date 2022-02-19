@@ -8,6 +8,8 @@ import kotlinx.coroutines.*
 
 import java.io.File
 import java.util.*
+import java.util.concurrent.ForkJoinPool
+import java.util.concurrent.RecursiveTask
 import kotlin.coroutines.resume
 
 /**
@@ -54,17 +56,61 @@ class ScanMediaFile private constructor() {
             mPathList.clear()
         }
         val startTime = System.currentTimeMillis()
-        Log.d(TAG, "run: 扫描开始")
+        logd("run: 扫描开始")
         if (mInnerStoragePath != null) {
-            searchFile(File(mInnerStoragePath!!))
-            Log.e(TAG, "run: 扫描内部存储结束")
+            findFileByForkJoin(File(mInnerStoragePath!!))
+            logd("run: 扫描内部存储结束")
         }
         if (mExternalStoragePath != null) {
-            searchFile(File(mExternalStoragePath!!))
-            Log.e(TAG, "run: 扫描外部存储结束")
+            findFileByForkJoin(File(mExternalStoragePath!!))
+            logd("run: 扫描外部存储结束")
         }
-        Log.d(TAG, "run: 扫描结束 cost=${System.currentTimeMillis() - startTime}")
+        logd("run: 扫描结束 cost=${System.currentTimeMillis() - startTime}")
         l.onComplete(mPathList)
+    }
+
+    private fun findFileByForkJoin(file: File) {
+        val task = Task(file)
+        ForkJoinPool().execute(task)
+        mPathList.addAll(task.join())
+    }
+
+    class Task(private val file: File) : RecursiveTask<List<String>>() {
+
+        override fun compute(): List<String> {
+            val result = mutableListOf<String>()
+            if (file.exists() && file.isDirectory) {
+                val childFiles = file.listFiles()
+                if (childFiles.isNullOrEmpty()) return result
+                val tasks = mutableListOf<Task>()
+                for (file in childFiles) {
+                    tasks.add(Task(file))
+                }
+                if (tasks.isNotEmpty()) {
+                    for (subTask in invokeAll(tasks)) {
+                        try {
+                            val subResult = subTask.fork().join()
+                            if (subResult.isNotEmpty()) {
+                                result.addAll(subResult)
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            } else {
+                for (type in SupportMediaType.SUPPORT_TYPE) {
+                    if (file.name.endsWith(type)) {
+                        val size = 1024L * 1024L
+                        if (size < file.length()) {
+                            logw(file.absolutePath + ",length=" + file.length())
+                            result.add(file.absolutePath)
+                        }
+                    }
+                }
+            }
+            return result
+        }
     }
 
     /**

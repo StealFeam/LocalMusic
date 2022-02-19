@@ -5,7 +5,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import androidx.annotation.Nullable;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.widget.ViewPager2;
+
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -20,6 +21,7 @@ import com.zy.ppmusic.utils.UIUtils;
 /**
  * @author stealfeam
  * @date 2018/3/22
+ * 循环列表的实现类
  * 只支持横向，还欠缺的是多指判断，耦合性相对高
  */
 public class ViewPagerBorderWrapper extends ViewGroup {
@@ -27,7 +29,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
     /**
      * 中间的View
      */
-    private ViewPager mViewPager;
+    private ViewPager2 mViewPager;
     /**
      * 左侧的View
      */
@@ -69,7 +71,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
         super(context, attrs, defStyleAttr);
     }
 
-    private void attachViewPager(ViewPager viewPager) {
+    private void attachViewPager(ViewPager2 viewPager) {
         this.mViewPager = viewPager;
         if (mLeftView == null) {
             mLeftView = new SimpleVerticalTextView(getContext());
@@ -91,7 +93,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-        attachViewPager((ViewPager) getChildAt(0));
+        attachViewPager((ViewPager2) getChildAt(0));
     }
 
     @Override
@@ -122,7 +124,6 @@ public class ViewPagerBorderWrapper extends ViewGroup {
         }
     }
 
-
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         switch (ev.getAction()) {
@@ -147,7 +148,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                     return false;
                 }
 
-                if (mViewPager.getCurrentItem() == mViewPager.getAdapter().getCount() - 1) {
+                if (mViewPager.getCurrentItem() == mViewPager.getAdapter().getItemCount() - 1) {
                     if (deltaX < 0) {
                         isLastIntercepted = true;
                         Log.e(TAG, "dispatchTouchEvent: 这是到最右侧时触发");
@@ -156,6 +157,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                     return isLastIntercepted && mInterceptDownTime == ev.getDownTime();
                 }
                 break;
+            case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 mLastTouchX = (int) ev.getRawX();
                 isLastIntercepted = false;
@@ -197,7 +199,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                     }
                     mLeftView.setLayoutParams(layoutParams);
                     //最后一个条目，并且是向左滑动
-                } else if (mViewPager.getCurrentItem() == mViewPager.getAdapter().getCount() - 1) {
+                } else if (mViewPager.getCurrentItem() == mViewPager.getAdapter().getItemCount() - 1) {
                     LayoutParams layoutParams = mRightView.getLayoutParams();
                     layoutParams.width -= deltaX;
                     layoutParams.width = Math.max(0, layoutParams.width);
@@ -221,6 +223,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                 }
                 mLastTouchX = (int) ev.getRawX();
                 break;
+            case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 final LayoutParams leftParams = mLeftView.getLayoutParams();
                 final LayoutParams rightParams = mRightView.getLayoutParams();
@@ -229,7 +232,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                 } else {
                     int endPosition = -1;
                     if (mViewPager.getAdapter() != null) {
-                        endPosition = mViewPager.getAdapter().getCount() - 1;
+                        endPosition = mViewPager.getAdapter().getItemCount() - 1;
                     }
                     restoreView(leftParams, mLeftView, endPosition);
                 }
@@ -243,25 +246,22 @@ public class ViewPagerBorderWrapper extends ViewGroup {
     private void restoreView(final LayoutParams params, final View view, final int itemPosition) {
         ValueAnimator valueAnimator = ValueAnimator.ofInt(params.width, 0);
         valueAnimator.setDuration(80);
-        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                params.width = (int) animation.getAnimatedValue();
-                //当前仅有右侧滑动会改动scrollX
-                if (getScrollX() != 0) {
-                    scrollTo(params.width, 0);
-                    invalidate();
-                }
-                view.setLayoutParams(params);
-                if (params.width == 0) {
-                    animation.removeAllUpdateListeners();
-                    if (isSkip) {
-                        if (itemPosition == -1) {
-                            System.out.println("-1位置错误");
-                            return;
-                        }
-                        mViewPager.setCurrentItem(itemPosition, false);
+        valueAnimator.addUpdateListener(animation -> {
+            params.width = (int) animation.getAnimatedValue();
+            //当前仅有右侧滑动会改动scrollX
+            if (getScrollX() != 0) {
+                scrollTo(params.width, 0);
+                invalidate();
+            }
+            view.setLayoutParams(params);
+            if (params.width == 0) {
+                animation.removeAllUpdateListeners();
+                if (isSkip) {
+                    if (itemPosition == -1) {
+                        System.out.println("-1位置错误");
+                        return;
                     }
+                    mViewPager.setCurrentItem(itemPosition, false);
                 }
             }
         });
@@ -273,6 +273,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         int left = l;
         int right = 0;
+        if (getChildCount() == 0) return;
         for (int i = 0; i < getChildCount(); i++) {
             View childAt = getChildAt(i);
             right += childAt.getMeasuredWidth();
@@ -286,6 +287,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        if (getChildCount() == 0) return;
         for (int i = 0; i < getChildCount(); i++) {
             View childAt = getChildAt(i);
             childAt.draw(canvas);

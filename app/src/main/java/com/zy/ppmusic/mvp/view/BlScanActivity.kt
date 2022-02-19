@@ -98,7 +98,6 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
      */
     private fun checkLocationPermission() {
         if (!EasyPermissions.hasPermissions(applicationContext, "android.permission.ACCESS_COARSE_LOCATION")) {
-            println("没有权限")
             if (!EasyPermissions.permissionPermanentlyDenied(this, "android.permission.ACCESS_COARSE_LOCATION")) {
                 EasyPermissions.requestPermissions(this, "获取粗略位置用来加快扫描",
                         1, "android.permission.ACCESS_COARSE_LOCATION")
@@ -139,6 +138,9 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
      * 权限申请不通过
      */
     override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>?) {
+        if(EasyPermissions.hasPermissions(applicationContext, "android.permission.ACCESS_COARSE_LOCATION")){
+            return
+        }
         if (requestCode == 1) {
             if (EasyPermissions.somePermissionPermanentlyDenied(this, perms!!)) {
                 println("权限新特性")
@@ -309,6 +311,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
             BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
                 println("开始扫描")
                 startDiscoveryAnim()
+                checkLocationPermission()
             }
         }
     }
