@@ -7,7 +7,7 @@
     tools:viewBindingIgnore="true"
     tools:context="com.zy.ppmusic.mvp.view.SplashActivity">
 
-    <androidx.appcompat.widget.AppCompatTextView
+    <TextView
         android:id="@+id/splashTextView"
         android:text="@string/app_name"
         android:textColor="@color/colorWhite"

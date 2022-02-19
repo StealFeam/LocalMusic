@@ -1,28 +1,27 @@
 package com.zy.ppmusic.mvp.view
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
-import androidx.appcompat.widget.AppCompatTextView
+import android.widget.TextView
 import com.zy.ppmusic.App
 import com.zy.ppmusic.R
 import com.zy.ppmusic.utils.Constant
-import com.zy.ppmusic.utils.PrintLog
 import com.zy.ppmusic.utils.SpUtils
 import com.zy.ppmusic.utils.Void
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import kotlin.system.exitProcess
 
-class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
+class SplashActivity : Activity(), EasyPermissions.PermissionCallbacks {
     private val requestCode = 0x010
     private val mPreferenceName = "SPLASH"
     private var animDuration: Long = 1500
-    private val splashTextView: AppCompatTextView by lazy { findViewById(R.id.splashTextView) }
+    private var splashTextView: TextView? = null
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
@@ -39,11 +38,12 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
         App.setCustomDensity(this)
+        splashTextView = findViewById(R.id.splashTextView)
     }
 
     override fun onResume() {
         super.onResume()
-        splashTextView.startAnimation(createLoadingAnim())
+        splashTextView?.startAnimation(createLoadingAnim())
     }
 
     private fun createLoadingAnim(): Animation {
@@ -131,7 +131,7 @@ class SplashActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks 
 
     override fun onDestroy() {
         super.onDestroy()
-        splashTextView.animation?.cancel()
-        splashTextView.animation = null
+        splashTextView?.animation?.cancel()
+        splashTextView?.animation = null
     }
 }
