@@ -339,7 +339,7 @@ class MediaService : MediaBrowserServiceCompat() {
             stateBuilder.setActiveQueueItemId(mCurrentMedia!!.queueId)
         }
 
-        GlobalScope.launch(Dispatchers.Main) {
+        launchScope.launch(Dispatchers.Main) {
             mMediaSessionCompat?.setPlaybackState(stateBuilder.build())
             postNotifyByStyle(state)
         }
@@ -462,7 +462,7 @@ class MediaService : MediaBrowserServiceCompat() {
      * 进度更新到界面
      */
     fun updatePositionToSession() {
-        GlobalScope.launch(Dispatchers.IO) {
+        launchScope.launch(Dispatchers.IO) {
             val bundle = Bundle()
             bundle.putInt(UPDATE_POSITION_EVENT, mPlayBack!!.currentStreamPosition)
             mMediaSessionCompat?.sendSessionEvent(UPDATE_POSITION_EVENT, bundle)
@@ -483,7 +483,7 @@ class MediaService : MediaBrowserServiceCompat() {
                 lastChangeMis = System.currentTimeMillis()
             }
             PrintLog.d("mediaId-----$mediaId")
-            GlobalScope.launch(Dispatchers.Default) {
+            launchScope.launch(Dispatchers.Default) {
                 updateTask(mediaId, shouldPlayWhenPrepared, shouldSeekToPosition)
             }
         } else {
@@ -577,7 +577,7 @@ class MediaService : MediaBrowserServiceCompat() {
                     handlePlayOrPauseRequest()
                     //初始化播放器，如果本地有播放记录，取播放记录，没有就初始化穿过来的media
                 } else if (ACTION_PLAY_INIT == action) {
-                    GlobalScope.launch(Dispatchers.Main) {
+                    launchScope.launch(Dispatchers.Main) {
                         val job = async(Dispatchers.IO) {
                             return@async App.instance!!.databaseManager!!.entity
                         }
@@ -685,7 +685,7 @@ class MediaService : MediaBrowserServiceCompat() {
                 COMMAND_UPDATE_QUEUE -> {
                     //是否是前台扫描媒体操作
                     val isForce = reqExtra?.getBoolean(EXTRA_SCAN_COMPLETE) ?: false
-                    GlobalScope.launch(Dispatchers.Main) {
+                    launchScope.launch(Dispatchers.Main) {
                         val job = async(Dispatchers.Default) {
                             savePlayingRecord()
                             mPlayBack?.setPlayQueue(DataProvider.get().mediaIdList)
