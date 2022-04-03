@@ -1,5 +1,7 @@
 package com.zy.ppmusic.adapter;
 
+import static com.zy.ppmusic.utils.UIUtilsKt.getString;
+
 import androidx.annotation.NonNull;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -13,7 +15,6 @@ import com.zy.ppmusic.adapter.base.ExpandableViewHolder;
 import com.zy.ppmusic.adapter.base.OnItemViewClickListener;
 import com.zy.ppmusic.adapter.base.OnItemViewLongClickListener;
 import com.zy.ppmusic.utils.StringUtils;
-import com.zy.ppmusic.utils.UIUtils;
 
 import java.util.List;
 import java.util.Locale;
@@ -62,10 +63,10 @@ public class PlayQueueAdapter extends AbstractSingleTypeAdapter {
         MediaDescriptionCompat description = mData.get(position).getDescription();
         TextView tvSubTitle = holder.getView(R.id.queue_item_display_sub_title);
         tvSubTitle.setText(StringUtils.ifEmpty(String.valueOf(description.getSubtitle()),
-                UIUtils.getString(R.string.unknown_author)));
+                getString(R.string.unknown_author)));
         TextView tvTitle = holder.getView(R.id.queue_item_display_title);
         tvTitle.setText(StringUtils.ifEmpty(String.valueOf(description.getTitle())
-                , UIUtils.getString(R.string.unknown_name)));
+                , getString(R.string.unknown_name)));
         TextView tvPosition = holder.getView(R.id.queue_item_position);
         if (selectIndex == position) {
 //            tvSubTitle.setTextColor(Color.WHITE);

@@ -113,47 +113,6 @@ class ScanMediaFile private constructor() {
         }
     }
 
-    /**
-     * 遍历文件目录下的所有文件
-     *
-     * @param file 需要扫描的文件目录
-     */
-    private fun searchFile(file: File) {
-        if (file.isDirectory && file.listFiles()?.isNullOrEmpty() == false) {
-            // 过滤android系统目录
-            if (file.absolutePath.contains("com.android.")) {
-                return
-            }
-            // 过滤隐藏文件
-            if (file.isHidden) return
-            // 过滤以点开头的文件夹或文件
-            if (file.absolutePath.startsWith(dot)) return
-            file.listFiles { _, name ->
-                Constant.FILTER_DIRS.none { segment -> name.splitToSequence("/").any { it == segment } }
-            }?.filter {
-                // 过滤没有后缀名的文件
-                val index = it.name.lastIndexOf(dot)
-                val length = it.name.length
-                // xxx.x以及xxx.xxxxx格式不支持
-                it.isDirectory || !(index <= 0 || index > length - 2 || index < length - 4)
-            }?.forEach {
-                searchFile(it)
-            }
-            return
-        }
-        println(file.absolutePath)
-        //判断文件的类型是否支持
-        SupportMediaType.SUPPORT_TYPE.forEach {
-            if (file.name.endsWith(it)) {
-                val size = 1024L * 1024L
-                if (size < file.length()) {
-                    Log.w(TAG, file.absolutePath + ",length=" + file.length())
-                    mPathList.add(file.absolutePath)
-                }
-            }
-        }
-    }
-
     private object ScanInstance {
         val instance = ScanMediaFile()
     }

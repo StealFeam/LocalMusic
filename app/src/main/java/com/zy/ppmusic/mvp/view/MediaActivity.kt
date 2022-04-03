@@ -1,5 +1,6 @@
 package com.zy.ppmusic.mvp.view
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ComponentName
@@ -45,8 +46,11 @@ import com.zy.ppmusic.service.MediaService
 import com.zy.ppmusic.utils.*
 import com.zy.ppmusic.widget.*
 import kotlinx.coroutines.launch
+import pub.devrel.easypermissions.AppSettingsDialog
+import pub.devrel.easypermissions.EasyPermissions
 import java.lang.ref.WeakReference
 import java.util.*
+import kotlin.system.exitProcess
 
 /**
  * 与MediaService两种通信方式：
@@ -54,7 +58,7 @@ import java.util.*
  *      2.SessionCompat.sendCommand(String,Bundle,ResultReceiver);//需要获取结果
  */
 @Keep
-class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActivityContract.IMediaActivityView {
+class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActivityContract.IMediaActivityView, EasyPermissions.PermissionCallbacks {
 
     private var mMediaBrowser: MediaBrowserCompat? = null
     /*** 媒体控制器*/
@@ -130,6 +134,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     }
 
     companion object {
+        private const val REQUEST_CODE = 100
+
         fun action(context: Context) {
             Intent(context, MediaActivity::class.java).apply {
                 context.startActivity(this)
@@ -138,17 +144,17 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     }
 
     private var loader: Loader? = null
-    private val binding: ActivityMediaBinding by lazy { ActivityMediaBinding.bind(contentView) }
-    private val mediaToolbar: Toolbar by lazy { binding.mediaToolbar }
-    private val mediaTitleTintView: View by lazy { binding.mediaTitleTintView }
-    private val bottomTintView: View by lazy { binding.bottomTintView }
-    private val contentViewPager: ViewPager2 by lazy { binding.contentViewPager }
-    private val mediaSeekBar: AppCompatSeekBar by lazy { binding.mediaSeekBar }
-    private val playingTimeTextView: AppCompatTextView by lazy { binding.playingTimeTextView }
-    private val durationTimeTextView: AppCompatTextView by lazy { binding.durationTimeTextView }
-    private val loopModelImageView: AppCompatImageView by lazy { binding.loopModelImageView }
-    private val playOrPauseImageView: AppCompatImageView by lazy { binding.playOrPauseImageView }
-    private val showPlayQueueImageView: AppCompatImageView by lazy { binding.showPlayQueueImageView }
+    private val binding: ActivityMediaBinding by lazy2 { ActivityMediaBinding.bind(contentView) }
+    private val mediaToolbar: Toolbar by lazy2 { binding.mediaToolbar }
+    private val mediaTitleTintView: View by lazy2 { binding.mediaTitleTintView }
+    private val bottomTintView: View by lazy2 { binding.bottomTintView }
+    private val contentViewPager: ViewPager2 by lazy2 { binding.contentViewPager }
+    private val mediaSeekBar: AppCompatSeekBar by lazy2 { binding.mediaSeekBar }
+    private val playingTimeTextView: AppCompatTextView by lazy2 { binding.playingTimeTextView }
+    private val durationTimeTextView: AppCompatTextView by lazy2 { binding.durationTimeTextView }
+    private val loopModelImageView: AppCompatImageView by lazy2 { binding.loopModelImageView }
+    private val playOrPauseImageView: AppCompatImageView by lazy2 { binding.playOrPauseImageView }
+    private val showPlayQueueImageView: AppCompatImageView by lazy2 { binding.showPlayQueueImageView }
 
     override fun getContentViewId(): Int = R.layout.activity_media
 
@@ -171,14 +177,14 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     private fun setUpBottomEdgeView() {
         //设置底部的斜边
         val bottomBackGround = TimBackGroundDrawable()
-        bottomBackGround.setDrawableColor(UIUtils.getColor(R.color.colorTheme))
+        bottomBackGround.setDrawableColor(getColor(R.color.colorTheme))
         bottomBackGround.setCorner(TimBackGroundDrawable.LEFT)
         bottomBackGround.setPercent(TimBackGroundDrawable.BOTTOM)
         ViewCompat.setBackground(bottomTintView, bottomBackGround)
     }
 
     private fun setUpCenterBackGround() {
-        val dp2px = UIUtils.dp2px(this, 110)
+        val dp2px = dp2px(this, 110)
         val vpDrawable = RoundDrawable(dp2px, ContextCompat.getColor(this, R.color.colorGray))
         ViewCompat.setBackground(contentViewPager, vpDrawable)
     }
@@ -239,7 +245,38 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         showPlayQueueImageView.addOnClickListener {
             createBottomQueueDialog()
         }
+
+        if (!EasyPermissions.hasPermissions(applicationContext, Manifest.permission.READ_EXTERNAL_STORAGE
+                , Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            EasyPermissions.requestPermissions(this,
+                getString(R.string.string_permission_read), REQUEST_CODE,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+                , Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        }
     }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
+    }
+
+    override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>?) {
+        if (EasyPermissions.hasPermissions(applicationContext, Manifest.permission.READ_EXTERNAL_STORAGE
+                , Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            return
+        }
+
+        if (EasyPermissions.somePermissionPermanentlyDenied(this, perms!!)) {
+            val dialog = AppSettingsDialog.Builder(this)
+            dialog.setNegativeButton(R.string.exit)
+            dialog.build().show()
+        } else {
+            EasyPermissions.requestPermissions(this, getString(R.string.string_permission_read)
+                , REQUEST_CODE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        }
+    }
+
+    override fun onPermissionsGranted(requestCode: Int, perms: List<String>?) = handleReloadMedia()
 
     /*专辑图片位置改变监听*/
     private val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
@@ -298,12 +335,14 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         return true
     }
 
+    private fun handleReloadMedia() {
+        showMsg(getString(R.string.start_scanning_the_local_file))
+        mPresenter?.refreshQueue(true)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_media_scan -> {
-                showMsg(getString(R.string.start_scanning_the_local_file))
-                mPresenter?.refreshQueue(true)
-            }
+            R.id.menu_media_scan -> handleReloadMedia()
 //            R.id.menu_blue_connect -> {
 //                val intent = Intent(this, BlScanActivity::class.java)
 //                startActivity(intent)
@@ -364,7 +403,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         mMediaQueueDialog?.dismissWithAnimation = true
         mMediaQueueRecycler?.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
         mMediaQueueRecycler?.addItemDecoration(RecycleViewDecoration(this, androidx.recyclerview.widget.LinearLayoutManager.VERTICAL,
-                R.drawable.recyclerview_vertical_line, UIUtils.dp2px(this, 25)))
+                R.drawable.recyclerview_vertical_line, dp2px(this, 25)))
         mMediaQueueAdapter?.setData(DataProvider.get().queueItemList)
         mMediaQueueDialog?.show()
     }
@@ -392,8 +431,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     private fun createDelQueueItemDialog(position: Int) {
         val delContentBinding = DlContentDelItemBinding.inflate(layoutInflater)
         val delContentView = delContentBinding.root
-        delContentView.setPadding(UIUtils.dp2px(this, 20), UIUtils.dp2px(this, 20),
-                UIUtils.dp2px(this, 10), UIUtils.dp2px(this, 10))
+        delContentView.setPadding(dp2px(this, 20), dp2px(this, 20),
+                dp2px(this, 10), dp2px(this, 10))
         AlertDialog.Builder(this)
                 .setTitle(getString(R.string.string_sure_del))
                 .setView(delContentView)
@@ -444,6 +483,20 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             if (doDelActionPosition != -1) {
                 mPresenter?.deleteFile(includeFile = true, doDelActionPosition)
                 doDelActionPosition = -1
+            }
+        } else if (requestCode == AppSettingsDialog.DEFAULT_SETTINGS_REQ_CODE) {
+            if (resultCode == -1) {
+                finish()
+                exitProcess(-1)
+            } else {
+                if (EasyPermissions.hasPermissions(applicationContext, Manifest.permission.READ_EXTERNAL_STORAGE
+                        , Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    handleReloadMedia()
+                } else {
+                    EasyPermissions.requestPermissions(this, getString(R.string.string_permission_read)
+                        , REQUEST_CODE, Manifest.permission.READ_EXTERNAL_STORAGE
+                        , Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                }
             }
         }
     }
@@ -842,7 +895,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             when (event) {
                 MediaService.LOCAL_CACHE_POSITION_EVENT -> {
                     startPosition = extras?.getLong(MediaService.LOCAL_CACHE_POSITION_EVENT) ?: 0L
-                    PrintLog.d("收到穿过来的缓存位置----$startPosition")
+                    PrintLog.d("收到传过来的缓存位置----$startPosition")
                     updateTime()
                 }
                 MediaService.ERROR_PLAY_QUEUE_EVENT -> {
@@ -925,8 +978,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 更新媒体信息
      */
     private fun setMediaInfo(displayTitle: String?, subTitle: String?) {
-        supportActionBar?.title = displayTitle ?: UIUtils.getString(R.string.unknown_name)
-        supportActionBar?.subtitle = subTitle ?: UIUtils.getString(R.string.unknown_author)
+        supportActionBar?.title = displayTitle ?: getString(R.string.unknown_name)
+        supportActionBar?.subtitle = subTitle ?: getString(R.string.unknown_author)
     }
 
     /**

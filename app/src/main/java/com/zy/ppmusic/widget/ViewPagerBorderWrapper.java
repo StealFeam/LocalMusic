@@ -1,5 +1,7 @@
 package com.zy.ppmusic.widget;
 
+import static com.zy.ppmusic.utils.UIUtilsKt.getColor;
+
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -16,7 +18,6 @@ import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 
 import com.zy.ppmusic.R;
-import com.zy.ppmusic.utils.UIUtils;
 
 /**
  * @author stealfeam
@@ -81,8 +82,8 @@ public class ViewPagerBorderWrapper extends ViewGroup {
             mRightView = new SimpleVerticalTextView(getContext());
             mRightView.setGravity(Gravity.CENTER);
         }
-        mLeftView.setTextColor(UIUtils.getColor(R.color.colorBlack));
-        mRightView.setTextColor(UIUtils.getColor(R.color.colorBlack));
+        mLeftView.setTextColor(getColor(R.color.colorBlack));
+        mRightView.setTextColor(getColor(R.color.colorBlack));
         removeAllViews();
         addView(mLeftView, 0, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
         addView(mViewPager, 1);

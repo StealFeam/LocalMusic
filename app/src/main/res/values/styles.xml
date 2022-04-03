@@ -20,10 +20,11 @@
         <item name="colorControlActivated">@color/colorTheme</item>
     </style>
 
-    <style name="AppTheme.SplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:windowBackground">@color/colorTheme</item>
+    <style name="AppTheme.SplashTheme" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/colorTheme</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_music_launcher_round</item>
+        <item name="windowSplashScreenAnimationDuration">200</item>
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
     </style>
 
     <style name="AppTheme.NoActionBar.Translate" parent="AppTheme.NoActionBar">

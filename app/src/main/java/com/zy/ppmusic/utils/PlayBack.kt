@@ -13,6 +13,7 @@ import android.text.TextUtils
 import com.zy.ppmusic.service.MediaService
 import kotlinx.coroutines.*
 import java.lang.ref.WeakReference
+import kotlin.math.max
 
 /**
  * @author stealfeam
@@ -20,12 +21,10 @@ import java.lang.ref.WeakReference
 class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeListener,
         MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener,
         MediaPlayer.OnPreparedListener, MediaPlayer.OnSeekCompleteListener {
-    @Volatile
     private var mMediaPlayer: MediaPlayer? = null
     /**
      * 当前播放队列
      */
-    @Volatile
     private var mPlayQueue: List<String>? = null
 
     private var mCurrentPosition: Int = 0
@@ -54,7 +53,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
         private set
     private val mContextWeak: WeakReference<MediaService> = WeakReference(mMediaService)
 
-    var currentStreamPosition: Int = 0
+    val currentStreamPosition: Int
         get() {
             val isPlaying = mMediaPlayer?.isPlaying ?: false
             return if (isPlaying) {
@@ -272,7 +271,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
 
     fun onSkipToNext(): String? {
         checkPlayQueue()
-        if (mPlayQueue!!.isEmpty()) {
+        if (mPlayQueue.isNullOrEmpty()) {
             return null
         }
         var queueIndex = mPlayQueue!!.indexOf(currentMediaId)
@@ -291,10 +290,11 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
     }
 
     fun onSkipToPrevious(): String? {
-        if (mPlayQueue!!.isEmpty()) {
+        if (mPlayQueue.isNullOrEmpty()) {
             return null
         }
         var queueIndex = mPlayQueue?.indexOf(currentMediaId) ?: 0
+        // 到最后一首
         if (queueIndex == 0) {
             queueIndex = mPlayQueue!!.size
         }
@@ -325,17 +325,12 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
             mMediaPlayer?.setOnErrorListener(this)
             mMediaPlayer?.setOnSeekCompleteListener(this)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                val builder = AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .setLegacyStreamType(AudioManager.STREAM_MUSIC)
-                        .setFlags(AudioManager.FLAG_ALLOW_RINGER_MODES)
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                mMediaPlayer?.setAudioAttributes(builder.build())
-            } else {
-                @Suppress("DEPRECATION")
-                mMediaPlayer?.setAudioStreamType(AudioManager.STREAM_MUSIC)
-            }
+            val builder = AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setLegacyStreamType(AudioManager.STREAM_MUSIC)
+                    .setFlags(AudioManager.FLAG_ALLOW_RINGER_MODES)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+            mMediaPlayer?.setAudioAttributes(builder.build())
         } else {
             mMediaPlayer?.stop()
             mMediaPlayer?.reset()

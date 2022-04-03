@@ -3,9 +3,8 @@ package com.zy.ppmusic.widget
 import android.app.Activity
 import android.content.Context
 import android.graphics.Color
-import android.view.View
 import android.view.WindowManager
-import com.zy.ppmusic.utils.UIUtils
+import com.zy.ppmusic.utils.dp2px
 import java.lang.ref.WeakReference
 
 /**
@@ -30,7 +29,7 @@ class Loader(context: Context) {
         val refreshView = WaveRefreshView(context)
         weakReference = WeakReference(refreshView)
         refreshView.setBackgroundColor(Color.TRANSPARENT)
-        val params = WindowManager.LayoutParams(UIUtils.dp2px(context, 50), UIUtils.dp2px(context, 50), WindowManager.LayoutParams.TYPE_APPLICATION, WindowManager.LayoutParams.FLAG_FULLSCREEN, -3)
+        val params = WindowManager.LayoutParams(dp2px(context, 50), dp2px(context, 50), WindowManager.LayoutParams.TYPE_APPLICATION, WindowManager.LayoutParams.FLAG_FULLSCREEN, -3)
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         refreshView.startAnim()
         windowManager.addView(refreshView, params)

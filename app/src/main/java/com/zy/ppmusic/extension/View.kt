@@ -11,9 +11,8 @@ fun View.addOnClickListener(listener: View.OnClickListener) {
 }
 
 fun View.addOnClickListener(lifecycle: Lifecycle, listener: View.OnClickListener) {
-    lifecycle.addObserver(object : LifecycleObserver {
-        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        fun onDestroy() {
+    lifecycle.addObserver(object : DefaultLifecycleObserver {
+        override fun onDestroy(owner: LifecycleOwner) {
             setOnClickListener(null)
             lifecycle.removeObserver(this)
         }
