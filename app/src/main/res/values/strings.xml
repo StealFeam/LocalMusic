@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">LoveMusic</string>
+    <string name="app_name">倩音</string>
     <string name="normal_text">@string/app_name</string>
     <string name="scan_result_icon">扫描设备的标识</string>
     <string name="menu_refresh">刷新</string>
