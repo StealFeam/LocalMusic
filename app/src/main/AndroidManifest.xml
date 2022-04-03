@@ -23,10 +23,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:requestLegacyExternalStorage="true"
-        tools:ignore="GoogleAppIndexingWarning">
+        tools:ignore="GoogleAppIndexingWarning"
+        android:dataExtractionRules="@xml/data_extraction_rules">
 
         <activity
             android:name="com.zy.ppmusic.mvp.view.BlScanActivity"
+            android:exported="false"
             android:theme="@style/AppTheme.NoActionBar.Translate" />
 
         <service
@@ -39,9 +41,12 @@
 
         </service>
 
-        <service android:name=".service.LoopService"/>
+        <service
+            android:name=".service.LoopService"
+            android:exported="false" />
 
-        <receiver android:name="androidx.media.session.MediaButtonReceiver"
+        <receiver
+            android:name="androidx.media.session.MediaButtonReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
@@ -50,6 +55,7 @@
 
         <activity
             android:name=".mvp.view.MediaActivity"
+            android:exported="false"
             android:launchMode="singleTask" />
 
         <activity
@@ -66,7 +72,9 @@
 
         </activity>
 
-        <activity android:name=".mvp.view.ErrorActivity"/>
+        <activity
+            android:name=".mvp.view.ErrorActivity"
+            android:exported="false" />
 
         <meta-data
             android:name="android.max_aspect"
