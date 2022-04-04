@@ -23,4 +23,5 @@
     <dimen name="dp25">25dp</dimen>
     <dimen name="dp100">100dp</dimen>
     <dimen name="dp200">200dp</dimen>
+    <dimen name="dp300">300dp</dimen>
 </resources>

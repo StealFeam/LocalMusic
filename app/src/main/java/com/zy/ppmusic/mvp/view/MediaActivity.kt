@@ -6,6 +6,9 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
 import android.os.*
 import android.provider.DocumentsContract
@@ -20,14 +23,10 @@ import android.widget.SeekBar
 import android.widget.TextView
 import androidx.annotation.Keep
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.view.menu.MenuBuilder
-import androidx.appcompat.widget.AppCompatImageView
-import androidx.appcompat.widget.AppCompatSeekBar
-import androidx.appcompat.widget.AppCompatTextView
-import androidx.appcompat.widget.Toolbar
+import androidx.appcompat.widget.*
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.palette.graphics.Palette
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import androidx.viewpager2.widget.ViewPager2
@@ -36,7 +35,6 @@ import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.MediaAlbumAdapter
 import com.zy.ppmusic.adapter.PlayQueueAdapter
 import com.zy.ppmusic.adapter.TimeClockAdapter
-import com.zy.ppmusic.adapter.base.OnItemViewClickListener
 import com.zy.ppmusic.databinding.ActivityMediaBinding
 import com.zy.ppmusic.databinding.DlContentDelItemBinding
 import com.zy.ppmusic.extension.addOnClickListener
@@ -46,7 +44,10 @@ import com.zy.ppmusic.mvp.presenter.MediaPresenterImpl
 import com.zy.ppmusic.service.MediaService
 import com.zy.ppmusic.utils.*
 import com.zy.ppmusic.widget.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import java.lang.ref.WeakReference
@@ -151,14 +152,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     override fun createPresenter(): MediaPresenterImpl = MediaPresenterImpl(this)
 
     private fun setUpTitleBar() {
-        mediaToolbar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorTheme))
+        updateThemeColor()
         setSupportActionBar(mediaToolbar)
-    }
-
-    private fun setUpCenterBackGround() {
-        val dp2px = dp2px(this, 110)
-        val vpDrawable = RoundDrawable(dp2px, ContextCompat.getColor(this, R.color.colorGray))
-        ViewCompat.setBackground(contentViewPager, vpDrawable)
     }
 
     private fun setUpContentViewPager() {
@@ -172,8 +167,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
     override fun initViews() {
         setUpTitleBar()
-        //专辑图片的圆形背景
-        setUpCenterBackGround()
         setUpContentViewPager()
         mediaSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -213,7 +206,13 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             }
         }
         showPlayQueueImageView.addOnClickListener {
-            // TODO 替换为menu操作
+            PopupMenu(this, showPlayQueueImageView, Gravity.START).apply {
+                inflate(R.menu.main)
+                setOnMenuItemClickListener { item ->
+                    onOptionsItemSelected(item)
+                    true
+                }
+            }.show()
         }
 
         if (!EasyPermissions.hasPermissions(applicationContext, Manifest.permission.READ_EXTERNAL_STORAGE
@@ -324,44 +323,31 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
         loge("准备播放第${contentViewPager.currentItem}首")
         mPresenter?.skipToPosition(contentViewPager.currentItem.toLong())
-        // TODO 动态改变主题色
-//        val mediaMetadataCompat = DataProvider.get().getMetadataItem(currentMediaId)
-//        lifecycleScope.launchWhenResumed {
-//            val palette = withContext(Dispatchers.Default) {
-//                mediaMetadataCompat?.description?.iconBitmap?.let {
-//                    Palette.from(it).generate()
-//                }
-//            }
-//            val sourceColor = palette?.lightVibrantSwatch?.rgb
-//            if (sourceColor != null) {
-//                val drawable = ColorDrawable(sourceColor).apply {
-//                    alpha = 50
-//                }
-//                binding.mediaContentRoot.background = drawable
-//                supportActionBar?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-//            } else {
-//                binding.mediaContentRoot.background = ColorDrawable(Color.WHITE)
-//                supportActionBar?.setBackgroundDrawable(ColorDrawable(resources.getColor(R.color.colorTheme, theme)))
-//            }
-//        }
+
+        calculatePalette(DataProvider.get().getMetadataItem(currentMediaId))
     }
 
-    @Keep
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.main, menu)
-        if (menu != null) {
-            if (menu::class == MenuBuilder::class) {
-                try {
-                    val method = menu::class.java.getDeclaredMethod("setOptionalIconsVisible",
-                            Boolean::class.java)
-                    method.isAccessible = true
-                    method.invoke(menu, true)
-                } catch (e: Exception) {
-                    PrintLog.d("反射显示图标失败")
+    private fun calculatePalette(mediaMetadataCompat: MediaMetadataCompat?) {
+        lifecycleScope.launchWhenResumed {
+            val palette = withContext(Dispatchers.Default) {
+                mediaMetadataCompat?.description?.iconBitmap?.let {
+                    Palette.from(it).generate()
                 }
             }
+            updateThemeColor(palette?.lightVibrantSwatch?.rgb, palette?.lightVibrantSwatch?.titleTextColor, palette?.lightVibrantSwatch?.bodyTextColor)
         }
-        return true
+    }
+
+    private fun updateThemeColor(color: Int? = null, titleColor: Int? = null, subTitle: Int? = null) {
+        val themeColor = color ?: ContextCompat.getColor(this, R.color.colorTheme)
+        val titleThemeColor = titleColor ?: Color.WHITE
+        val colorDrawable = ColorDrawable(themeColor)
+        mediaToolbar.background = colorDrawable
+        window.statusBarColor = themeColor
+        window.navigationBarColor = Color.TRANSPARENT
+        contentViewPager.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(themeColor, Color.WHITE))
+
+        modifyThemeColor(themeColor, titleThemeColor)
     }
 
     private fun handleReloadMedia() {
@@ -372,10 +358,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_media_scan -> handleReloadMedia()
-//            R.id.menu_blue_connect -> {
-//                val intent = Intent(this, BlScanActivity::class.java)
-//                startActivity(intent)
-//            }
             R.id.menu_notify_style -> {
                 ChooseStyleDialog().show(supportFragmentManager, "选择通知栏样式")
             }
@@ -416,7 +398,10 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 .setView(delContentView)
                 .setPositiveButton(getString(R.string.string_del)) { _, _ ->
                     when (mPresenter?.deleteFile(delContentBinding.checkboxDlContentMessage.isChecked, position)) {
-                        null -> needDocumentPermission(position)
+                        null -> {
+                            // TODO 替换成ContentProvider删除
+                            needDocumentPermission(position)
+                        }
                         true -> toast("删除成功")
                         false -> toast("删除失败")
                     }
@@ -489,18 +474,21 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         mTimeClockRecycler?.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
         mTimeClockAdapter = TimeClockAdapter()
         //无用的参数直接下划线表示
-        mTimeClockAdapter?.setOnItemClickListener(OnItemViewClickListener { _, position ->
+        mTimeClockAdapter?.setOnItemClickListener { _, position ->
             mTimeClockDialog?.cancel()
             if (getCurrentTimeClockLength(position) != 0L) {
                 //如果正在倒计时判断是否需要停止倒计时
                 val bundle = Bundle()
-                bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME, getCurrentTimeClockLength(position))
+                bundle.putLong(
+                    MediaService.ACTION_COUNT_DOWN_TIME,
+                    getCurrentTimeClockLength(position)
+                )
                 mPresenter?.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME, bundle)
                 mTimeClockDialog = null
             }
-        })
+        }
         //如果正在倒计时显示取消计时选项，否则隐藏
-        if (mBorderTextView != null && mBorderTextView?.visibility == View.VISIBLE) {
+        if (mBorderTextView != null && mBorderTextView?.isVisible == true) {
             mTimeClockAdapter?.setTicking(true)
         } else {
             mTimeClockAdapter?.setTicking(false)
@@ -508,7 +496,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         mTimeClockRecycler?.adapter = mTimeClockAdapter
         val lengthSeekBar = mTimeContentView?.findViewById(R.id.time_selector_seek_bar) as SeekBar
         val progressHintTv = mTimeContentView?.findViewById(R.id.time_selector_progress_hint_tv) as TextView
-        progressHintTv.visibility = View.VISIBLE
+        progressHintTv.isVisible = true
         progressHintTv.text = String.format(Locale.CHINA, "%d", (lengthSeekBar.progress + 1))
         lengthSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             var percent = 0f
@@ -521,13 +509,14 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 val transXRound = (s!!.measuredWidth - s.paddingLeft - s.paddingRight
                         + progressHintTv.measuredWidth / 2).toFloat()
                 percent = transXRound / s.max.toFloat()
-                progressHintTv.visibility = View.VISIBLE
+                progressHintTv.isVisible = true
             }
 
             override fun onStopTrackingTouch(s: SeekBar?) {
-                mTimeClockRecycler?.postDelayed({
-                    progressHintTv.visibility = View.INVISIBLE
-                }, 1000)
+                lifecycleScope.launch {
+                    delay(1000)
+                    progressHintTv.isVisible = false
+                }
             }
         })
         mTimeContentView?.findViewById<Button>(R.id.time_selector_sure_btn)?.setOnClickListener {
@@ -552,19 +541,20 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 获取当前倒计时长度
      * 如果处于倒计时状态，第一条为取消倒计时
      */
-    private fun getCurrentTimeClockLength(position: Int): Long =
-            if (mTimeClockAdapter!!.isTick) {
-                //发送停止倒计时，隐藏倒计时文本
-                if (position == 0) {
-                    mPresenter?.sendCustomAction(MediaService.ACTION_STOP_COUNT_DOWN, Bundle())
-                    mBorderTextView?.hide()
-                    0L
-                } else {
-                    mTimeClockAdapter!!.getItem(position - 1) * 1000L * 60L
-                }
+    private fun getCurrentTimeClockLength(position: Int): Long {
+        return if (mTimeClockAdapter!!.isTick) {
+            //发送停止倒计时，隐藏倒计时文本
+            if (position == 0) {
+                mPresenter?.sendCustomAction(MediaService.ACTION_STOP_COUNT_DOWN, Bundle())
+                mBorderTextView?.hide()
+                0L
             } else {
-                mTimeClockAdapter!!.getItem(position) * 1000L * 60L
+                mTimeClockAdapter!!.getItem(position - 1) * 1000L * 60L
             }
+        } else {
+            mTimeClockAdapter!!.getItem(position) * 1000L * 60L
+        }
+    }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         when (keyCode) {
@@ -748,15 +738,14 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                             DataProvider.get().getMediaIndex(it)
                         } ?: 0
                         contentViewPager.setCurrentItem(position, false)
-//                        updateQueueSize(position + 1, mHeadAdapter!!.count)
+
+                        calculatePalette(this)
                     }
                     handlePlayState(mMediaController!!.playbackState!!.state)
                 } else {
                     setMediaInfo(children[0].description.title?.toString(), children[0].description.subtitle?.toString())
                     mCurrentMediaIdStr = children[0].description.mediaId
                     mCurrentMediaIdStr?.apply {
-                        //                        val position = DataProvider.get().getMediaIndex(this)
-//                        updateQueueSize(position + 1, DataProvider.get().mediaIdList.size)
                         val extra = Bundle()
                         extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_INIT)
                         mPresenter?.playWithId(this, extra)
@@ -818,6 +807,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             if (contentViewPager.currentItem != position) {
                 contentViewPager.setCurrentItem(position, false)
             }
+            calculatePalette(metadata)
         }
 
         //播放列表变化回调
@@ -971,7 +961,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
         //去除ViewPager的监听
         contentViewPager.unregisterOnPageChangeCallback(pageChangeCallback)
-        ViewCompat.setBackground(contentViewPager, null)
         //释放时间计时弹窗
         if (mTimeClockDialog != null) {
             mTimeClockDialog?.dismiss()

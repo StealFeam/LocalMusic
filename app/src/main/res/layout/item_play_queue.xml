@@ -11,10 +11,10 @@
 
     <View
         android:id="@+id/queue_item_selected_line"
-        android:background="@color/colorTheme"
+        android:background="?attr/colorAccent"
         android:layout_width="@dimen/dp5"
         android:layout_height="0dp"
-        android:visibility="gone"
+        android:visibility="invisible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
@@ -26,7 +26,6 @@
         android:layout_centerVertical="true"
         android:gravity="center"
         tools:text="1"
-        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/line_13"
         app:layout_constraintHorizontal_chainStyle="spread_inside"

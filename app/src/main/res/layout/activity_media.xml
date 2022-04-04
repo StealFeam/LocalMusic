@@ -34,17 +34,10 @@
                 app:subtitleTextColor="@color/colorWhite"
                 app:titleTextColor="@color/colorWhite" />
 
-            <com.zy.ppmusic.widget.ViewPagerBorderWrapper
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/contentViewPager"
                 android:layout_width="match_parent"
-                android:layout_height="400dp">
-
-                <androidx.viewpager2.widget.ViewPager2
-                    android:id="@+id/contentViewPager"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
-
-            </com.zy.ppmusic.widget.ViewPagerBorderWrapper>
-
+                android:layout_height="400dp" />
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"

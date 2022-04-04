@@ -1,8 +1,10 @@
 package com.zy.ppmusic.utils
 
 import android.content.Context
+import android.view.View
 import androidx.core.content.ContextCompat
 import com.zy.ppmusic.App
+import com.zy.ppmusic.R
 
 /**
  * @author stealfeam
@@ -22,6 +24,18 @@ fun getString(id: Int): String {
 fun getColor(id: Int): Int {
     return ContextCompat.getColor(App.instance!!, id)
 }
+
+var themeColor: Int = getColor(R.color.colorTheme)
+
+var View.isVisible: Boolean
+    set(value) {
+        if (value) {
+            visibility = View.VISIBLE
+        } else {
+            visibility = View.INVISIBLE
+        }
+    }
+    get() = visibility == View.VISIBLE
 
 fun <T> lazy2(initializer: () -> T): Lazy<T> = lazy<T>(LazyThreadSafetyMode.NONE, initializer)
 

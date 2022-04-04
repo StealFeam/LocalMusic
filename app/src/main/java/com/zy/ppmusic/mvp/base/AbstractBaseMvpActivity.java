@@ -1,15 +1,30 @@
 package com.zy.ppmusic.mvp.base;
 
+import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.StrictMode;
+import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatImageView;
+import androidx.appcompat.widget.AppCompatTextView;
+import androidx.core.view.LayoutInflaterCompat;
 
 import com.zy.ppmusic.App;
-import com.zy.ppmusic.BuildConfig;
+import com.zy.ppmusic.R;
+import com.zy.ppmusic.utils.UIUtilsKt;
+
+import java.lang.ref.SoftReference;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author stealfeam
@@ -20,8 +35,53 @@ public abstract class AbstractBaseMvpActivity<P extends AbstractBasePresenter> e
     protected P mPresenter;
     protected View contentView;
 
+    private static final List<SoftReference<View>> availableModifyThemeColorView = new ArrayList<>();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        LayoutInflaterCompat.setFactory2(getLayoutInflater(), new LayoutInflater.Factory2() {
+            @Nullable
+            @Override
+            public View onCreateView(@Nullable View parent, @NonNull String name, @NonNull Context context, @NonNull AttributeSet attrs) {
+                View result = getDelegate().createView(parent, name, context, attrs);
+
+                boolean availableModify = result instanceof TextView || result instanceof ImageView;
+                if (result == null) {
+                    result = createView(name, context, attrs);
+                    availableModify = result != null;
+                }
+                if (availableModify && result.getTag(R.id.ignore_theme_color) == null) {
+                    availableModifyThemeColorView.add(new SoftReference<>(result));
+                }
+                return result;
+            }
+
+            @Nullable
+            @Override
+            public View onCreateView(@NonNull String name, @NonNull Context context, @NonNull AttributeSet attrs) {
+                View result = getDelegate().createView(null, name, context, attrs);
+                boolean availableModify = result instanceof TextView || result instanceof ImageView;
+                if (result == null) {
+                    result = createView(name, context, attrs);
+                    availableModify = result != null;
+                }
+                if (availableModify) {
+                    availableModifyThemeColorView.add(new SoftReference<>(result));
+                }
+                return result;
+            }
+
+            @Nullable
+            private View createView(String name, Context context, AttributeSet attrs) {
+                View result = null;
+                if ("androidx.appcompat.widget.AppCompatTextView".equals(name)) {
+                    result = new AppCompatTextView(context, attrs);
+                } else if ("androidx.appcompat.widget.AppCompatImageView".equals(name)) {
+                    result = new AppCompatImageView(context, attrs);
+                }
+                return result;
+            }
+        });
         super.onCreate(savedInstanceState);
         App.setCustomDensity(this);
         featureBeforeCreate();
@@ -31,9 +91,44 @@ public abstract class AbstractBaseMvpActivity<P extends AbstractBasePresenter> e
         initViews();
     }
 
+    protected void modifyThemeColor(int themeColor, int titleColor) {
+        UIUtilsKt.setThemeColor(themeColor);
+        int size = availableModifyThemeColorView.size();
+        for (int index = size - 1; index >= 0; index --) {
+            final View view = availableModifyThemeColorView.get(index).get();
+            if (view == null || view.getTag(R.id.ignore_theme_color) != null) {
+                availableModifyThemeColorView.remove(index).clear();
+                continue;
+            }
+            if (view instanceof TextView) {
+                if (titleColor == -1) {
+                    ((TextView)view).setTextColor(getResources().getColor(R.color.colorTheme, getTheme()));
+                } else {
+                    ((TextView)view).setTextColor(titleColor);
+                }
+            } else if (view instanceof ImageView) {
+                if (view instanceof AppCompatImageView) {
+                    AppCompatImageView imageView = ((AppCompatImageView) view);
+                    if (imageView.getImageTintMode() == PorterDuff.Mode.SRC_IN) {
+                        return;
+                    }
+                    imageView.setImageTintList(ColorStateList.valueOf(themeColor));
+                } else {
+                    Drawable drawable = ((ImageView) view).getDrawable();
+                    if (drawable != null) {
+                        drawable.setTint(themeColor);
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        for (SoftReference<View> viewSoftReference : availableModifyThemeColorView) {
+            viewSoftReference.clear();
+        }
         if (mPresenter != null) {
             mPresenter.detachViewAndModel();
         }

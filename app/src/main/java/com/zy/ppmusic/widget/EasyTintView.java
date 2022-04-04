@@ -22,6 +22,7 @@ import android.widget.FrameLayout;
 
 import com.zy.ppmusic.R;
 import com.zy.ppmusic.utils.PrintLog;
+import com.zy.ppmusic.utils.UIUtilsKt;
 
 import java.util.Locale;
 
@@ -45,7 +46,7 @@ public class EasyTintView extends AppCompatTextView {
     public EasyTintView(Context context) {
         super(context);
         mDelayHandler = new Handler();
-        setBackgroundColor(ContextCompat.getColor(context, R.color.colorTheme));
+        setBackgroundColor(UIUtilsKt.getThemeColor());
         setTextColor(Color.WHITE);
         setGravity(Gravity.CENTER);
         setTag(TAG);

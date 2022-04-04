@@ -24,6 +24,7 @@ import com.zy.ppmusic.R;
  * @date 2018/3/22
  * 循环列表的实现类
  * 只支持横向，还欠缺的是多指判断，耦合性相对高
+ * 和NestedScrollChild配和有问题，暂时不用
  */
 public class ViewPagerBorderWrapper extends ViewGroup {
     private static final String TAG = "ViewPagerBorderWrapper";
@@ -70,6 +71,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
 
     public ViewPagerBorderWrapper(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        setLayerType(View.LAYER_TYPE_SOFTWARE, null);
     }
 
     private void attachViewPager(ViewPager2 viewPager) {
@@ -84,6 +86,8 @@ public class ViewPagerBorderWrapper extends ViewGroup {
         }
         mLeftView.setTextColor(getColor(R.color.colorBlack));
         mRightView.setTextColor(getColor(R.color.colorBlack));
+        mRightView.setVisibility(View.INVISIBLE);
+        mLeftView.setVisibility(View.INVISIBLE);
         removeAllViews();
         addView(mLeftView, 0, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
         addView(mViewPager, 1);
@@ -139,6 +143,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                     if (deltaX > 0) {
                         isLastIntercepted = true;
                         Log.e(TAG, "dispatchTouchEvent：这是最左侧触发：");
+                        requestDisallowInterceptTouchEvent(true);
                         return true;
                     }
                     //上次的事件序列并没有结束
@@ -152,6 +157,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                 if (mViewPager.getCurrentItem() == mViewPager.getAdapter().getItemCount() - 1) {
                     if (deltaX < 0) {
                         isLastIntercepted = true;
+                        requestDisallowInterceptTouchEvent(true);
                         Log.e(TAG, "dispatchTouchEvent: 这是到最右侧时触发");
                         return true;
                     }
@@ -191,6 +197,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                     LayoutParams layoutParams = mLeftView.getLayoutParams();
                     layoutParams.width += deltaX;
                     layoutParams.width = Math.max(0, layoutParams.width);
+                    mLeftView.setVisibility(View.VISIBLE);
                     if (layoutParams.width > maxChangedWidth) {
                         mLeftView.setText("释放跳转到最后一首");
                         isSkip = true;
@@ -204,6 +211,7 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                     LayoutParams layoutParams = mRightView.getLayoutParams();
                     layoutParams.width -= deltaX;
                     layoutParams.width = Math.max(0, layoutParams.width);
+                    mRightView.setVisibility(View.VISIBLE);
                     if (layoutParams.width > maxChangedWidth) {
                         mRightView.setText("释放跳转到第一首");
                         isSkip = true;
@@ -219,7 +227,6 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                         return false;
                     }
                     scrollBy(-deltaX, 0);
-                    invalidate();
                     System.out.println("scrollX===" + getScrollX());
                 }
                 mLastTouchX = (int) ev.getRawX();
@@ -229,8 +236,10 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                 final LayoutParams leftParams = mLeftView.getLayoutParams();
                 final LayoutParams rightParams = mRightView.getLayoutParams();
                 if (rightParams.width > 0) {
+                    mLeftView.setVisibility(INVISIBLE);
                     restoreView(rightParams, mRightView, 0);
                 } else {
+                    mRightView.setVisibility(INVISIBLE);
                     int endPosition = -1;
                     if (mViewPager.getAdapter() != null) {
                         endPosition = mViewPager.getAdapter().getItemCount() - 1;
@@ -246,16 +255,12 @@ public class ViewPagerBorderWrapper extends ViewGroup {
 
     private void restoreView(final LayoutParams params, final View view, final int itemPosition) {
         ValueAnimator valueAnimator = ValueAnimator.ofInt(params.width, 0);
-        valueAnimator.setDuration(80);
+        valueAnimator.setDuration(50);
         valueAnimator.addUpdateListener(animation -> {
             params.width = (int) animation.getAnimatedValue();
-            //当前仅有右侧滑动会改动scrollX
-            if (getScrollX() != 0) {
-                scrollTo(params.width, 0);
-                invalidate();
-            }
             view.setLayoutParams(params);
             if (params.width == 0) {
+                view.setVisibility(View.INVISIBLE);
                 animation.removeAllUpdateListeners();
                 if (isSkip) {
                     if (itemPosition == -1) {
@@ -264,6 +269,12 @@ public class ViewPagerBorderWrapper extends ViewGroup {
                     }
                     mViewPager.setCurrentItem(itemPosition, false);
                 }
+            }
+            //当前仅有右侧滑动会改动scrollX
+            if (getScrollX() != 0) {
+                scrollTo(params.width, 0);
+            } else {
+                postInvalidate();
             }
         });
         valueAnimator.setInterpolator(new LinearInterpolator());
