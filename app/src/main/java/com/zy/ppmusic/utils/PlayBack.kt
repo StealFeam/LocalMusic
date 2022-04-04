@@ -285,7 +285,7 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
 
     private fun checkPlayQueue() {
         if (mPlayQueue == null) {
-            mPlayQueue = DataProvider.get().pathList
+            mPlayQueue = DataProvider.get().getPathList()
         }
     }
 

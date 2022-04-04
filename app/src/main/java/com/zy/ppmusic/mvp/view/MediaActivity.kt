@@ -317,7 +317,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     }
 
     private fun skipToCurrentPosition() {
-        val currentMediaId = DataProvider.get().mediaIdList[contentViewPager.currentItem]
+        val currentMediaId = DataProvider.get().getMediaIdList()[contentViewPager.currentItem]
         if (currentMediaId == mCurrentMediaIdStr) {
             return
         }
@@ -575,7 +575,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 mediaAlbumAdapter = MediaAlbumAdapter()
                 contentViewPager.adapter = mediaAlbumAdapter
             }
-            mediaAlbumAdapter?.fillDataToAdapter(lifecycleScope, DataProvider.get().pathList)
+            mediaAlbumAdapter?.fillDataToAdapter(lifecycleScope, DataProvider.get().getPathList())
         }
     }
 
@@ -593,7 +593,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             connectMediaService()
             return
         }
-        if (DataProvider.get().pathList.size > 0) {
+        if (DataProvider.get().getPathList().isNotEmpty()) {
             if (mResultReceive != null) {
                 mPresenter?.sendCommand(MediaService.COMMAND_UPDATE_QUEUE, Bundle().apply {
                     putBoolean(MediaService.EXTRA_SCAN_COMPLETE, isForce)
@@ -628,7 +628,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 显示加载框
      */
     override fun showLoading() {
-        if(loader == null){
+        if (loader == null) {
             loader = Loader.show(this)
         }
     }
@@ -798,8 +798,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             mCurrentMediaIdStr = metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID)
             endPosition = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
             updateTime()
-            val position: Int? = mCurrentMediaIdStr?.let { DataProvider.get().getMediaIndex(it) }
-            if (position == null || position < 0) return
+            val position: Int = DataProvider.get().getMediaIndex(mCurrentMediaIdStr)
+            if (position < 0) return
             handleUpdatePlayListItemChanged(position)
 
             setMediaInfo(metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE),
@@ -816,11 +816,14 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             PrintLog.print("onQueueChanged called size=${queue?.size}")
             if (queue == null || queue.isEmpty()) {
                 setMediaInfo(getString(R.string.app_name), getString(R.string.app_name))
+                handleUpdatePlaylist()
+                mediaAlbumAdapter?.fillDataToAdapter(lifecycleScope, null)
+                updateThemeColor(null, null, null)
                 return
             }
             contentViewPager.unregisterOnPageChangeCallback(pageChangeCallback)
             initOrUpdateAdapter()
-            val currentIndex = DataProvider.get().getMediaIndex(mCurrentMediaIdStr!!)
+            val currentIndex = DataProvider.get().getMediaIndex(mCurrentMediaIdStr)
             contentViewPager.setCurrentItem(currentIndex, false)
             playlistAdapter.selectIndex = currentIndex
             handleUpdatePlaylist()
@@ -834,7 +837,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             PrintLog.print("position=" + state?.position + ",buffer=" + state?.bufferedPosition)
             PrintLog.print("endPosition=$endPosition")
             startPosition = state?.position ?: 0
-            if (DataProvider.get().pathList.isEmpty()) {
+            if (DataProvider.get().getPathList().isEmpty()) {
                 setMediaInfo(getString(R.string.app_name), getString(R.string.app_name))
             }
             updateTime()
@@ -879,7 +882,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 }
                 MediaService.UPDATE_POSITION_EVENT -> {
                     startPosition = extras?.getInt(MediaService.UPDATE_POSITION_EVENT, 0)?.toLong() ?: 0
-                    PrintLog.d("更新列表的位置-----$startPosition")
                     updateTime()
                 }
                 else -> {

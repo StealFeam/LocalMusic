@@ -11,7 +11,7 @@ import android.view.View;
 public class ExpandableViewHolder extends RecyclerView.ViewHolder
         implements View.OnClickListener, View.OnLongClickListener {
     private static final String TAG = "ExpandableViewHolder";
-    private SparseArrayCompat<View> mItemChildViews;
+    private final SparseArrayCompat<View> mItemChildViews;
     private OnItemViewClickListener mItemClickListener;
     private OnItemViewLongClickListener mItemLongClickListener;
 
@@ -27,7 +27,6 @@ public class ExpandableViewHolder extends RecyclerView.ViewHolder
         for (View itemView : views) {
             itemView.setOnClickListener(this);
         }
-        Log.e(TAG, "attachOnClickListener:");
     }
 
     public void attachOnLongClickListener(OnItemViewLongClickListener l, View... views) {
