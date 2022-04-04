@@ -16,4 +16,4 @@
 出现闪退可查看本机中Download文件夹有个music_error_log.txt中有异常的详细信息
 如果能提供这个文件最好不过了
 
-<img src="https://raw.githubusercontent.com/Sole2016/LocalMusic/master/screenshots/home4.png" width="50%" height="50%" />
+<img src="https://raw.githubusercontent.com/Sole2016/LocalMusic/master/screenshots/home5.png" width="50%" height="50%" />
