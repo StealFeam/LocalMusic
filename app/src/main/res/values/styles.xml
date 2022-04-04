@@ -81,4 +81,9 @@
         <item name="colorControlNormal">@color/colorWhite</item>
         <item name="colorControlHighlight">@color/colorWhite</item>
     </style>
+
+    <style name="AppTheme.AlertDialog" parent="Theme.AppCompat.DayNight.Dialog">
+        <item name="windowMinWidthMajor">90%</item>
+        <item name="windowMinWidthMinor">90%</item>
+    </style>
 </resources>
