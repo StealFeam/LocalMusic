@@ -74,7 +74,7 @@ class MediaActivityModelImpl : IMediaActivityContract.IMediaActivityModel {
 
     override fun removeQueueItem(position: Int) {
         scope.launch(Dispatchers.IO) {
-            mControllerWeak?.get()?.removeQueueItem(DataProvider.get().queueItemList[position].description)
+            mControllerWeak?.get()?.removeQueueItem(DataProvider.get().queueItemList.get()[position].description)
         }
     }
 
