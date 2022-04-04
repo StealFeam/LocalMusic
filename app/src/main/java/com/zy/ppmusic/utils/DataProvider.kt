@@ -20,6 +20,7 @@ import com.zy.ppmusic.entity.MusicInfoEntity
 import kotlinx.coroutines.*
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.collections.ArrayList
 import kotlin.coroutines.resume
 import kotlin.math.max
 
@@ -31,19 +32,19 @@ class DataProvider private constructor() {
     var musicInfoEntities: AtomicReference<ArrayList<MusicInfoEntity>> = AtomicReference(ArrayList())
     val queueItemList: AtomicReference<ArrayList<MediaSessionCompat.QueueItem>> = AtomicReference(ArrayList())
     val mediaItemList: AtomicReference<ArrayList<MediaBrowserCompat.MediaItem>> = AtomicReference(ArrayList())
-    private val mapMetadataArray: ArrayMap<String, MediaMetadataCompat> = ArrayMap()
+    private val mapMetadataArray: AtomicReference<ArrayMap<String, MediaMetadataCompat>> = AtomicReference(ArrayMap())
 
     /**
      * 扫描到的路径
      */
-    val pathList: ArrayList<String> = ArrayList()
+    val pathList: AtomicReference<ArrayList<String>> = AtomicReference(ArrayList())
     /**
      * 用于获取mediaId的位置
      */
-    val mediaIdList: ArrayList<String> = ArrayList()
+    val mediaIdList: AtomicReference<ArrayList<String>> = AtomicReference(ArrayList())
 
     val metadataCompatList: Map<String, MediaMetadataCompat>
-        get() = mapMetadataArray
+        get() = mapMetadataArray.get()
 
     private val loadPicOption = BitmapFactory.Options().apply {
         inSampleSize = 2
@@ -59,7 +60,7 @@ class DataProvider private constructor() {
     }
 
     private fun isMemoryHasData():Boolean {
-        return pathList.size > 0
+        return pathList.get().size > 0
     }
 
     suspend fun loadData(forceCache: Boolean) = suspendCancellableCoroutine<Void> { cont ->
@@ -124,7 +125,7 @@ class DataProvider private constructor() {
                     mediaMetadataRetriever.release()
                 }
                 //缓存到本地
-                FileUtils.saveObject(musicInfoEntities, Constant.CACHE_FILE_PATH)
+                FileUtils.saveObject(musicInfoEntities.get(), Constant.CACHE_FILE_PATH)
                 cont.resume(Void)
             }
         } else {
@@ -132,7 +133,7 @@ class DataProvider private constructor() {
                 override fun onComplete(paths: ArrayList<String>) {
                     transformData(paths)
                     //缓存到本地
-                    FileUtils.saveObject(musicInfoEntities, Constant.CACHE_FILE_PATH)
+                    FileUtils.saveObject(musicInfoEntities.get(), Constant.CACHE_FILE_PATH)
                     cont.resume(Void)
                 }
             })
@@ -140,12 +141,12 @@ class DataProvider private constructor() {
     }
 
     private fun clearData() {
-        if (this.pathList.size > 0) {
-            this.pathList.clear()
+        if (this.pathList.get().size > 0) {
+            this.pathList.get().clear()
             musicInfoEntities.get().clear()
-            mapMetadataArray.clear()
+            mapMetadataArray.get().clear()
             queueItemList.get().clear()
-            mediaIdList.clear()
+            mediaIdList.get().clear()
             mediaItemList.get().clear()
         }
     }
@@ -160,8 +161,10 @@ class DataProvider private constructor() {
         var oldUri: Uri? = null
         val mediaMetadataRetriever = MediaMetadataRetriever()
 
-        for (itemPath in localList) {
-            if (mediaIdList.contains(itemPath.hashCode().toString())) {
+        val endIndex = localList.size - 1
+        for (index in endIndex downTo 0) {
+            val itemPath = localList[index]
+            if (mediaIdList.get().contains(itemPath.hashCode().toString())) {
                 continue
             } else {
                 PrintLog.print(itemPath)
@@ -170,7 +173,7 @@ class DataProvider private constructor() {
             val audioUri = MediaStore.Audio.Media.getContentUriForPath(itemPath) ?: continue
             //仅查询是音乐的文件
             val query = contentResolver.query(audioUri, null,
-                    MediaStore.Audio.Media.IS_MUSIC + "=?", arrayOf("1"), null)
+                MediaStore.Audio.Media.IS_MUSIC + "=?", arrayOf("1"), null)
             if (query != null) {
                 //判断如果是上次扫描的uri则跳过，系统分为内部存储uri的音频和外部存储的uri
                 if (oldUri != null && oldUri == audioUri) {
@@ -187,7 +190,7 @@ class DataProvider private constructor() {
 
         PrintLog.d("扫描的数量-----${queueItemList.get().size}")
 
-        if (localList.size > pathList.size) {
+        if (localList.size > pathList.get().size) {
             reQueryList(localList,mediaMetadataRetriever)
         }
 
@@ -221,15 +224,15 @@ class DataProvider private constructor() {
             val infoEntity = MusicInfoEntity(queryPath.hashCode().toString(), title, artist, queryPath, size.toLong(),
                     duration, picLoader.embeddedPicture)
 
-            mapMetadataArray[infoEntity.mediaId] = buildMetadataCompat(infoEntity)
+            mapMetadataArray.get()[infoEntity.mediaId] = buildMetadataCompat(infoEntity)
 
-            queueItemList.get().add(buildQueueItem(mapMetadataArray[infoEntity.mediaId]!!.description))
+            queueItemList.get().add(buildQueueItem(mapMetadataArray.get()[infoEntity.mediaId]!!.description))
 
-            mediaItemList.get().add(buildMediaItem(mapMetadataArray[infoEntity.mediaId]!!.description))
+            mediaItemList.get().add(buildMediaItem(mapMetadataArray.get()[infoEntity.mediaId]!!.description))
 
             musicInfoEntities.get()?.add(infoEntity)
-            pathList.add(queryPath)
-            mediaIdList.add(infoEntity.mediaId!!)
+            pathList.get().add(queryPath)
+            mediaIdList.get().add(infoEntity.mediaId!!)
         }
     }
 
@@ -239,7 +242,7 @@ class DataProvider private constructor() {
      */
     private fun reQueryList(list: List<String>,retriever: MediaMetadataRetriever) {
         for (itemPath in list) {
-            if (!this.pathList.contains(itemPath)) {
+            if (!this.pathList.get().contains(itemPath)) {
                 //过滤本地不存在的媒体文件
                 if (!FileUtils.isExits(itemPath)) {
                     continue
@@ -261,15 +264,15 @@ class DataProvider private constructor() {
                         StringUtils.ifEmpty(mediaName, getMusicName(itemPath)), mediaAuthor,
                         itemPath, 0, length, retriever.embeddedPicture)
 
-                mapMetadataArray[infoEntity.mediaId] = buildMetadataCompat(infoEntity)
+                mapMetadataArray.get()[infoEntity.mediaId] = buildMetadataCompat(infoEntity)
 
-                queueItemList.get().add(buildQueueItem(mapMetadataArray[infoEntity.mediaId]!!.description))
+                queueItemList.get().add(buildQueueItem(mapMetadataArray.get()[infoEntity.mediaId]!!.description))
 
-                mediaItemList.get().add(buildMediaItem(mapMetadataArray[infoEntity.mediaId]!!.description))
+                mediaItemList.get().add(buildMediaItem(mapMetadataArray.get()[infoEntity.mediaId]!!.description))
 
                 musicInfoEntities.get().add(infoEntity)
-                pathList.add(infoEntity.queryPath!!)
-                mediaIdList.add(infoEntity.mediaId!!)
+                pathList.get().add(infoEntity.queryPath!!)
+                mediaIdList.get().add(infoEntity.mediaId!!)
             }
         }
     }
@@ -305,33 +308,30 @@ class DataProvider private constructor() {
         clearData()
         this.musicInfoEntities.set(localList)
         for (itemEntity in localList) {
-            pathList.add(itemEntity.queryPath!!)
-            mediaIdList.add(itemEntity.mediaId!!)
+            pathList.get().add(itemEntity.queryPath!!)
+            mediaIdList.get().add(itemEntity.mediaId!!)
 
-            mapMetadataArray[itemEntity.mediaId] = buildMetadataCompat(itemEntity)
+            mapMetadataArray.get()[itemEntity.mediaId] = buildMetadataCompat(itemEntity)
 
-            queueItemList.get().add(buildQueueItem(mapMetadataArray[itemEntity.mediaId]!!.description))
+            queueItemList.get().add(buildQueueItem(mapMetadataArray.get()[itemEntity.mediaId]!!.description))
 
-            mediaItemList.get().add(buildMediaItem(mapMetadataArray[itemEntity.mediaId]!!.description))
+            mediaItemList.get().add(buildMediaItem(mapMetadataArray.get()[itemEntity.mediaId]!!.description))
         }
     }
 
     private fun removeItem(index: Int) {
-        pathList.removeAt(index)
+        pathList.get().removeAt(index)
         musicInfoEntities.get().removeAt(index)
-        mapMetadataArray.remove(this.mediaIdList[index])
-        mediaIdList.removeAt(index)
+        mapMetadataArray.get().remove(this.mediaIdList.get()[index])
+        mediaIdList.get().removeAt(index)
         mediaItemList.get().removeAt(index)
-    }
-
-    fun removeQueueAt(index: Int) {
         queueItemList.get().removeAt(index)
     }
 
-    suspend fun removeItemIncludeFile(index: Int) = coroutineScope {
+    suspend fun removeItemIncludeFile(index: Int) = withContext(Dispatchers.IO) {
         removeItem(index)
         // 更新缓存
-        FileUtils.saveObject(musicInfoEntities, Constant.CACHE_FILE_PATH)
+        FileUtils.saveObject(musicInfoEntities.get(), Constant.CACHE_FILE_PATH)
     }
 
     /**
@@ -352,27 +352,31 @@ class DataProvider private constructor() {
     }
 
     fun getMediaIdList(): List<String> {
-        return mediaIdList
+        return mediaIdList.get()
     }
 
     fun getPath(position: Int): String? {
-        return if (position >= 0 && position < pathList.size) {
-            pathList[position]
+        return if (position >= 0 && position < pathList.get().size) {
+            pathList.get()[position]
         } else {
             null
         }
+    }
+
+    fun getPathList(): List<String> {
+        return pathList.get()
     }
 
     fun getMediaIndex(mediaId: String?): Int {
         return if (mediaId.isNullOrEmpty()) {
             -1
         } else {
-            mediaIdList.indexOf(mediaId)
+            mediaIdList.get().indexOf(mediaId)
         }
     }
 
     fun getMetadataItem(mediaId: String): MediaMetadataCompat? {
-        return mapMetadataArray[mediaId]
+        return mapMetadataArray.get()[mediaId]
     }
 
     override fun toString(): String {
@@ -380,9 +384,9 @@ class DataProvider private constructor() {
                 "musicInfoEntities=" + musicInfoEntities.get().size +
                 ", queueItemList=" + queueItemList.get().size +
                 ", mediaItemList=" + mediaItemList.get().size +
-                ", mapMetadataArray=" + mapMetadataArray.size +
-                ", pathList=" + pathList.size +
-                ", mediaIdList=" + mediaIdList.size +
+                ", mapMetadataArray=" + mapMetadataArray.get().size +
+                ", pathList=" + pathList.get().size +
+                ", mediaIdList=" + mediaIdList.get().size +
                 '}'.toString()
     }
 

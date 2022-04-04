@@ -30,7 +30,6 @@ class ScanMediaFile private constructor() {
      * 外部存储路径
      */
     private var mExternalStoragePath: String? = null
-    private val dot = "."
 
     suspend fun scanInternalMedia(c: Context) = coroutineScope {
         FileUtils.getStoragePath(c, isExternalStorage = false)?.let { scanMediaBySystem(it) }

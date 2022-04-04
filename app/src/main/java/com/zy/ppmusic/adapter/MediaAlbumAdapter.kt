@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.zy.ppmusic.R
 import com.zy.ppmusic.utils.DataProvider
+import com.zy.ppmusic.utils.lazy2
 import kotlinx.coroutines.*
 import kotlin.collections.ArrayList
 
@@ -17,7 +18,7 @@ import kotlin.collections.ArrayList
  * @date 2017/12/26
  */
 class MediaAlbumAdapter : RecyclerView.Adapter<MediaAlbumAdapter.MediaHolder>() {
-    private val pathList: ArrayList<String> by lazy { ArrayList() }
+    private val pathList: ArrayList<String> by lazy2 { ArrayList() }
     private var lastFillJob: Job? = null
 
     fun fillDataToAdapter(context: CoroutineScope, newPathList: List<String>?) {
@@ -70,7 +71,7 @@ class MediaAlbumAdapter : RecyclerView.Adapter<MediaAlbumAdapter.MediaHolder>() 
     }
 
     override fun onBindViewHolder(holder: MediaHolder, position: Int) {
-        val mediaId = DataProvider.get().mediaIdList[position]
+        val mediaId = DataProvider.get().getMediaIdList()[position]
         val metadataCompat = DataProvider.get().getMetadataItem(mediaId)
         metadataCompat?.description?.iconBitmap?.apply {
             Glide.with(holder.albumImageView).load(this).into(holder.albumImageView)
