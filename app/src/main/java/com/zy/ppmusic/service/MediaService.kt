@@ -192,14 +192,14 @@ class MediaService : MediaBrowserServiceCompat() {
         Log.d(TAG, "service onLoadChildren() called with: s = [$s], result = [$result]")
         if (s == MY_ROOT_ID) {
             result.detach()
-            if (DataProvider.get().mediaItemList.isNotEmpty()) {
-                result.sendResult(DataProvider.get().mediaItemList)
-                PrintLog.print("load list size ... ${DataProvider.get().mediaItemList.size}")
+            if (DataProvider.get().mediaItemList.get().isNotEmpty()) {
+                result.sendResult(DataProvider.get().mediaItemList.get())
+                PrintLog.print("load list size ... ${DataProvider.get().mediaItemList.get().size}")
             } else {
                 launchScope.launch(Dispatchers.Main) {
                     val job = async(Dispatchers.IO) {
                         DataProvider.get().loadData(false)
-                        return@async DataProvider.get().mediaItemList
+                        return@async DataProvider.get().mediaItemList.get()
                     }
                     val list = job.await()
                     result.sendResult(list)
@@ -538,7 +538,7 @@ class MediaService : MediaBrowserServiceCompat() {
 
     private fun updateQueue() {
         mPlayBack?.setPlayQueue(DataProvider.get().mediaIdList)
-        mMediaSessionCompat?.setQueue(DataProvider.get().queueItemList)
+        mMediaSessionCompat?.setQueue(DataProvider.get().queueItemList.get())
     }
 
     /**
@@ -689,7 +689,7 @@ class MediaService : MediaBrowserServiceCompat() {
                         val job = async(Dispatchers.Default) {
                             savePlayingRecord()
                             mPlayBack?.setPlayQueue(DataProvider.get().mediaIdList)
-                            mMediaSessionCompat?.setQueue(DataProvider.get().queueItemList)
+                            mMediaSessionCompat?.setQueue(DataProvider.get().queueItemList.get())
                             cb?.send(COMMAND_UPDATE_QUEUE_CODE, Bundle())
                             if (isForce) {
                                 //读取本地数据库

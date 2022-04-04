@@ -19,6 +19,7 @@ import com.zy.ppmusic.App
 import com.zy.ppmusic.entity.MusicInfoEntity
 import kotlinx.coroutines.*
 import java.util.*
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.math.max
 
@@ -27,9 +28,9 @@ import kotlin.math.max
  * @author stealfeam
  */
 class DataProvider private constructor() {
-    var musicInfoEntities: ArrayList<MusicInfoEntity> = ArrayList()
-    val queueItemList: ArrayList<MediaSessionCompat.QueueItem> = ArrayList()
-    val mediaItemList: ArrayList<MediaBrowserCompat.MediaItem> = ArrayList()
+    var musicInfoEntities: AtomicReference<ArrayList<MusicInfoEntity>> = AtomicReference(ArrayList())
+    val queueItemList: AtomicReference<ArrayList<MediaSessionCompat.QueueItem>> = AtomicReference(ArrayList())
+    val mediaItemList: AtomicReference<ArrayList<MediaBrowserCompat.MediaItem>> = AtomicReference(ArrayList())
     private val mapMetadataArray: ArrayMap<String, MediaMetadataCompat> = ArrayMap()
 
     /**
@@ -141,11 +142,11 @@ class DataProvider private constructor() {
     private fun clearData() {
         if (this.pathList.size > 0) {
             this.pathList.clear()
-            musicInfoEntities?.clear()
+            musicInfoEntities.get().clear()
             mapMetadataArray.clear()
-            queueItemList.clear()
+            queueItemList.get().clear()
             mediaIdList.clear()
-            mediaItemList.clear()
+            mediaItemList.get().clear()
         }
     }
 
@@ -184,7 +185,7 @@ class DataProvider private constructor() {
             oldUri = audioUri
         }
 
-        PrintLog.d("扫描的数量-----${queueItemList.size}")
+        PrintLog.d("扫描的数量-----${queueItemList.get().size}")
 
         if (localList.size > pathList.size) {
             reQueryList(localList,mediaMetadataRetriever)
@@ -222,11 +223,11 @@ class DataProvider private constructor() {
 
             mapMetadataArray[infoEntity.mediaId] = buildMetadataCompat(infoEntity)
 
-            queueItemList.add(buildQueueItem(mapMetadataArray[infoEntity.mediaId]!!.description))
+            queueItemList.get().add(buildQueueItem(mapMetadataArray[infoEntity.mediaId]!!.description))
 
-            mediaItemList.add(buildMediaItem(mapMetadataArray[infoEntity.mediaId]!!.description))
+            mediaItemList.get().add(buildMediaItem(mapMetadataArray[infoEntity.mediaId]!!.description))
 
-            musicInfoEntities?.add(infoEntity)
+            musicInfoEntities.get()?.add(infoEntity)
             pathList.add(queryPath)
             mediaIdList.add(infoEntity.mediaId!!)
         }
@@ -262,11 +263,11 @@ class DataProvider private constructor() {
 
                 mapMetadataArray[infoEntity.mediaId] = buildMetadataCompat(infoEntity)
 
-                queueItemList.add(buildQueueItem(mapMetadataArray[infoEntity.mediaId]!!.description))
+                queueItemList.get().add(buildQueueItem(mapMetadataArray[infoEntity.mediaId]!!.description))
 
-                mediaItemList.add(buildMediaItem(mapMetadataArray[infoEntity.mediaId]!!.description))
+                mediaItemList.get().add(buildMediaItem(mapMetadataArray[infoEntity.mediaId]!!.description))
 
-                musicInfoEntities?.add(infoEntity)
+                musicInfoEntities.get().add(infoEntity)
                 pathList.add(infoEntity.queryPath!!)
                 mediaIdList.add(infoEntity.mediaId!!)
             }
@@ -302,29 +303,29 @@ class DataProvider private constructor() {
      */
     private fun transFormData(localList: ArrayList<MusicInfoEntity>) {
         clearData()
-        this.musicInfoEntities = localList
+        this.musicInfoEntities.set(localList)
         for (itemEntity in localList) {
             pathList.add(itemEntity.queryPath!!)
             mediaIdList.add(itemEntity.mediaId!!)
 
             mapMetadataArray[itemEntity.mediaId] = buildMetadataCompat(itemEntity)
 
-            queueItemList.add(buildQueueItem(mapMetadataArray[itemEntity.mediaId]!!.description))
+            queueItemList.get().add(buildQueueItem(mapMetadataArray[itemEntity.mediaId]!!.description))
 
-            mediaItemList.add(buildMediaItem(mapMetadataArray[itemEntity.mediaId]!!.description))
+            mediaItemList.get().add(buildMediaItem(mapMetadataArray[itemEntity.mediaId]!!.description))
         }
     }
 
     private fun removeItem(index: Int) {
         pathList.removeAt(index)
-        musicInfoEntities?.removeAt(index)
+        musicInfoEntities.get().removeAt(index)
         mapMetadataArray.remove(this.mediaIdList[index])
         mediaIdList.removeAt(index)
-        mediaItemList.removeAt(index)
+        mediaItemList.get().removeAt(index)
     }
 
     fun removeQueueAt(index: Int) {
-        queueItemList.removeAt(index)
+        queueItemList.get().removeAt(index)
     }
 
     suspend fun removeItemIncludeFile(index: Int) = coroutineScope {
@@ -343,11 +344,11 @@ class DataProvider private constructor() {
     }
 
     fun getMusicInfoEntities(): List<MusicInfoEntity>? {
-        return musicInfoEntities
+        return musicInfoEntities.get()
     }
 
     fun getQueueItemList(): List<MediaSessionCompat.QueueItem> {
-        return queueItemList
+        return queueItemList.get()
     }
 
     fun getMediaIdList(): List<String> {
@@ -376,9 +377,9 @@ class DataProvider private constructor() {
 
     override fun toString(): String {
         return "DataProvider{" +
-                "musicInfoEntities=" + musicInfoEntities!!.size +
-                ", queueItemList=" + queueItemList.size +
-                ", mediaItemList=" + mediaItemList.size +
+                "musicInfoEntities=" + musicInfoEntities.get().size +
+                ", queueItemList=" + queueItemList.get().size +
+                ", mediaItemList=" + mediaItemList.get().size +
                 ", mapMetadataArray=" + mapMetadataArray.size +
                 ", pathList=" + pathList.size +
                 ", mediaIdList=" + mediaIdList.size +

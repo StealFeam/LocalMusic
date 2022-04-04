@@ -260,7 +260,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             playlistContainer.adapter = playlistAdapter
             playlistAdapter.selectIndex = DataProvider.get().getMediaIndex(mCurrentMediaIdStr)
         }
-        playlistAdapter.setData(DataProvider.get().queueItemList)
+        playlistAdapter.setData(DataProvider.get().queueItemList.get())
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -372,11 +372,11 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 显示列表item的详细信息
      */
     private fun createQueueItemDetailDialog(position: Int): Boolean {
-        if ((position in 0..DataProvider.get().queueItemList.size).not()) {
+        if ((position in 0..DataProvider.get().queueItemList.get().size).not()) {
             return false
         }
 
-        val item = DataProvider.get().queueItemList[position].description ?: return false
+        val item = DataProvider.get().queueItemList.get()[position].description ?: return false
         AlertDialog.Builder(this, R.style.AppTheme_AlertDialog)
                 .setTitle(String.format(Locale.CHINA, getString(R.string.show_name_and_author), item.title, item.subtitle))
                 .setMessage(item.mediaUri.toString())
