@@ -7,7 +7,7 @@
     tools:viewBindingIgnore="true"
     tools:context="com.zy.ppmusic.mvp.view.SplashActivity">
 
-    <androidx.appcompat.widget.AppCompatTextView
+    <TextView
         android:id="@+id/splashTextView"
         android:text="@string/app_name"
         android:textColor="@color/colorWhite"
@@ -15,7 +15,9 @@
         android:layout_height="@dimen/dp30"
         android:gravity="center"
         android:textSize="@dimen/sp20"
-        android:textStyle="italic"
+        android:textStyle="bold"
+        android:textAppearance="@style/TextAppearance.AppCompat.Display2"
+        android:fontFamily="sans-serif-thin"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"

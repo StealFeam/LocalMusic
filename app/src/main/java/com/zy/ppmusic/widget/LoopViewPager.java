@@ -9,6 +9,7 @@ import androidx.viewpager.widget.ViewPager;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.WindowManager;
 
 /**

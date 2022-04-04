@@ -1,5 +1,6 @@
 package com.zy.ppmusic.service
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
@@ -26,6 +27,7 @@ import com.zy.ppmusic.receiver.AudioBecomingNoisyReceiver
 import com.zy.ppmusic.receiver.LoopReceiver
 import com.zy.ppmusic.utils.*
 import kotlinx.coroutines.*
+import kotlin.coroutines.CoroutineContext
 import kotlin.system.exitProcess
 
 /**
@@ -58,6 +60,8 @@ class MediaService : MediaBrowserServiceCompat() {
      * 当无法播放曲目数量和列表数量相同时销毁播放器避免循环
      */
     private var mErrorTimes: Int = 0
+
+    private val launchScope: CoroutineScope by lazy2 { CoroutineScope(Dispatchers.Main + SupervisorJob()) }
 
     private var receiver: LoopReceiver? = null
 
@@ -95,6 +99,7 @@ class MediaService : MediaBrowserServiceCompat() {
 
     override fun onCreate() {
         super.onCreate()
+
         PrintLog.e("onCreate----------")
         if (!Constant.IS_STARTED && applicationContext != null) {
             PrintLog.e("启动Service。。。。。")
@@ -107,7 +112,19 @@ class MediaService : MediaBrowserServiceCompat() {
             Constant.IS_STARTED = true
         }
         if (mMediaSessionCompat == null) {
-            mMediaSessionCompat = MediaSessionCompat(this, TAG)
+            val mediaIntent = Intent(applicationContext, MediaActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP and Intent.FLAG_ACTIVITY_NEW_TASK)
+            @SuppressLint("UnspecifiedImmutableFlag")
+            val pendingIntent = if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                PendingIntent.getActivity(applicationContext, 1, mediaIntent,
+                    PendingIntent.FLAG_MUTABLE)
+            } else {
+                PendingIntent.getActivity(applicationContext, 1, mediaIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT)
+            }
+            mMediaSessionCompat = MediaSessionCompat(this, TAG, null, pendingIntent)
+            mMediaSessionCompat?.setMediaButtonReceiver(pendingIntent)
+            mMediaSessionCompat?.setSessionActivity(pendingIntent)
         }
         sessionToken = mMediaSessionCompat!!.sessionToken
         val mPlayBackStateBuilder = PlaybackStateCompat.Builder()
@@ -121,12 +138,6 @@ class MediaService : MediaBrowserServiceCompat() {
         mMediaSessionCompat?.setPlaybackToLocal(AudioManager.STREAM_MUSIC)
         mMediaSessionCompat?.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE)
 
-        val mediaIntent = Intent(applicationContext, MediaActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP and Intent.FLAG_ACTIVITY_NEW_TASK)
-        val pendingIntent = PendingIntent.getActivity(applicationContext, 1, mediaIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT)
-        mMediaSessionCompat?.setMediaButtonReceiver(pendingIntent)
-        mMediaSessionCompat?.setSessionActivity(pendingIntent)
         mAudioReceiver = AudioBecomingNoisyReceiver(this)
     }
 
@@ -185,7 +196,7 @@ class MediaService : MediaBrowserServiceCompat() {
                 result.sendResult(DataProvider.get().mediaItemList)
                 PrintLog.print("load list size ... ${DataProvider.get().mediaItemList.size}")
             } else {
-                GlobalScope.launch(Dispatchers.Main) {
+                launchScope.launch(Dispatchers.Main) {
                     val job = async(Dispatchers.IO) {
                         DataProvider.get().loadData(false)
                         return@async DataProvider.get().mediaItemList
@@ -328,7 +339,7 @@ class MediaService : MediaBrowserServiceCompat() {
             stateBuilder.setActiveQueueItemId(mCurrentMedia!!.queueId)
         }
 
-        GlobalScope.launch(Dispatchers.Main) {
+        launchScope.launch(Dispatchers.Main) {
             mMediaSessionCompat?.setPlaybackState(stateBuilder.build())
             postNotifyByStyle(state)
         }
@@ -428,6 +439,7 @@ class MediaService : MediaBrowserServiceCompat() {
             mPlayBack?.stopPlayer()
             mPlayBack = null
         }
+        launchScope.cancel()
     }
 
     fun stopLoop() {
@@ -450,7 +462,7 @@ class MediaService : MediaBrowserServiceCompat() {
      * 进度更新到界面
      */
     fun updatePositionToSession() {
-        GlobalScope.launch(Dispatchers.IO) {
+        launchScope.launch(Dispatchers.IO) {
             val bundle = Bundle()
             bundle.putInt(UPDATE_POSITION_EVENT, mPlayBack!!.currentStreamPosition)
             mMediaSessionCompat?.sendSessionEvent(UPDATE_POSITION_EVENT, bundle)
@@ -471,7 +483,7 @@ class MediaService : MediaBrowserServiceCompat() {
                 lastChangeMis = System.currentTimeMillis()
             }
             PrintLog.d("mediaId-----$mediaId")
-            GlobalScope.launch(Dispatchers.Default) {
+            launchScope.launch(Dispatchers.Default) {
                 updateTask(mediaId, shouldPlayWhenPrepared, shouldSeekToPosition)
             }
         } else {
@@ -481,9 +493,14 @@ class MediaService : MediaBrowserServiceCompat() {
 
     /**
      * 根据类型选择指定的通知样式
+     * Android S及以上的设备自定义的范围缩小，所以使用系统样式
      */
     private fun postNotifyByStyle(state: Int) {
-        val style = NotificationUtils.getNotifyStyle(applicationContext)
+        val style = if (belowSVersion) {
+            NotificationUtils.getNotifyStyle(applicationContext)
+        } else {
+            R.id.rb_choose_system
+        }
         val notification: Notification? = if (style == R.id.rb_choose_system) {
             NotificationUtils.createSystemNotify(this@MediaService,
                     mMediaSessionCompat, state == PlaybackStateCompat.STATE_PLAYING)
@@ -560,7 +577,7 @@ class MediaService : MediaBrowserServiceCompat() {
                     handlePlayOrPauseRequest()
                     //初始化播放器，如果本地有播放记录，取播放记录，没有就初始化穿过来的media
                 } else if (ACTION_PLAY_INIT == action) {
-                    GlobalScope.launch(Dispatchers.Main) {
+                    launchScope.launch(Dispatchers.Main) {
                         val job = async(Dispatchers.IO) {
                             return@async App.instance!!.databaseManager!!.entity
                         }
@@ -668,7 +685,7 @@ class MediaService : MediaBrowserServiceCompat() {
                 COMMAND_UPDATE_QUEUE -> {
                     //是否是前台扫描媒体操作
                     val isForce = reqExtra?.getBoolean(EXTRA_SCAN_COMPLETE) ?: false
-                    GlobalScope.launch(Dispatchers.Main) {
+                    launchScope.launch(Dispatchers.Main) {
                         val job = async(Dispatchers.Default) {
                             savePlayingRecord()
                             mPlayBack?.setPlayQueue(DataProvider.get().mediaIdList)

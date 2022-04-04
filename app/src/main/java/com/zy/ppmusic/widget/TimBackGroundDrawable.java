@@ -1,5 +1,7 @@
 package com.zy.ppmusic.widget;
 
+import static com.zy.ppmusic.utils.UIUtilsKt.dp2px;
+
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -14,7 +16,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.zy.ppmusic.App;
-import com.zy.ppmusic.utils.UIUtils;
 
 /**
  * @author stealfeam
@@ -45,7 +46,7 @@ public class TimBackGroundDrawable extends Drawable {
     public TimBackGroundDrawable() {
         mPaint = new Paint();
         mPaint.setTextAlign(Paint.Align.CENTER);
-        mPaint.setTextSize(UIUtils.dp2px(App.getAppBaseContext(),12));
+        mPaint.setTextSize(dp2px(App.getAppBaseContext(),12));
         mPaint.setAntiAlias(true);
         mPaint.setColor(mPaintColor);
         mPaint.setStrokeWidth(1);

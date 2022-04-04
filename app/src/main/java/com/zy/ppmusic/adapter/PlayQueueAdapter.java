@@ -1,5 +1,7 @@
 package com.zy.ppmusic.adapter;
 
+import static com.zy.ppmusic.utils.UIUtilsKt.getString;
+
 import androidx.annotation.NonNull;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -13,7 +15,6 @@ import com.zy.ppmusic.adapter.base.ExpandableViewHolder;
 import com.zy.ppmusic.adapter.base.OnItemViewClickListener;
 import com.zy.ppmusic.adapter.base.OnItemViewLongClickListener;
 import com.zy.ppmusic.utils.StringUtils;
-import com.zy.ppmusic.utils.UIUtils;
 
 import java.util.List;
 import java.util.Locale;
@@ -61,27 +62,24 @@ public class PlayQueueAdapter extends AbstractSingleTypeAdapter {
     public void setupItemData(ExpandableViewHolder holder, int position) {
         MediaDescriptionCompat description = mData.get(position).getDescription();
         TextView tvSubTitle = holder.getView(R.id.queue_item_display_sub_title);
+        tvSubTitle.setTag(R.id.ignore_theme_color, true);
         tvSubTitle.setText(StringUtils.ifEmpty(String.valueOf(description.getSubtitle()),
-                UIUtils.getString(R.string.unknown_author)));
+                getString(R.string.unknown_author)));
         TextView tvTitle = holder.getView(R.id.queue_item_display_title);
+        tvTitle.setTag(R.id.ignore_theme_color, true);
         tvTitle.setText(StringUtils.ifEmpty(String.valueOf(description.getTitle())
-                , UIUtils.getString(R.string.unknown_name)));
+                , getString(R.string.unknown_name)));
         TextView tvPosition = holder.getView(R.id.queue_item_position);
+        tvPosition.setTag(R.id.ignore_theme_color, true);
         if (selectIndex == position) {
-//            tvSubTitle.setTextColor(Color.WHITE);
-//            tvTitle.setTextColor(Color.WHITE);
-//            tvPosition.setTextColor(Color.WHITE);
-//            holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(),R.color.colorTheme));
             holder.getView(R.id.queue_item_selected_line).setVisibility(View.VISIBLE);
         } else {
-//            tvSubTitle.setTextColor(ContextCompat.getColor(holder.itemView.getContext(),R.color.colorDarkGray));
-//            tvTitle.setTextColor(ContextCompat.getColor(holder.itemView.getContext(),R.color.colorBlack));
-//            tvPosition.setTextColor(ContextCompat.getColor(holder.itemView.getContext(),R.color.colorDarkGray));
-//            ViewCompat.setBackgroundTintList(holder.itemView,null);
             holder.getView(R.id.queue_item_selected_line).setVisibility(View.GONE);
         }
         tvPosition.setText(String.format(Locale.CHINA, "%2d", (position + 1)));
         tvSubTitle.setTag(mData.get(position));
+
+        holder.getView(R.id.queue_item_del).setTag(R.id.ignore_theme_color, true);
     }
 
     @Override

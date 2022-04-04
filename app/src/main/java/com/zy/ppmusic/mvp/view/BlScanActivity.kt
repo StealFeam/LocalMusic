@@ -27,7 +27,6 @@ import com.zy.ppmusic.mvp.presenter.BlActivityPresenter
 import com.zy.ppmusic.receiver.DeviceFoundReceiver
 import com.zy.ppmusic.receiver.StatusChangeReceiver
 import com.zy.ppmusic.utils.PrintLog
-import com.zy.ppmusic.utils.UIUtils
 import com.zy.ppmusic.widget.DragFinishLayout
 import com.zy.ppmusic.widget.EasyTintView
 import pub.devrel.easypermissions.AppSettingsDialog
@@ -57,7 +56,7 @@ class BlScanActivity : AbstractBaseMvpActivity<BlActivityPresenter>(), IBLActivi
         mToolBar = findViewById(R.id.toolbar_bl)
         mScanResultRecycler = findViewById(R.id.show_device_recycler)
         if (mPresenter!!.isSupportBl().not()) {
-            Toast.makeText(this, UIUtils.getString(R.string.unsupport_bluetooth), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.unsupport_bluetooth), Toast.LENGTH_SHORT).show()
             finish()
             return
         }

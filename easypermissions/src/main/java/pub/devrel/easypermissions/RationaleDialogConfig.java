@@ -55,7 +55,7 @@ class RationaleDialogConfig {
     }
 
     AlertDialog createDialog(Context context, Dialog.OnClickListener listener) {
-        return new AlertDialog.Builder(context)
+        return new AlertDialog.Builder(context, R.style.EasyPermissions_AlertDialog)
                 .setCancelable(false)
                 .setPositiveButton(positiveButton, listener)
                 .setNegativeButton(negativeButton, listener)

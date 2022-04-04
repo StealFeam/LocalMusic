@@ -20,19 +20,18 @@ import com.zy.ppmusic.entity.MusicInfoEntity
 import kotlinx.coroutines.*
 import java.util.*
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
+import kotlin.math.max
 
 /**
  * 数据转换
  * @author stealfeam
  */
 class DataProvider private constructor() {
-    @Volatile
-    var musicInfoEntities: ArrayList<MusicInfoEntity>? = null
-    @Volatile
-    var queueItemList: ArrayList<MediaSessionCompat.QueueItem>
-    val mediaItemList: ArrayList<MediaBrowserCompat.MediaItem>
-    private val mapMetadataArray: ArrayMap<String, MediaMetadataCompat>
+    var musicInfoEntities: ArrayList<MusicInfoEntity> = ArrayList()
+    val queueItemList: ArrayList<MediaSessionCompat.QueueItem> = ArrayList()
+    val mediaItemList: ArrayList<MediaBrowserCompat.MediaItem> = ArrayList()
+    private val mapMetadataArray: ArrayMap<String, MediaMetadataCompat> = ArrayMap()
+
     /**
      * 扫描到的路径
      */
@@ -40,7 +39,7 @@ class DataProvider private constructor() {
     /**
      * 用于获取mediaId的位置
      */
-    val mediaIdList: ArrayList<String>
+    val mediaIdList: ArrayList<String> = ArrayList()
 
     val metadataCompatList: Map<String, MediaMetadataCompat>
         get() = mapMetadataArray
@@ -51,14 +50,6 @@ class DataProvider private constructor() {
 
     private object Inner {
         val INSTANCE = DataProvider()
-    }
-
-    init {
-        musicInfoEntities = ArrayList()
-        mapMetadataArray = ArrayMap()
-        queueItemList = ArrayList()
-        mediaItemList = ArrayList()
-        mediaIdList = ArrayList()
     }
 
     fun transformData(pathList: ArrayList<String>) {
@@ -207,12 +198,12 @@ class DataProvider private constructor() {
     private fun queryContent(query: Cursor, picLoader: MediaMetadataRetriever) {
         //遍历得到内部或者外部存储的所有媒体文件的信息
         while (query.moveToNext()) {
-            val title = query.getString(query.getColumnIndex(MediaStore.Audio.Media.TITLE))
-            val artist = query.getString(query.getColumnIndex(MediaStore.Audio.Media.ARTIST))
-            val duration = query.getLong(query.getColumnIndex(MediaStore.Audio.Media.DURATION))
-            val size = query.getString(query.getColumnIndex(MediaStore.Audio.Media.SIZE))
+            val title = query.getString(max(query.getColumnIndex(MediaStore.Audio.Media.TITLE), 0))
+            val artist = query.getString(max(query.getColumnIndex(MediaStore.Audio.Media.ARTIST), 0))
+            val duration = query.getLong(max(query.getColumnIndex(MediaStore.Audio.Media.DURATION), 0))
+            val size = query.getString(max(query.getColumnIndex(MediaStore.Audio.Media.SIZE), 0))
             // RELATIVE_PATH
-            val queryPath = query.getString(query.getColumnIndex(MediaStore.Audio.Media.DATA))
+            val queryPath = query.getString(max(query.getColumnIndex(MediaStore.Audio.Media.DATA), 0))
             //过滤本地不存在的媒体文件
             if (!FileUtils.isExits(queryPath)) {
                 continue

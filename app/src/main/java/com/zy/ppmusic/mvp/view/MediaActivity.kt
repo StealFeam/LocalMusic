@@ -1,10 +1,14 @@
 package com.zy.ppmusic.mvp.view
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
 import android.os.*
 import android.provider.DocumentsContract
@@ -14,27 +18,23 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.view.*
-import androidx.annotation.Keep
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.view.menu.MenuBuilder
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
-import androidx.appcompat.widget.AppCompatImageView
-import androidx.appcompat.widget.AppCompatSeekBar
-import androidx.appcompat.widget.AppCompatTextView
-import androidx.appcompat.widget.Toolbar
+import androidx.annotation.Keep
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.*
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.palette.graphics.Palette
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.zy.ppmusic.R
 import com.zy.ppmusic.adapter.MediaAlbumAdapter
 import com.zy.ppmusic.adapter.PlayQueueAdapter
 import com.zy.ppmusic.adapter.TimeClockAdapter
-import com.zy.ppmusic.adapter.base.OnItemViewClickListener
 import com.zy.ppmusic.databinding.ActivityMediaBinding
 import com.zy.ppmusic.databinding.DlContentDelItemBinding
 import com.zy.ppmusic.extension.addOnClickListener
@@ -44,9 +44,15 @@ import com.zy.ppmusic.mvp.presenter.MediaPresenterImpl
 import com.zy.ppmusic.service.MediaService
 import com.zy.ppmusic.utils.*
 import com.zy.ppmusic.widget.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import pub.devrel.easypermissions.AppSettingsDialog
+import pub.devrel.easypermissions.EasyPermissions
 import java.lang.ref.WeakReference
 import java.util.*
+import kotlin.system.exitProcess
 
 /**
  * 与MediaService两种通信方式：
@@ -54,17 +60,11 @@ import java.util.*
  *      2.SessionCompat.sendCommand(String,Bundle,ResultReceiver);//需要获取结果
  */
 @Keep
-class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActivityContract.IMediaActivityView {
+class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActivityContract.IMediaActivityView, EasyPermissions.PermissionCallbacks {
 
     private var mMediaBrowser: MediaBrowserCompat? = null
     /*** 媒体控制器*/
     private var mMediaController: MediaControllerCompat? = null
-    /*** 播放列表的recycler*/
-    private var mMediaQueueRecycler: androidx.recyclerview.widget.RecyclerView? = null
-    /*** 展示播放列表的dialog*/
-    private var mMediaQueueDialog: BottomSheetDialog? = null
-    /*** 播放列表的适配器*/
-    private var mMediaQueueAdapter: PlayQueueAdapter? = null
     /*** 当前播放的媒体id*/
     private var mCurrentMediaIdStr: String? = null
     /*** 结束位置*/
@@ -86,13 +86,9 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     /*** 倒计时Recycler的适配器*/
     private var mTimeClockAdapter: TimeClockAdapter? = null
     /*** 倒计时选择弹窗Recycler*/
-    private var mTimeClockRecycler: androidx.recyclerview.widget.RecyclerView? = null
+    private var mTimeClockRecycler: RecyclerView? = null
     /*** 倒计时展示的自定义TextView*/
     private var mBorderTextView: BorderTextView? = null
-    /*** 播放列表弹窗的contentView*/
-    private var mPlayQueueContentView: View? = null
-    /*** 显示播放列表数量*/
-    private var mQueueCountTv: TextView? = null
     /*** 歌曲图片适配器*/
     private var mediaAlbumAdapter: MediaAlbumAdapter? = null
     /*** 记录循环是否已经开始*/
@@ -118,7 +114,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 MediaService.COMMAND_UPDATE_QUEUE_CODE -> {
                     val isNotEmpty = activity.mMediaController?.queue?.isNotEmpty() ?: false
                     if (isNotEmpty) {
-                        activity.mMediaQueueAdapter?.setData(activity.mMediaController?.queue)
+                        activity.playlistAdapter.setData(activity.mMediaController?.queue)
                     }
                     activity.hideLoading()
                 }
@@ -130,6 +126,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     }
 
     companion object {
+        private const val REQUEST_CODE = 100
+
         fun action(context: Context) {
             Intent(context, MediaActivity::class.java).apply {
                 context.startActivity(this)
@@ -138,49 +136,24 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     }
 
     private var loader: Loader? = null
-    private val binding: ActivityMediaBinding by lazy { ActivityMediaBinding.bind(contentView) }
-    private val mediaToolbar: Toolbar by lazy { binding.mediaToolbar }
-    private val mediaTitleTintView: View by lazy { binding.mediaTitleTintView }
-    private val bottomTintView: View by lazy { binding.bottomTintView }
-    private val contentViewPager: ViewPager2 by lazy { binding.contentViewPager }
-    private val mediaSeekBar: AppCompatSeekBar by lazy { binding.mediaSeekBar }
-    private val playingTimeTextView: AppCompatTextView by lazy { binding.playingTimeTextView }
-    private val durationTimeTextView: AppCompatTextView by lazy { binding.durationTimeTextView }
-    private val loopModelImageView: AppCompatImageView by lazy { binding.loopModelImageView }
-    private val playOrPauseImageView: AppCompatImageView by lazy { binding.playOrPauseImageView }
-    private val showPlayQueueImageView: AppCompatImageView by lazy { binding.showPlayQueueImageView }
+    private val binding: ActivityMediaBinding by lazy2 { ActivityMediaBinding.bind(contentView) }
+    private val mediaToolbar: Toolbar by lazy2 { binding.mediaToolbar }
+    private val contentViewPager: ViewPager2 by lazy2 { binding.contentViewPager }
+    private val mediaSeekBar: AppCompatSeekBar by lazy2 { binding.mediaSeekBar }
+    private val playingTimeTextView: AppCompatTextView by lazy2 { binding.playingTimeTextView }
+    private val durationTimeTextView: AppCompatTextView by lazy2 { binding.durationTimeTextView }
+    private val loopModelImageView: AppCompatImageView by lazy2 { binding.loopModelImageView }
+    private val playOrPauseImageView: AppCompatImageView by lazy2 { binding.playOrPauseImageView }
+    private val showPlayQueueImageView: AppCompatImageView by lazy2 { binding.showPlayQueueImageView }
+    private val playlistContainer: RecyclerView by lazy2 { binding.playlistContainer }
 
     override fun getContentViewId(): Int = R.layout.activity_media
 
     override fun createPresenter(): MediaPresenterImpl = MediaPresenterImpl(this)
 
     private fun setUpTitleBar() {
-        mediaToolbar.setBackgroundColor(ContextCompat.getColor(this, R.color.colorTheme))
-        mediaToolbar.elevation = 0f
+        updateThemeColor()
         setSupportActionBar(mediaToolbar)
-    }
-
-    private fun setUpTopEdgeView(){
-        //顶部斜边View的背景
-        val drawable = TimBackGroundDrawable()
-        drawable.setDrawableColor(ContextCompat.getColor(this, R.color.colorTheme))
-        drawable.setPercent(TimBackGroundDrawable.TOP)
-        ViewCompat.setBackground(mediaTitleTintView, drawable)
-    }
-
-    private fun setUpBottomEdgeView() {
-        //设置底部的斜边
-        val bottomBackGround = TimBackGroundDrawable()
-        bottomBackGround.setDrawableColor(UIUtils.getColor(R.color.colorTheme))
-        bottomBackGround.setCorner(TimBackGroundDrawable.LEFT)
-        bottomBackGround.setPercent(TimBackGroundDrawable.BOTTOM)
-        ViewCompat.setBackground(bottomTintView, bottomBackGround)
-    }
-
-    private fun setUpCenterBackGround() {
-        val dp2px = UIUtils.dp2px(this, 110)
-        val vpDrawable = RoundDrawable(dp2px, ContextCompat.getColor(this, R.color.colorGray))
-        ViewCompat.setBackground(contentViewPager, vpDrawable)
     }
 
     private fun setUpContentViewPager() {
@@ -194,10 +167,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
     override fun initViews() {
         setUpTitleBar()
-        setUpTopEdgeView()
-        setUpBottomEdgeView()
-        //专辑图片的圆形背景
-        setUpCenterBackGround()
         setUpContentViewPager()
         mediaSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -237,9 +206,85 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             }
         }
         showPlayQueueImageView.addOnClickListener {
-            createBottomQueueDialog()
+            PopupMenu(this, showPlayQueueImageView, Gravity.START).apply {
+                inflate(R.menu.main)
+                setOnMenuItemClickListener { item ->
+                    onOptionsItemSelected(item)
+                    true
+                }
+            }.show()
+        }
+
+        if (!EasyPermissions.hasPermissions(applicationContext, Manifest.permission.READ_EXTERNAL_STORAGE
+                , Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            EasyPermissions.requestPermissions(this,
+                getString(R.string.string_permission_read), REQUEST_CODE,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+                , Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
     }
+
+    private val playlistAdapter = PlayQueueAdapter()
+
+    /**
+     * 更新播放列表中高亮显示当前播放的媒体
+     * 应该这里更新adapter中的index
+     */
+    private fun handleUpdatePlayListItemChanged(index: Int) {
+        val lastIndex = playlistAdapter.selectIndex
+        playlistAdapter.selectIndex = index
+        playlistAdapter.notifyItemChanged(lastIndex)
+        playlistAdapter.notifyItemChanged(index)
+    }
+
+    /**
+     * 更新底部的播放列表
+     */
+    private fun handleUpdatePlaylist() {
+        if (playlistContainer.adapter == null) {
+            playlistAdapter.setItemClickListener { v, index ->
+                if (v.id == R.id.queue_item_del) {
+                    createDelQueueItemDialog(index)
+                } else {
+                    handleUpdatePlayListItemChanged(index)
+                    // 点击播放列表直接播放选中的media
+                    mPresenter?.skipToPosition(index.toLong())
+                }
+            }
+
+            playlistAdapter.setItemLongClickListener { _, position ->
+                createQueueItemDetailDialog(position)
+            }
+            playlistContainer.addItemDecoration(RecycleViewDecoration(this, androidx.recyclerview.widget.LinearLayoutManager.VERTICAL,
+                R.drawable.recyclerview_vertical_line, dp2px(this, 25)))
+            playlistContainer.adapter = playlistAdapter
+            playlistAdapter.selectIndex = DataProvider.get().getMediaIndex(mCurrentMediaIdStr)
+        }
+        playlistAdapter.setData(DataProvider.get().queueItemList)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
+    }
+
+    override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>?) {
+        if (EasyPermissions.hasPermissions(applicationContext, Manifest.permission.READ_EXTERNAL_STORAGE
+                , Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            return
+        }
+
+        if (EasyPermissions.somePermissionPermanentlyDenied(this, perms!!)) {
+            val dialog = AppSettingsDialog.Builder(this)
+            dialog.setNegativeButton(R.string.exit)
+            dialog.build().show()
+        } else {
+            EasyPermissions.requestPermissions(this, getString(R.string.string_permission_read)
+                , REQUEST_CODE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        }
+    }
+
+    override fun onPermissionsGranted(requestCode: Int, perms: List<String>?) = handleReloadMedia()
 
     /*专辑图片位置改变监听*/
     private val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
@@ -278,36 +323,41 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
         loge("准备播放第${contentViewPager.currentItem}首")
         mPresenter?.skipToPosition(contentViewPager.currentItem.toLong())
+
+        calculatePalette(DataProvider.get().getMetadataItem(currentMediaId))
     }
 
-    @Keep
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.main, menu)
-        if (menu != null) {
-            if (menu::class == MenuBuilder::class) {
-                try {
-                    val method = menu::class.java.getDeclaredMethod("setOptionalIconsVisible",
-                            Boolean::class.java)
-                    method.isAccessible = true
-                    method.invoke(menu, true)
-                } catch (e: Exception) {
-                    PrintLog.d("反射显示图标失败")
+    private fun calculatePalette(mediaMetadataCompat: MediaMetadataCompat?) {
+        lifecycleScope.launchWhenResumed {
+            val palette = withContext(Dispatchers.Default) {
+                mediaMetadataCompat?.description?.iconBitmap?.let {
+                    Palette.from(it).generate()
                 }
             }
+            updateThemeColor(palette?.lightVibrantSwatch?.rgb, palette?.lightVibrantSwatch?.titleTextColor, palette?.lightVibrantSwatch?.bodyTextColor)
         }
-        return true
+    }
+
+    private fun updateThemeColor(color: Int? = null, titleColor: Int? = null, subTitle: Int? = null) {
+        val themeColor = color ?: ContextCompat.getColor(this, R.color.colorTheme)
+        val titleThemeColor = titleColor ?: Color.WHITE
+        val colorDrawable = ColorDrawable(themeColor)
+        mediaToolbar.background = colorDrawable
+        window.statusBarColor = themeColor
+        window.navigationBarColor = Color.TRANSPARENT
+        contentViewPager.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(themeColor, Color.WHITE))
+
+        modifyThemeColor(themeColor, titleThemeColor)
+    }
+
+    private fun handleReloadMedia() {
+        showMsg(getString(R.string.start_scanning_the_local_file))
+        mPresenter?.refreshQueue(true)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_media_scan -> {
-                showMsg(getString(R.string.start_scanning_the_local_file))
-                mPresenter?.refreshQueue(true)
-            }
-//            R.id.menu_blue_connect -> {
-//                val intent = Intent(this, BlScanActivity::class.java)
-//                startActivity(intent)
-//            }
+            R.id.menu_media_scan -> handleReloadMedia()
             R.id.menu_notify_style -> {
                 ChooseStyleDialog().show(supportFragmentManager, "选择通知栏样式")
             }
@@ -319,57 +369,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     }
 
     /**
-     * 创建播放列表
-     */
-    @SuppressLint("InflateParams")
-    private fun createBottomQueueDialog() {
-        mMediaQueueDialog = BottomSheetDialog(this)
-        if (mMediaQueueAdapter === null) {
-            mMediaQueueAdapter = PlayQueueAdapter()
-            mMediaQueueAdapter?.setItemClickListener { v, index ->
-                if (v.id == R.id.queue_item_del) {
-                    createDelQueueItemDialog(index)
-                    return@setItemClickListener
-                }
-                //点击播放列表直接播放选中的media
-                mPresenter?.skipToPosition(index.toLong())
-                if (mMediaQueueDialog!!.isShowing) {
-                    mMediaQueueDialog?.cancel()
-                    mMediaQueueDialog?.dismiss()
-                    mMediaQueueDialog = null
-                    mMediaQueueAdapter = null
-                }
-            }
-
-            mMediaQueueAdapter?.setItemLongClickListener { _, position ->
-                createQueueItemDetailDialog(position)
-            }
-        }
-        if (mPlayQueueContentView == null) {
-            mPlayQueueContentView = LayoutInflater.from(this).inflate(R.layout.play_queue_layout, null)
-            mMediaQueueRecycler = mPlayQueueContentView?.findViewById(R.id.control_queue_recycle)
-            mQueueCountTv = mPlayQueueContentView?.findViewById(R.id.control_queue_count)
-        } else {
-            val parent = mPlayQueueContentView?.parent as? ViewGroup
-            parent?.removeView(mPlayQueueContentView)
-        }
-
-        if (mCurrentMediaIdStr != null) {
-            mMediaQueueAdapter?.selectIndex = DataProvider.get().getMediaIndex(mCurrentMediaIdStr!!)
-        }
-        mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
-                (mMediaQueueAdapter?.selectIndex?.plus(1) ?: 1), DataProvider.get().pathList.size)
-        mMediaQueueDialog?.setContentView(mPlayQueueContentView!!)
-        mMediaQueueRecycler?.adapter = mMediaQueueAdapter
-        mMediaQueueDialog?.dismissWithAnimation = true
-        mMediaQueueRecycler?.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
-        mMediaQueueRecycler?.addItemDecoration(RecycleViewDecoration(this, androidx.recyclerview.widget.LinearLayoutManager.VERTICAL,
-                R.drawable.recyclerview_vertical_line, UIUtils.dp2px(this, 25)))
-        mMediaQueueAdapter?.setData(DataProvider.get().queueItemList)
-        mMediaQueueDialog?.show()
-    }
-
-    /**
      * 显示列表item的详细信息
      */
     private fun createQueueItemDetailDialog(position: Int): Boolean {
@@ -378,7 +377,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
 
         val item = DataProvider.get().queueItemList[position].description ?: return false
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(this, R.style.AppTheme_AlertDialog)
                 .setTitle(String.format(Locale.CHINA, getString(R.string.show_name_and_author), item.title, item.subtitle))
                 .setMessage(item.mediaUri.toString())
                 .create()
@@ -392,15 +391,19 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     private fun createDelQueueItemDialog(position: Int) {
         val delContentBinding = DlContentDelItemBinding.inflate(layoutInflater)
         val delContentView = delContentBinding.root
-        delContentView.setPadding(UIUtils.dp2px(this, 20), UIUtils.dp2px(this, 20),
-                UIUtils.dp2px(this, 10), UIUtils.dp2px(this, 10))
-        AlertDialog.Builder(this)
+        delContentView.setPadding(dp2px(this, 20), dp2px(this, 20),
+                dp2px(this, 10), dp2px(this, 10))
+        AlertDialog.Builder(this, R.style.AppTheme_AlertDialog)
                 .setTitle(getString(R.string.string_sure_del))
                 .setView(delContentView)
                 .setPositiveButton(getString(R.string.string_del)) { _, _ ->
-                    when (val success = mPresenter?.deleteFile(delContentBinding.checkboxDlContentMessage.isChecked, position)) {
-                        null -> needDocumentPermission(position)
-                        else -> toast(if (success) "删除成功" else "删除失败")
+                    when (mPresenter?.deleteFile(delContentBinding.checkboxDlContentMessage.isChecked, position)) {
+                        null -> {
+                            // TODO 替换成ContentProvider删除
+                            needDocumentPermission(position)
+                        }
+                        true -> toast("删除成功")
+                        false -> toast("删除失败")
                     }
                 }
                 .setNegativeButton(getString(R.string.string_cancel)) { d, _ ->
@@ -411,9 +414,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 .show()
     }
 
-    override fun setDeleteResult(isSuccess: Boolean, path: String?) {
-
-    }
+    override fun setDeleteResult(isSuccess: Boolean, path: String?) = Unit
 
     override fun needDocumentPermission(position: Int) {
         toast("需要授予权限")
@@ -445,6 +446,20 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 mPresenter?.deleteFile(includeFile = true, doDelActionPosition)
                 doDelActionPosition = -1
             }
+        } else if (requestCode == AppSettingsDialog.DEFAULT_SETTINGS_REQ_CODE) {
+            if (resultCode == -1) {
+                finish()
+                exitProcess(-1)
+            } else {
+                if (EasyPermissions.hasPermissions(applicationContext, Manifest.permission.READ_EXTERNAL_STORAGE
+                        , Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    handleReloadMedia()
+                } else {
+                    EasyPermissions.requestPermissions(this, getString(R.string.string_permission_read)
+                        , REQUEST_CODE, Manifest.permission.READ_EXTERNAL_STORAGE
+                        , Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                }
+            }
         }
     }
 
@@ -459,18 +474,21 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         mTimeClockRecycler?.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
         mTimeClockAdapter = TimeClockAdapter()
         //无用的参数直接下划线表示
-        mTimeClockAdapter?.setOnItemClickListener(OnItemViewClickListener { _, position ->
+        mTimeClockAdapter?.setOnItemClickListener { _, position ->
             mTimeClockDialog?.cancel()
             if (getCurrentTimeClockLength(position) != 0L) {
                 //如果正在倒计时判断是否需要停止倒计时
                 val bundle = Bundle()
-                bundle.putLong(MediaService.ACTION_COUNT_DOWN_TIME, getCurrentTimeClockLength(position))
+                bundle.putLong(
+                    MediaService.ACTION_COUNT_DOWN_TIME,
+                    getCurrentTimeClockLength(position)
+                )
                 mPresenter?.sendCustomAction(MediaService.ACTION_COUNT_DOWN_TIME, bundle)
                 mTimeClockDialog = null
             }
-        })
+        }
         //如果正在倒计时显示取消计时选项，否则隐藏
-        if (mBorderTextView != null && mBorderTextView?.visibility == View.VISIBLE) {
+        if (mBorderTextView != null && mBorderTextView?.isVisible == true) {
             mTimeClockAdapter?.setTicking(true)
         } else {
             mTimeClockAdapter?.setTicking(false)
@@ -478,7 +496,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         mTimeClockRecycler?.adapter = mTimeClockAdapter
         val lengthSeekBar = mTimeContentView?.findViewById(R.id.time_selector_seek_bar) as SeekBar
         val progressHintTv = mTimeContentView?.findViewById(R.id.time_selector_progress_hint_tv) as TextView
-        progressHintTv.visibility = View.VISIBLE
+        progressHintTv.isVisible = true
         progressHintTv.text = String.format(Locale.CHINA, "%d", (lengthSeekBar.progress + 1))
         lengthSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             var percent = 0f
@@ -491,13 +509,14 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 val transXRound = (s!!.measuredWidth - s.paddingLeft - s.paddingRight
                         + progressHintTv.measuredWidth / 2).toFloat()
                 percent = transXRound / s.max.toFloat()
-                progressHintTv.visibility = View.VISIBLE
+                progressHintTv.isVisible = true
             }
 
             override fun onStopTrackingTouch(s: SeekBar?) {
-                mTimeClockRecycler?.postDelayed({
-                    progressHintTv.visibility = View.INVISIBLE
-                }, 1000)
+                lifecycleScope.launch {
+                    delay(1000)
+                    progressHintTv.isVisible = false
+                }
             }
         })
         mTimeContentView?.findViewById<Button>(R.id.time_selector_sure_btn)?.setOnClickListener {
@@ -522,19 +541,20 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 获取当前倒计时长度
      * 如果处于倒计时状态，第一条为取消倒计时
      */
-    private fun getCurrentTimeClockLength(position: Int): Long =
-            if (mTimeClockAdapter!!.isTick) {
-                //发送停止倒计时，隐藏倒计时文本
-                if (position == 0) {
-                    mPresenter?.sendCustomAction(MediaService.ACTION_STOP_COUNT_DOWN, Bundle())
-                    mBorderTextView?.hide()
-                    0L
-                } else {
-                    mTimeClockAdapter!!.getItem(position - 1) * 1000L * 60L
-                }
+    private fun getCurrentTimeClockLength(position: Int): Long {
+        return if (mTimeClockAdapter!!.isTick) {
+            //发送停止倒计时，隐藏倒计时文本
+            if (position == 0) {
+                mPresenter?.sendCustomAction(MediaService.ACTION_STOP_COUNT_DOWN, Bundle())
+                mBorderTextView?.hide()
+                0L
             } else {
-                mTimeClockAdapter!!.getItem(position) * 1000L * 60L
+                mTimeClockAdapter!!.getItem(position - 1) * 1000L * 60L
             }
+        } else {
+            mTimeClockAdapter!!.getItem(position) * 1000L * 60L
+        }
+    }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         when (keyCode) {
@@ -718,20 +738,20 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                             DataProvider.get().getMediaIndex(it)
                         } ?: 0
                         contentViewPager.setCurrentItem(position, false)
-//                        updateQueueSize(position + 1, mHeadAdapter!!.count)
+
+                        calculatePalette(this)
                     }
                     handlePlayState(mMediaController!!.playbackState!!.state)
                 } else {
                     setMediaInfo(children[0].description.title?.toString(), children[0].description.subtitle?.toString())
                     mCurrentMediaIdStr = children[0].description.mediaId
                     mCurrentMediaIdStr?.apply {
-                        //                        val position = DataProvider.get().getMediaIndex(this)
-//                        updateQueueSize(position + 1, DataProvider.get().mediaIdList.size)
                         val extra = Bundle()
                         extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_PLAY_INIT)
                         mPresenter?.playWithId(this, extra)
                     }
                 }
+                handleUpdatePlaylist()
             } else {
                 playingTimeTextView.text = getString(R.string.string_time_init)
                 durationTimeTextView.text = getString(R.string.string_time_init)
@@ -780,22 +800,14 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             updateTime()
             val position: Int? = mCurrentMediaIdStr?.let { DataProvider.get().getMediaIndex(it) }
             if (position == null || position < 0) return
-            //只在dialog显示时刷新
-            mMediaQueueDialog?.apply {
-                if (this.isShowing) {
-                    mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position),
-                            position + 1, mMediaQueueAdapter?.itemCount)
-                    mMediaQueueAdapter?.selectIndex = position
-                    mMediaQueueAdapter?.notifyDataSetChanged()
-                }
-            }
+            handleUpdatePlayListItemChanged(position)
 
             setMediaInfo(metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE),
                     metadata.getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE))
             if (contentViewPager.currentItem != position) {
                 contentViewPager.setCurrentItem(position, false)
             }
-//            updateQueueSize(position + 1, DataProvider.get().pathList.size)
+            calculatePalette(metadata)
         }
 
         //播放列表变化回调
@@ -804,21 +816,14 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             PrintLog.print("onQueueChanged called size=${queue?.size}")
             if (queue == null || queue.isEmpty()) {
                 setMediaInfo(getString(R.string.app_name), getString(R.string.app_name))
-                mMediaQueueDialog?.dismiss()
                 return
             }
             contentViewPager.unregisterOnPageChangeCallback(pageChangeCallback)
             initOrUpdateAdapter()
-            mMediaQueueDialog?.let {
-                if (it.isShowing) {
-                    val currentIndex = DataProvider.get().getMediaIndex(mCurrentMediaIdStr!!)
-                    contentViewPager.setCurrentItem(currentIndex, false)
-//                    updateQueueSize(currentIndex + 1, DataProvider.get().pathList.size)
-                    mMediaQueueAdapter?.selectIndex = currentIndex
-                    mMediaQueueAdapter?.setData(queue)
-                    mQueueCountTv?.text = String.format(Locale.CHINA, getString(R.string.string_queue_playing_position), currentIndex + 1, queue.size)
-                }
-            }
+            val currentIndex = DataProvider.get().getMediaIndex(mCurrentMediaIdStr!!)
+            contentViewPager.setCurrentItem(currentIndex, false)
+            playlistAdapter.selectIndex = currentIndex
+            handleUpdatePlaylist()
             showMsg("更新播放列表")
             contentViewPager.registerOnPageChangeCallback(pageChangeCallback)
         }
@@ -831,7 +836,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             startPosition = state?.position ?: 0
             if (DataProvider.get().pathList.isEmpty()) {
                 setMediaInfo(getString(R.string.app_name), getString(R.string.app_name))
-                mMediaQueueDialog?.dismiss()
             }
             updateTime()
             handlePlayState(state?.state ?: PlaybackStateCompat.STATE_NONE)
@@ -842,7 +846,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             when (event) {
                 MediaService.LOCAL_CACHE_POSITION_EVENT -> {
                     startPosition = extras?.getLong(MediaService.LOCAL_CACHE_POSITION_EVENT) ?: 0L
-                    PrintLog.d("收到穿过来的缓存位置----$startPosition")
+                    PrintLog.d("收到传过来的缓存位置----$startPosition")
                     updateTime()
                 }
                 MediaService.ERROR_PLAY_QUEUE_EVENT -> {
@@ -925,8 +929,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
      * 更新媒体信息
      */
     private fun setMediaInfo(displayTitle: String?, subTitle: String?) {
-        supportActionBar?.title = displayTitle ?: UIUtils.getString(R.string.unknown_name)
-        supportActionBar?.subtitle = subTitle ?: UIUtils.getString(R.string.unknown_author)
+        supportActionBar?.title = displayTitle ?: getString(R.string.unknown_name)
+        supportActionBar?.subtitle = subTitle ?: getString(R.string.unknown_author)
     }
 
     /**
@@ -957,17 +961,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
 
         //去除ViewPager的监听
         contentViewPager.unregisterOnPageChangeCallback(pageChangeCallback)
-        ViewCompat.setBackground(mediaTitleTintView, null)
-        ViewCompat.setBackground(contentViewPager, null)
-        ViewCompat.setBackground(bottomTintView, null)
-        //释放播放列表弹窗
-        if (mMediaQueueDialog != null) {
-            mMediaQueueDialog?.dismiss()
-            mQueueCountTv = null
-            mPlayQueueContentView = null
-            mMediaQueueDialog = null
-            mMediaQueueAdapter = null
-        }
         //释放时间计时弹窗
         if (mTimeClockDialog != null) {
             mTimeClockDialog?.dismiss()
