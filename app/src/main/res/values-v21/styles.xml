@@ -7,7 +7,7 @@
         <item name="colorAccent">@color/colorTheme</item>
         <item name="android:windowBackground">@null</item>
         <item name="android:statusBarColor">@color/colorTheme</item>
-        <item name="android:navigationBarColor">@color/colorTheme</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="AppTheme">
@@ -16,12 +16,11 @@
         <item name="android:statusBarColor">@color/colorTheme</item>
     </style>
 
-
-    <style name="AppTheme.SplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:statusBarColor">@color/colorTheme</item>
-        <item name="android:navigationBarColor">@color/colorTheme</item>
-        <item name="android:windowBackground">@color/colorTheme</item>
+    <style name="AppTheme.SplashTheme" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/colorTheme</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_music_launcher_round</item>
+        <item name="windowSplashScreenAnimationDuration">800</item>
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
     </style>
+
 </resources>

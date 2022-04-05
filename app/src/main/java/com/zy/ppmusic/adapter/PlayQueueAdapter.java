@@ -15,6 +15,7 @@ import com.zy.ppmusic.adapter.base.ExpandableViewHolder;
 import com.zy.ppmusic.adapter.base.OnItemViewClickListener;
 import com.zy.ppmusic.adapter.base.OnItemViewLongClickListener;
 import com.zy.ppmusic.utils.StringUtils;
+import com.zy.ppmusic.utils.UIUtilsKt;
 
 import java.util.List;
 import java.util.Locale;
@@ -74,8 +75,9 @@ public class PlayQueueAdapter extends AbstractSingleTypeAdapter {
         if (selectIndex == position) {
             holder.getView(R.id.queue_item_selected_line).setVisibility(View.VISIBLE);
         } else {
-            holder.getView(R.id.queue_item_selected_line).setVisibility(View.GONE);
+            holder.getView(R.id.queue_item_selected_line).setVisibility(View.INVISIBLE);
         }
+        holder.getView(R.id.queue_item_selected_line).setBackgroundColor(UIUtilsKt.getThemeColor());
         tvPosition.setText(String.format(Locale.CHINA, "%2d", (position + 1)));
         tvSubTitle.setTag(mData.get(position));
 

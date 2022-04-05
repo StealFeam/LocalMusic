@@ -25,6 +25,7 @@ import androidx.annotation.Keep
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.*
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.palette.graphics.Palette
 import androidx.recyclerview.widget.RecyclerView
@@ -93,6 +94,8 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     private var mediaAlbumAdapter: MediaAlbumAdapter? = null
     /*** 记录循环是否已经开始*/
     private var isStarted = false
+    /** 播放列表 **/
+    private val playlistAdapter by lazy2 { PlayQueueAdapter() }
 
     /*** 接收媒体服务回传的信息，这里处理的是当前播放的位置和进度*/
     @Keep
@@ -147,6 +150,11 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
     private val showPlayQueueImageView: AppCompatImageView by lazy2 { binding.showPlayQueueImageView }
     private val playlistContainer: RecyclerView by lazy2 { binding.playlistContainer }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
+        super.onCreate(savedInstanceState)
+    }
+
     override fun getContentViewId(): Int = R.layout.activity_media
 
     override fun createPresenter(): MediaPresenterImpl = MediaPresenterImpl(this)
@@ -180,10 +188,11 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                seekBar ?: return
                 //初始化的时候点击的按钮直接播放当前的media
                 val extra = Bundle()
                 extra.putString(MediaService.ACTION_PARAM, MediaService.ACTION_SEEK_TO)
-                extra.putInt(MediaService.SEEK_TO_POSITION_PARAM, (seekBar!!.progress * stepPosition).toInt())
+                extra.putLong(MediaService.SEEK_TO_POSITION_PARAM, seekBar.progress * stepPosition)
                 mPresenter?.playWithId(mCurrentMediaIdStr!!, extra)
                 mIsTrackingBar = false
             }
@@ -223,8 +232,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 , Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
     }
-
-    private val playlistAdapter = PlayQueueAdapter()
 
     /**
      * 更新播放列表中高亮显示当前播放的媒体
@@ -334,20 +341,19 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                     Palette.from(it).generate()
                 }
             }
-            updateThemeColor(palette?.lightVibrantSwatch?.rgb, palette?.lightVibrantSwatch?.titleTextColor, palette?.lightVibrantSwatch?.bodyTextColor)
+            updateThemeColor(palette?.lightVibrantSwatch?.rgb)
         }
     }
 
-    private fun updateThemeColor(color: Int? = null, titleColor: Int? = null, subTitle: Int? = null) {
+    private fun updateThemeColor(color: Int? = null) {
         val themeColor = color ?: ContextCompat.getColor(this, R.color.colorTheme)
-        val titleThemeColor = titleColor ?: Color.WHITE
         val colorDrawable = ColorDrawable(themeColor)
         mediaToolbar.background = colorDrawable
         window.statusBarColor = themeColor
-        window.navigationBarColor = Color.TRANSPARENT
+        window.navigationBarColor = themeColor
         contentViewPager.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(themeColor, Color.WHITE))
 
-        modifyThemeColor(themeColor, titleThemeColor)
+        modifyThemeColor(themeColor)
     }
 
     private fun handleReloadMedia() {
@@ -818,7 +824,7 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 setMediaInfo(getString(R.string.app_name), getString(R.string.app_name))
                 handleUpdatePlaylist()
                 mediaAlbumAdapter?.fillDataToAdapter(lifecycleScope, null)
-                updateThemeColor(null, null, null)
+                updateThemeColor(null)
                 return
             }
             contentViewPager.unregisterOnPageChangeCallback(pageChangeCallback)

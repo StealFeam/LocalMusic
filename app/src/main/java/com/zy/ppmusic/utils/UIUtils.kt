@@ -29,10 +29,10 @@ var themeColor: Int = getColor(R.color.colorTheme)
 
 var View.isVisible: Boolean
     set(value) {
-        if (value) {
-            visibility = View.VISIBLE
+        visibility = if (value) {
+            View.VISIBLE
         } else {
-            visibility = View.INVISIBLE
+            View.INVISIBLE
         }
     }
     get() = visibility == View.VISIBLE

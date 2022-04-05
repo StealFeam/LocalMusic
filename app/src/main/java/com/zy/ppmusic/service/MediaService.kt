@@ -592,7 +592,7 @@ class MediaService : MediaBrowserServiceCompat() {
                         }
                     }
                 } else if (ACTION_SEEK_TO == action) {
-                    val seekPosition = extras.getInt(SEEK_TO_POSITION_PARAM)
+                    val seekPosition = extras.getLong(SEEK_TO_POSITION_PARAM)
                     mPlayBack?.seekTo(seekPosition, true)
                     Log.e(TAG, "onPlayFromMediaId: $seekPosition")
                 } else {

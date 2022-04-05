@@ -23,7 +23,7 @@
     <style name="AppTheme.SplashTheme" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/colorTheme</item>
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_music_launcher_round</item>
-        <item name="windowSplashScreenAnimationDuration">200</item>
+        <item name="windowSplashScreenAnimationDuration">800</item>
         <item name="postSplashScreenTheme">@style/AppTheme</item>
     </style>
 

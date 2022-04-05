@@ -243,19 +243,18 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
         mCallBack?.onPlayBackStateChange(state)
     }
 
-    fun seekTo(position: Int, isAutoStart: Boolean) {
+    fun seekTo(position: Long, isAutoStart: Boolean) {
         if (mMediaPlayer == null) {
             return
         }
         if (mAudioFocus != AUDIO_FOCUSED) {
             getAudioFocus()
         }
-        if (mMediaPlayer!!.isPlaying) {
-            mMediaPlayer?.pause()
-        }
         PrintLog.print("seek to $position,$isAutoStart")
         mIsAutoStart = isAutoStart
-        mMediaPlayer?.seekTo(position)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            mMediaPlayer?.seekTo(position, MediaPlayer.SEEK_CLOSEST_SYNC)
+        }
         state = PlaybackStateCompat.STATE_BUFFERING
 
         mCallBack?.onPlayBackStateChange(state)

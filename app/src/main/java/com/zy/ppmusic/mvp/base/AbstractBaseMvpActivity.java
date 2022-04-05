@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -15,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.appcompat.widget.AppCompatSeekBar;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.core.view.LayoutInflaterCompat;
 
@@ -78,6 +80,8 @@ public abstract class AbstractBaseMvpActivity<P extends AbstractBasePresenter> e
                     result = new AppCompatTextView(context, attrs);
                 } else if ("androidx.appcompat.widget.AppCompatImageView".equals(name)) {
                     result = new AppCompatImageView(context, attrs);
+                } else if ("androidx.appcompat.widget.AppCompatSeekBar".equals(name)) {
+                    result = new AppCompatSeekBar(context, attrs);
                 }
                 return result;
             }
@@ -91,7 +95,7 @@ public abstract class AbstractBaseMvpActivity<P extends AbstractBasePresenter> e
         initViews();
     }
 
-    protected void modifyThemeColor(int themeColor, int titleColor) {
+    protected void modifyThemeColor(int themeColor) {
         UIUtilsKt.setThemeColor(themeColor);
         int size = availableModifyThemeColorView.size();
         for (int index = size - 1; index >= 0; index --) {
@@ -101,24 +105,24 @@ public abstract class AbstractBaseMvpActivity<P extends AbstractBasePresenter> e
                 continue;
             }
             if (view instanceof TextView) {
-                if (titleColor == -1) {
-                    ((TextView)view).setTextColor(getResources().getColor(R.color.colorTheme, getTheme()));
-                } else {
-                    ((TextView)view).setTextColor(titleColor);
-                }
+                ((TextView)view).setTextColor(UIUtilsKt.getThemeColor());
             } else if (view instanceof ImageView) {
                 if (view instanceof AppCompatImageView) {
                     AppCompatImageView imageView = ((AppCompatImageView) view);
                     if (imageView.getImageTintMode() == PorterDuff.Mode.SRC_IN) {
-                        return;
+                        continue;
                     }
-                    imageView.setImageTintList(ColorStateList.valueOf(themeColor));
+                    imageView.setImageTintList(ColorStateList.valueOf(UIUtilsKt.getThemeColor()));
                 } else {
                     Drawable drawable = ((ImageView) view).getDrawable();
                     if (drawable != null) {
-                        drawable.setTint(themeColor);
+                        drawable.setTint(UIUtilsKt.getThemeColor());
                     }
                 }
+            } else if (view instanceof AppCompatSeekBar) {
+                AppCompatSeekBar seekBar = ((AppCompatSeekBar)view);
+                seekBar.getThumb().setTint(themeColor);
+                ((LayerDrawable)seekBar.getProgressDrawable()).getDrawable(2).setTint(themeColor);
             }
         }
     }
