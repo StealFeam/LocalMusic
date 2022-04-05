@@ -254,6 +254,8 @@ class PlayBack(mMediaService: MediaService) : AudioManager.OnAudioFocusChangeLis
         mIsAutoStart = isAutoStart
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             mMediaPlayer?.seekTo(position, MediaPlayer.SEEK_CLOSEST_SYNC)
+        } else {
+            mMediaPlayer?.seekTo(position.toInt())
         }
         state = PlaybackStateCompat.STATE_BUFFERING
 
