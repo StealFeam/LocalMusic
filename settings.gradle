@@ -1,1 +1,2 @@
-include 'app' ,':easypermissions'
+include 'app' ,':easypermissions', ':ViewOptAnnotation'
+include ':viewoptapt', ':ViewOptProcessor'

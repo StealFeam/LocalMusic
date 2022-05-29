@@ -22,6 +22,7 @@ import androidx.core.view.LayoutInflaterCompat;
 
 import com.zy.ppmusic.App;
 import com.zy.ppmusic.R;
+import com.zy.ppmusic.ViewOpt;
 import com.zy.ppmusic.utils.UIUtilsKt;
 
 import java.lang.ref.SoftReference;
@@ -38,6 +39,16 @@ public abstract class AbstractBaseMvpActivity<P extends AbstractBasePresenter> e
     protected View contentView;
 
     private static final List<SoftReference<View>> availableModifyThemeColorView = new ArrayList<>();
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull String name, @NonNull Context context, @NonNull AttributeSet attrs) {
+        View view = ViewOpt.createView(name, context, attrs);
+        if (view != null) {
+            return view;
+        }
+        return super.onCreateView(name, context, attrs);
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

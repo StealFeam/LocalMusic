@@ -13,6 +13,16 @@ import com.zy.ppmusic.utils.SpUtils.Companion.get
  */
 class App : Application() {
 
+    init {
+        println("----->>>> Constructor ")
+    }
+
+    override fun attachBaseContext(base: Context?) {
+        println("------>>>> attachBaseContext")
+        InjectClassLoader.hook(base!!.classLoader)
+        super.attachBaseContext(base)
+    }
+
     var databaseManager: DataBaseManager? = null
         private set
 

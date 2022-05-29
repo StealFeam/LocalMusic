@@ -29,6 +29,10 @@
         tools:ignore="GoogleAppIndexingWarning"
         android:dataExtractionRules="@xml/data_extraction_rules">
 
+        <provider
+            android:authorities="com.zy.ppmusic"
+            android:name=".AppContentProvider" />
+
         <activity
             android:name="com.zy.ppmusic.mvp.view.BlScanActivity"
             android:exported="false"
