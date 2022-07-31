@@ -64,6 +64,14 @@ public class ViewCreatorClassGenerator {
             mMessager.printMessage(Diagnostic.Kind.NOTE, "generate file path : " + classPath);
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 

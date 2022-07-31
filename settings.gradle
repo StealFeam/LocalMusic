@@ -1,2 +1,3 @@
 include 'app' ,':easypermissions', ':ViewOptAnnotation'
 include ':viewoptapt', ':ViewOptProcessor'
+include ':benchmark'

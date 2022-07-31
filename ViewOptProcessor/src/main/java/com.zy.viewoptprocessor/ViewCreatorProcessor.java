@@ -20,6 +20,11 @@ public class ViewCreatorProcessor extends AbstractProcessor {
     private Messager mMessager;
 
     @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latestSupported();
+    }
+
+    @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         mMessager = processingEnv.getMessager();
