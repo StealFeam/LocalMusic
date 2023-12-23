@@ -10,20 +10,34 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.media.AudioManager
-import android.os.*
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.ResultReceiver
 import android.provider.DocumentsContract
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.view.*
+import android.view.Gravity
+import android.view.KeyEvent
+import android.view.LayoutInflater
+import android.view.MenuItem
+import android.view.View
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.activity.result.ActivityResultCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.Keep
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.widget.*
+import androidx.appcompat.widget.AppCompatImageView
+import androidx.appcompat.widget.AppCompatSeekBar
+import androidx.appcompat.widget.AppCompatTextView
+import androidx.appcompat.widget.PopupMenu
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
@@ -43,8 +57,21 @@ import com.zy.ppmusic.mvp.base.AbstractBaseMvpActivity
 import com.zy.ppmusic.mvp.contract.IMediaActivityContract
 import com.zy.ppmusic.mvp.presenter.MediaPresenterImpl
 import com.zy.ppmusic.service.MediaService
-import com.zy.ppmusic.utils.*
-import com.zy.ppmusic.widget.*
+import com.zy.ppmusic.utils.DataProvider
+import com.zy.ppmusic.utils.DateUtil
+import com.zy.ppmusic.utils.PrintLog
+import com.zy.ppmusic.utils.dp2px
+import com.zy.ppmusic.utils.isVisible
+import com.zy.ppmusic.utils.lazy2
+import com.zy.ppmusic.utils.logd
+import com.zy.ppmusic.utils.loge
+import com.zy.ppmusic.utils.logi
+import com.zy.ppmusic.utils.toast
+import com.zy.ppmusic.widget.BorderTextView
+import com.zy.ppmusic.widget.ChooseStyleDialog
+import com.zy.ppmusic.widget.EasyTintView
+import com.zy.ppmusic.widget.Loader
+import com.zy.ppmusic.widget.RecycleViewDecoration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -52,7 +79,7 @@ import kotlinx.coroutines.withContext
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import java.lang.ref.WeakReference
-import java.util.*
+import java.util.Locale
 import kotlin.system.exitProcess
 
 /**
@@ -224,12 +251,18 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
             }.show()
         }
 
-        if (!EasyPermissions.hasPermissions(applicationContext, Manifest.permission.READ_EXTERNAL_STORAGE
-                , Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            EasyPermissions.requestPermissions(this,
-                getString(R.string.string_permission_read), REQUEST_CODE,
-                Manifest.permission.READ_EXTERNAL_STORAGE
-                , Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+                if (granted) {
+                    handleReloadMedia()
+                } else {
+                    // TODO make a compose style dialog
+                }
+            }.launch(Manifest.permission.READ_MEDIA_AUDIO)
+        } else {
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+                println("申请结果---> $it")
+            }.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
         }
     }
 

@@ -98,7 +98,7 @@ class MediaPresenterImpl(view: IMediaActivityContract.IMediaActivityView) : IMed
      * 修复5.0后无法删除外部存储文件
      */
     private fun doSupportDelAction(position: Int): Boolean? {
-        val contentResolver = App.instance!!.contentResolver
+        val contentResolver = App.instance.contentResolver
         return if (getGrantedRootUri().isNotEmpty()) {
             val path = DataProvider.get().getPath(position) ?: return false
             try {

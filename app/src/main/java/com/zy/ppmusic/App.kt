@@ -31,11 +31,11 @@ class App : Application() {
         get() = this.applicationContext
 
     companion object {
-        var instance: App? = null
+        lateinit var instance: App
 
         @JvmStatic fun setCustomDensity(activity: Activity) {
-            val application: Application? = instance
-            val appDisplayMetrics = application!!.resources.displayMetrics
+            val application: Application = instance
+            val appDisplayMetrics = application.resources.displayMetrics
 
             //px = density * dp
             //density= dpi / 160
@@ -51,6 +51,6 @@ class App : Application() {
             activityDisplayMetrics.densityDpi = targetDensityDpi
         }
 
-        @JvmStatic val appBaseContext: Context get() = instance!!.baseContext
+        @JvmStatic val appBaseContext: Context get() = instance.baseContext
     }
 }

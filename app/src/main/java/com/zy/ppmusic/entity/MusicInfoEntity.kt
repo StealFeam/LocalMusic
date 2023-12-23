@@ -1,58 +1,30 @@
 package com.zy.ppmusic.entity
 
-import com.zy.ppmusic.utils.FileUtils
-import java.io.Serializable
-import java.util.Arrays
+import androidx.room.Entity
 
 /**
  * @author stealfeam
  */
-class MusicInfoEntity : Serializable {
-    var mediaId: String? = null
-    var musicName: String? = null
-    var artist: String? = null
-    var queryPath: String? = null
-    /**
-     * 文件大小
-     */
-    var size: Long = 0
-    /**
-     * 时长
-     */
-    var duration: Long = 0
-    /**
-     * 专辑图片数据
-     */
-    var iconData: ByteArray? = null
+@Entity(tableName = "music", primaryKeys = ["queryPath"])
+data class MusicInfoEntity(
+    val mediaId: String?,
+    val musicName: String?,
+    val artist: String?,
+    val queryPath: String,
+    val size: Long = 0, // 文件大小
+    val duration: Long = 0, // 时长
+    val iconData: ByteArray? // 专辑图片数据
+) {
 
-    var isExits: Boolean = FileUtils.isExits(queryPath ?: "")
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
 
-    constructor() {}
-
-    constructor(mediaId: String?, musicName: String?, artist: String?, queryPath: String?,
-                size: Long, duration: Long, iconData: ByteArray?) {
-        this.mediaId = mediaId
-        this.musicName = musicName
-        this.artist = artist
-        this.queryPath = queryPath
-        this.size = size
-        this.duration = duration
-        this.iconData = iconData
+        other as MusicInfoEntity
+        return queryPath == other.queryPath
     }
 
-    override fun toString(): String {
-        return "MusicInfoEntity{" +
-                "mediaId='" + mediaId + '\''.toString() +
-                ", musicName='" + musicName + '\''.toString() +
-                ", artist='" + artist + '\''.toString() +
-                ", queryPath='" + queryPath + '\''.toString() +
-                ", size=" + size +
-                ", duration=" + duration +
-                ", iconData=" + Arrays.toString(iconData) +
-                '}'.toString()
-    }
-
-    companion object {
-        private const val serialVersionUID = -1016970004377532215L
+    override fun hashCode(): Int {
+        return queryPath.hashCode()
     }
 }

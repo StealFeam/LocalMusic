@@ -50,10 +50,6 @@ class DataProvider private constructor() {
         inSampleSize = 2
     }
 
-    private object Inner {
-        val INSTANCE = DataProvider()
-    }
-
     fun transformData(pathList: ArrayList<String>) {
         clearData()
         queryMedia(App.appBaseContext, pathList)
@@ -63,7 +59,7 @@ class DataProvider private constructor() {
         return pathList.get().size > 0
     }
 
-    suspend fun loadData(forceCache: Boolean) = suspendCancellableCoroutine<Void> { cont ->
+    suspend fun loadData(forceCache: Boolean) = suspendCancellableCoroutine { cont ->
         if (!forceCache) {
             // 返回内存中数据
             PrintLog.e("开始检查内存缓存")
@@ -72,7 +68,7 @@ class DataProvider private constructor() {
                 return@suspendCancellableCoroutine
             }
             PrintLog.e("开始检查文件缓存")
-            FileUtils.readObject(Constant.CACHE_FILE_PATH)?.apply {
+            FileUtils.readObject().apply {
                 PrintLog.e("读取到本地缓存列表------")
                 transFormData(this as ArrayList<MusicInfoEntity>)
                 cont.resume(Void)
@@ -82,8 +78,8 @@ class DataProvider private constructor() {
         PrintLog.e("未检查到本地缓存-----$forceCache")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             CoroutineScope(Job() + Dispatchers.IO).launch {
-                ScanMediaFile.get().scanInternalMedia(App.instance!!)
-                ScanMediaFile.get().scanExternalMedia(App.instance!!)
+                ScanMediaFile.get().scanInternalMedia(App.instance)
+                ScanMediaFile.get().scanExternalMedia(App.instance)
                 clearData()
                 val projection = arrayOf(
                     MediaStore.Audio.Media.ALBUM_ID,
@@ -96,36 +92,40 @@ class DataProvider private constructor() {
                     MediaStore.Audio.Media.DATA,
                     MediaStore.Audio.Media.RELATIVE_PATH
                 )
-                val externalQuery = ContentResolverCompat.query(
-                    App.instance?.contentResolver,
-                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                    projection,
-                    MediaStore.Audio.Media.IS_MUSIC + "=?",
-                    arrayOf("1"),
-                    null,
-                    null
-                )
+                val externalQuery = App.instance.contentResolver?.let {
+                    ContentResolverCompat.query(
+                        it,
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                        projection,
+                        MediaStore.Audio.Media.IS_MUSIC + "=?",
+                        arrayOf("1"),
+                        null,
+                        null
+                    )
+                }
                 externalQuery?.use { cursor ->
                     val mediaMetadataRetriever = MediaMetadataRetriever()
                     queryContent(cursor, mediaMetadataRetriever)
                     mediaMetadataRetriever.release()
                 }
-                val internalQuery = ContentResolverCompat.query(
-                    App.instance?.contentResolver,
-                    MediaStore.Audio.Media.INTERNAL_CONTENT_URI,
-                    projection,
-                    MediaStore.Audio.Media.IS_MUSIC + "=?",
-                    arrayOf("1"),
-                    null,
-                    null
-                )
+                val internalQuery = App.instance.contentResolver?.let {
+                    ContentResolverCompat.query(
+                        it,
+                        MediaStore.Audio.Media.INTERNAL_CONTENT_URI,
+                        projection,
+                        MediaStore.Audio.Media.IS_MUSIC + "=?",
+                        arrayOf("1"),
+                        null,
+                        null
+                    )
+                }
                 internalQuery?.use { cursor ->
                     val mediaMetadataRetriever = MediaMetadataRetriever()
                     queryContent(cursor, mediaMetadataRetriever)
                     mediaMetadataRetriever.release()
                 }
                 //缓存到本地
-                FileUtils.saveObject(musicInfoEntities.get(), Constant.CACHE_FILE_PATH)
+                FileUtils.saveObject(musicInfoEntities.get())
                 cont.resume(Void)
             }
         } else {
@@ -133,7 +133,7 @@ class DataProvider private constructor() {
                 override fun onComplete(paths: ArrayList<String>) {
                     transformData(paths)
                     //缓存到本地
-                    FileUtils.saveObject(musicInfoEntities.get(), Constant.CACHE_FILE_PATH)
+                    FileUtils.saveObject(musicInfoEntities.get())
                     cont.resume(Void)
                 }
             })
@@ -222,7 +222,7 @@ class DataProvider private constructor() {
             picLoader.setDataSource(queryPath)
 
             val infoEntity = MusicInfoEntity(queryPath.hashCode().toString(), title, artist, queryPath, size.toLong(),
-                    duration, picLoader.embeddedPicture)
+                    duration, null)
 
             mapMetadataArray.get()[infoEntity.mediaId] = buildMetadataCompat(infoEntity)
 
@@ -271,7 +271,7 @@ class DataProvider private constructor() {
                 mediaItemList.get().add(buildMediaItem(mapMetadataArray.get()[infoEntity.mediaId]!!.description))
 
                 musicInfoEntities.get().add(infoEntity)
-                pathList.get().add(infoEntity.queryPath!!)
+                pathList.get().add(infoEntity.queryPath)
                 mediaIdList.get().add(infoEntity.mediaId!!)
             }
         }
@@ -308,7 +308,7 @@ class DataProvider private constructor() {
         clearData()
         this.musicInfoEntities.set(localList)
         for (itemEntity in localList) {
-            pathList.get().add(itemEntity.queryPath!!)
+            pathList.get().add(itemEntity.queryPath)
             mediaIdList.get().add(itemEntity.mediaId!!)
 
             mapMetadataArray.get()[itemEntity.mediaId] = buildMetadataCompat(itemEntity)
@@ -331,7 +331,7 @@ class DataProvider private constructor() {
     suspend fun removeItemIncludeFile(index: Int) = withContext(Dispatchers.IO) {
         removeItem(index)
         // 更新缓存
-        FileUtils.saveObject(musicInfoEntities.get(), Constant.CACHE_FILE_PATH)
+        FileUtils.saveObject(musicInfoEntities.get())
     }
 
     /**
@@ -393,9 +393,11 @@ class DataProvider private constructor() {
     companion object {
         private const val TAG = "DataProvider"
 
+        private val INSTANCE = DataProvider()
+
         @JvmStatic
         fun get(): DataProvider {
-            return Inner.INSTANCE
+            return INSTANCE
         }
     }
 }

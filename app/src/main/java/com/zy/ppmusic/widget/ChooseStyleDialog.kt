@@ -20,7 +20,7 @@ import com.zy.ppmusic.utils.Constant
  * @author stealfeam
  * @date 2018/6/16
  */
-class ChooseStyleDialog : androidx.fragment.app.DialogFragment(), IChooseNotifyStyleContract.IChooseNotifyStyleView {
+class ChooseStyleDialog : DialogFragment(), IChooseNotifyStyleContract.IChooseNotifyStyleView {
     private val mPresenter: ChooseNotifyStylePresenter by lazy {
         ChooseNotifyStylePresenter(this)
     }
@@ -30,7 +30,7 @@ class ChooseStyleDialog : androidx.fragment.app.DialogFragment(), IChooseNotifyS
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView = inflater.inflate(R.layout.dialog_choose_notify_style_layout, container)
         rootView ?: let {
-            return super.onCreateView(inflater, container, savedInstanceState)!!
+            return super.onCreateView(inflater, container, savedInstanceState)
         }
         mRadioGroup = rootView.findViewById(R.id.rb_choose_parent)
         val localCheckId = mPresenter.getLocalStyle()
@@ -46,7 +46,7 @@ class ChooseStyleDialog : androidx.fragment.app.DialogFragment(), IChooseNotifyS
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return AppCompatDialog(activity, R.style.NotifyDialogStyle)
+        return AppCompatDialog(requireContext(), R.style.NotifyDialogStyle)
     }
 
     override fun onDismiss(dialog: DialogInterface) {

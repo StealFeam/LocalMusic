@@ -40,7 +40,7 @@ class ScanMediaFile private constructor() {
     }
 
     private suspend fun scanMediaBySystem(vararg path: String) = suspendCancellableCoroutine<Void> {
-        MediaScannerConnection.scanFile(App.instance!!, path, null) { _, _ ->
+        MediaScannerConnection.scanFile(App.instance, path, null) { _, _ ->
             it.resume(Void)
         }
     }

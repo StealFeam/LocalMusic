@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">倩音</string>
+    <string name="app_name">倩音乐</string>
     <string name="notification_channel_name">音频控制</string>
     <string name="normal_text">@string/app_name</string>
     <string name="scan_result_icon">扫描设备的标识</string>

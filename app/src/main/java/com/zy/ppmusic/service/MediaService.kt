@@ -27,7 +27,6 @@ import com.zy.ppmusic.receiver.AudioBecomingNoisyReceiver
 import com.zy.ppmusic.receiver.LoopReceiver
 import com.zy.ppmusic.utils.*
 import kotlinx.coroutines.*
-import kotlin.coroutines.CoroutineContext
 import kotlin.system.exitProcess
 
 /**
@@ -294,7 +293,7 @@ class MediaService : MediaBrowserServiceCompat() {
      */
     private fun savePlayingRecord() {
         PrintLog.d("开始保存记录-----")
-        App.instance?.databaseManager?.apply {
+        App.instance.databaseManager?.apply {
             deleteAll()
             insetEntity(buildCacheEntity())
         }
@@ -430,7 +429,7 @@ class MediaService : MediaBrowserServiceCompat() {
         super.onDestroy()
         Log.d(TAG, "onDestroy() called")
         NotificationUtils.cancelAllNotify(this)
-        App.instance?.databaseManager?.closeConn()
+        App.instance.databaseManager?.closeConn()
         mAudioReceiver?.unregister()
         mMediaSessionCompat?.release()
         if (mCountDownTimer != null) {
@@ -581,7 +580,7 @@ class MediaService : MediaBrowserServiceCompat() {
                 } else if (ACTION_PLAY_INIT == action) {
                     launchScope.launch(Dispatchers.Main) {
                         val job = async(Dispatchers.IO) {
-                            return@async App.instance!!.databaseManager!!.entity
+                            return@async App.instance.databaseManager!!.entity
                         }
                         val cacheEntity = job.await()
                         if (cacheEntity != null) {
@@ -695,7 +694,7 @@ class MediaService : MediaBrowserServiceCompat() {
                             cb?.send(COMMAND_UPDATE_QUEUE_CODE, Bundle())
                             if (isForce) {
                                 //读取本地数据库
-                                return@async App.instance!!.databaseManager!!.entity
+                                return@async App.instance.databaseManager!!.entity
                             }
                             return@async MusicDbEntity()
                         }

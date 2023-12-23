@@ -4,9 +4,11 @@ import android.content.Context
 import android.os.Build
 import android.os.Environment
 import android.os.storage.StorageManager
-import android.text.TextUtils
 import android.util.Log
+import androidx.room.Room
 import com.zy.ppmusic.App
+import com.zy.ppmusic.data.db.MusicDatabase
+import com.zy.ppmusic.entity.MusicInfoEntity
 import java.io.*
 import java.lang.reflect.Array
 
@@ -172,54 +174,19 @@ object FileUtils {
         return null
     }
 
-    fun saveObject(obj: Any?, path: String) {
-        val file = File(path)
-        if (!file.exists()) {
-            try {
-                val createFileResult = file.createNewFile()
-                if (createFileResult) {
-                    PrintLog.print("创建缓存文件成功")
-                } else {
-                    PrintLog.print("创建缓存文件失败")
-                }
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-        }
-        var outputStream: ObjectOutputStream? = null
-        try {
-            outputStream = ObjectOutputStream(FileOutputStream(file))
-            outputStream.writeObject(obj)
-            outputStream.flush()
-            PrintLog.print("write object success")
-        } catch (e: IOException) {
-            e.printStackTrace()
-        } finally {
-            StreamUtils.closeIo(outputStream!!)
+    fun saveObject(obj: List<MusicInfoEntity>?) {
+        val musicDao = db.musicDao()
+        obj?.filter { musicDao.queryByPath(it.queryPath).isEmpty() }?.let {
+            musicDao.insert(*it.toTypedArray())
         }
     }
 
-    fun readObject(path: String): Any? {
-        val file = File(path)
-        PrintLog.e("缓存文件的路径----$path")
-        if (!file.exists()) {
-            PrintLog.e("该文件不存在")
-            return null
-        }
-        var inputStream: ObjectInputStream? = null
-        return try {
-            inputStream = ObjectInputStream(FileInputStream(file))
-            PrintLog.d("read object success")
-            inputStream.readObject()
-        } catch (e: IOException) {
-            PrintLog.e("read cache has a error :" + e.message)
-            null
-        } catch (e: ClassNotFoundException) {
-            PrintLog.e("read cache has a error :" + e.message)
-            null
-        } finally {
-            StreamUtils.closeIo(inputStream!!)
-        }
+    private val db by lazy {
+        Room.databaseBuilder(App.instance, MusicDatabase::class.java, "music").build()
+    }
+
+    fun readObject(): List<MusicInfoEntity> {
+        return db.musicDao().all()
     }
 
     fun getPathFile(path: String): File {
