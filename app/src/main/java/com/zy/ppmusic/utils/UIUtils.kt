@@ -37,5 +37,5 @@ var View.isVisible: Boolean
     }
     get() = visibility == View.VISIBLE
 
-fun <T> lazy2(initializer: () -> T): Lazy<T> = lazy<T>(LazyThreadSafetyMode.NONE, initializer)
+fun <T> lazy2(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE, initializer)
 

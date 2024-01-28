@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -29,7 +30,6 @@ import android.view.View
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
-import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.Keep
 import androidx.appcompat.app.AlertDialog
@@ -72,6 +72,7 @@ import com.zy.ppmusic.widget.ChooseStyleDialog
 import com.zy.ppmusic.widget.EasyTintView
 import com.zy.ppmusic.widget.Loader
 import com.zy.ppmusic.widget.RecycleViewDecoration
+import com.zy.ppmusic.widget.RequirePermissionDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -88,7 +89,7 @@ import kotlin.system.exitProcess
  *      2.SessionCompat.sendCommand(String,Bundle,ResultReceiver);//需要获取结果
  */
 @Keep
-class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActivityContract.IMediaActivityView, EasyPermissions.PermissionCallbacks {
+class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActivityContract.IMediaActivityView {
 
     private var mMediaBrowser: MediaBrowserCompat? = null
     /*** 媒体控制器*/
@@ -256,14 +257,31 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
                 if (granted) {
                     handleReloadMedia()
                 } else {
-                    // TODO make a compose style dialog
+                    handleRequirePermission()
                 }
             }.launch(Manifest.permission.READ_MEDIA_AUDIO)
         } else {
-            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-                println("申请结果---> $it")
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { resultMap ->
+                if (resultMap.none { it.value.not() }) {
+                    handleReloadMedia()
+                } else {
+                    handleRequirePermission()
+                }
             }.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
         }
+    }
+
+    /**
+     * 处理没有同意权限情况
+     */
+    private fun handleRequirePermission() {
+        RequirePermissionDialog()
+            .apply {
+                dialogDismissListener = DialogInterface.OnDismissListener {
+                    handleReloadMedia()
+                }
+            }
+            .show(supportFragmentManager, "permission")
     }
 
     /**
@@ -302,29 +320,6 @@ class MediaActivity : AbstractBaseMvpActivity<MediaPresenterImpl>(), IMediaActiv
         }
         playlistAdapter.setData(DataProvider.get().queueItemList.get())
     }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
-    }
-
-    override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>?) {
-        if (EasyPermissions.hasPermissions(applicationContext, Manifest.permission.READ_EXTERNAL_STORAGE
-                , Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            return
-        }
-
-        if (EasyPermissions.somePermissionPermanentlyDenied(this, perms!!)) {
-            val dialog = AppSettingsDialog.Builder(this)
-            dialog.setNegativeButton(R.string.exit)
-            dialog.build().show()
-        } else {
-            EasyPermissions.requestPermissions(this, getString(R.string.string_permission_read)
-                , REQUEST_CODE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        }
-    }
-
-    override fun onPermissionsGranted(requestCode: Int, perms: List<String>?) = handleReloadMedia()
 
     /*专辑图片位置改变监听*/
     private val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
